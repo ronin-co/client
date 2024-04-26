@@ -26,7 +26,7 @@ describe('factory', () => {
   let { get, set, create, drop, count, batch } = {} as ReturnType<typeof createSyntaxFactory>;
 
   beforeEach(() => {
-    ({ get, set, create, drop, count, batch } = createSyntaxFactory());
+    ({ get, set, create, drop, count, batch } = createSyntaxFactory({}));
 
     mockFetch.mockClear();
     mockRequestResolvedValue = undefined;
@@ -283,7 +283,7 @@ describe('factory', () => {
   test('correctly format `amount`', async () => {
     const factory = createSyntaxFactory({
       fetch: async (request) => {
-        mockRequestResolvedValue = request;
+        mockRequestResolvedValue = request as Request;
 
         return Response.json({
           results: [
@@ -303,7 +303,7 @@ describe('factory', () => {
   test('correctly format not found result', async () => {
     const factory = createSyntaxFactory({
       fetch: async (request) => {
-        mockRequestResolvedValue = request;
+        mockRequestResolvedValue = request as Request;
 
         return Response.json({
           results: [{ record: null }],
@@ -318,14 +318,14 @@ describe('factory', () => {
 
   test('upload image', async () => {
     const bunFile = Bun.file('tests/assets/example.jpeg');
-    const file = new File([await bunFile.arrayBuffer()], 'example.jpeg', { type: 'image/jpeg' });
+    const file = new File([bunFile], 'example.jpeg', { type: 'image/jpeg' });
 
     let mockResolvedStorageRequest: Request | undefined = undefined;
 
     const factory = createSyntaxFactory({
       fetch: async (request) => {
-        if (request.url === 'https://data.ronin.co/writable') {
-          mockResolvedStorageRequest = request;
+        if ((request as Request).url === 'https://data.ronin.co/writable') {
+          mockResolvedStorageRequest = request as Request;
 
           const responseBody: StoredObject = {
             key: 'test-key',
@@ -369,7 +369,7 @@ describe('factory', () => {
   test('handle storage service error', async () => {
     const factory = createSyntaxFactory({
       fetch: async (request) => {
-        if (request.url === 'https://data.ronin.co/writable') {
+        if ((request as Request).url === 'https://data.ronin.co/writable') {
           return Response.error();
         }
         return mockFetch(request);

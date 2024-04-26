@@ -122,6 +122,7 @@ export const processStorableObjects = async (
       const { query, schema, field } = objects[index];
       const reference = storedObjects[index];
 
+      // @ts-expect-error It is guaranteed that these keys exist.
       queries[query.index][query.type][schema][query.type === 'set' ? 'to' : 'with'][field] = reference;
     }
   }

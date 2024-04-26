@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, mock, test } from 'bun:test';
 import { createSyntaxFactory } from 'src/syntax';
-import type { CombinedInstructions, Instructions } from 'src/types/query';
-import { runQueriesWithHooks } from 'src/utils/data-hooks';
+import type { CombinedInstructions, QueryType } from 'src/types/query';
+import { type FilteredHookQuery, runQueriesWithHooks } from 'src/utils/data-hooks';
 
 let mockResolvedRequestText: any = undefined;
 
@@ -45,7 +45,7 @@ describe('hooks', () => {
     await runQueriesWithHooks([query], {
       hooks: {
         account: {
-          get: mockHook,
+          get: mockHook as any,
         },
       },
     });
@@ -94,7 +94,7 @@ describe('hooks', () => {
     const { get } = createSyntaxFactory({
       hooks: {
         schema: {
-          get(query, multiple) {
+          get(_query, multiple) {
             if (multiple)
               return [
                 {
@@ -129,7 +129,7 @@ describe('hooks', () => {
   });
 
   test('run `create` query through factory containing `after` data hook', async () => {
-    let finalQuery: Instructions | undefined;
+    let finalQuery: FilteredHookQuery<CombinedInstructions, QueryType> | undefined;
     let finalMultiple: boolean | undefined;
     let finalResult: unknown;
 
@@ -181,7 +181,7 @@ describe('hooks', () => {
   });
 
   test('run `set` query affecting multiple accounts through factory containing `after` data hook', async () => {
-    let finalQuery: Instructions | undefined;
+    let finalQuery: FilteredHookQuery<CombinedInstructions, QueryType> | undefined;
     let finalMultiple: boolean | undefined;
     let finalResult: unknown;
 
@@ -246,13 +246,13 @@ describe('hooks', () => {
   });
 
   test('run normal queries alongside queries that are handled by `during` hook', async () => {
-    let finalQuery: Instructions | undefined;
+    let finalQuery: FilteredHookQuery<CombinedInstructions, QueryType> | undefined;
     let finalMultiple: boolean | undefined;
-    let mockResolvedRequestText: string = undefined;
+    let mockResolvedRequestText: string | undefined;
 
     const { get, batch } = createSyntaxFactory({
       fetch: async (request) => {
-        mockResolvedRequestText = await request.text();
+        mockResolvedRequestText = await (request as Request).text();
 
         return Response.json({
           results: [

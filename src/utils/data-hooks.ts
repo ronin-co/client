@@ -5,7 +5,7 @@ import { toDashCase } from './helpers';
 
 const EMPTY = Symbol('empty');
 
-type FilteredHookQuery<
+export type FilteredHookQuery<
   TQuery extends CombinedInstructions,
   TType extends QueryType
 > = RecursivePartial<TQuery> &

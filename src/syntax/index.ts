@@ -13,7 +13,9 @@ import { batch, getSyntaxProxy } from './utils';
  *
  * ### Usage
  * ```typescript
- * const { get, set, create, count, drop } = createSyntaxFactory();
+ * const { get, set, create, count, drop } = createSyntaxFactory({
+ *   token: '...'
+ * });
  *
  * await get.accounts();
  *
@@ -40,7 +42,7 @@ import { batch, getSyntaxProxy } from './utils';
  * ]);
  * ```
  */
-export const createSyntaxFactory = (options?: QueryHandlerOptions) => ({
+export const createSyntaxFactory = (options: QueryHandlerOptions) => ({
   create: getSyntaxProxy('create', (query) => queryHandler(query, options)) as RONIN.Creator,
   get: getSyntaxProxy('get', (query) => queryHandler(query, options)) as RONIN.Getter,
   set: getSyntaxProxy('set', (query) => queryHandler(query, options)) as RONIN.Setter,

@@ -139,13 +139,13 @@ export const runQueries = async <T>(
             .filter(([, type]) => type === 'time')
             .map(([name]) => name)
         : [];
-
+        
     // Handle single record result.
     if ('record' in result) {
       // This happens if no matching record was found for a singular query,
       // such as `get.account.with.handle('leo')`.
       if (result.record === null) {
-        results[i] = null;
+        results[i] = null as unknown as QueryResponse<T>['results'][number];
         continue;
       }
 

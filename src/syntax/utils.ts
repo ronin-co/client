@@ -31,7 +31,7 @@ export const getSyntaxProxy = (queryType: string, queryHandler: (query: Query) =
   return new Proxy(
     {},
     {
-      get(target: any, prop: string) {
+      get(_target: any, prop: string) {
         function createProxy(path: string[]) {
           const proxyTargetFunction = () => {};
 
@@ -41,7 +41,7 @@ export const getSyntaxProxy = (queryType: string, queryHandler: (query: Query) =
           proxyTargetFunction();
 
           return new Proxy(proxyTargetFunction, {
-            async apply(target: any, thisArg: any, args: any[]) {
+            async apply(_target: any, _thisArg: any, args: any[]) {
               const value = args[0];
               const expanded = objectFromAccessor(path.join('.'), typeof value === 'undefined' ? {} : value);
 
@@ -54,7 +54,7 @@ export const getSyntaxProxy = (queryType: string, queryHandler: (query: Query) =
               return queryHandler(query);
             },
 
-            get(target: any, nextProp: string) {
+            get(_target: any, nextProp: string): any {
               return createProxy(path.concat([nextProp]));
             },
           });

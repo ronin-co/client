@@ -23,7 +23,7 @@ describe('edge runtime', () => {
     global.process = undefined as unknown as NodeJS.Process;
 
     try {
-      const factory = createSyntaxFactory();
+      const factory = createSyntaxFactory({});
 
       await factory.get.account();
     } catch (err) {

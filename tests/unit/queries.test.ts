@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, mock, spyOn, test } from 'bun:test';
 import { queriesHandler } from 'src/syntax/handlers';
 
-let mockRequestResolvedValue: Request | undefined = undefined;
+let mockRequestResolvedValue: Request | undefined;
 
 const mockFetch = mock(async (request) => {
   mockRequestResolvedValue = request;
@@ -48,6 +48,7 @@ describe('queries handler', () => {
     const env = process.env;
     const originalToken = import.meta.env.RONIN_TOKEN;
 
+    // @ts-expect-error We're intentionally modifying the runtime environment.
     process.env = undefined;
     import.meta.env.RONIN_TOKEN = 'mytoken';
 
@@ -88,7 +89,7 @@ describe('queries handler', () => {
     const requestPromise = queriesHandler([], {
       token: 'takashitoken',
       fetch: async (request) => {
-        mockRequestResolvedValue = request;
+        mockRequestResolvedValue = request as Request;
 
         return Response.json({
           results: [],
@@ -115,7 +116,7 @@ describe('queries handler', () => {
       {
         token: 'takashitoken',
         fetch: async (request) => {
-          mockRequestResolvedValue = request;
+          mockRequestResolvedValue = request as Request;
 
           return Response.json({
             results: [

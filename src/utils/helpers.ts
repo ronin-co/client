@@ -54,7 +54,7 @@ const setPropertyViaPathSegments = (
   pathSegments: string[],
   value: any | ((value: any) => any)
 ) => {
-  let current = obj;
+  let current = obj as Record<string, object>;
 
   for (let i = 0; i < pathSegments.length; i++) {
     const key = pathSegments[i];
@@ -68,7 +68,7 @@ const setPropertyViaPathSegments = (
       if (!Object.prototype.hasOwnProperty.call(current, key) || typeof current[key] !== 'object') {
         current[key] = {};
       }
-      current = current[key];
+      current = current[key] as Record<string, object>;
     }
   }
 };
@@ -105,11 +105,11 @@ const setProperty = <T extends object, K>(obj: T, path: string, value: K): T => 
  * console.log(getProperty(exampleObject, ['user', 'non', 'existing'])); // Output: undefined
  */
 const getPropertyViaPathSegments = (obj: object, pathSegments: string[]): unknown => {
-  let current = obj;
+  let current = obj as Record<string, object>;
 
   for (const key of pathSegments) {
     if (current[key] === null || current[key] === undefined) return undefined;
-    current = current[key];
+    current = current[key] as Record<string, object>;
   }
 
   return current;
@@ -152,5 +152,5 @@ export const toDashCase = (string?: string | null): string => {
  * @param timeFields - An array of property keys for the time fields.
  */
 export const formatTimeFields = (record: object, timeFields: string[]) => {
-  timeFields.forEach((field) => setProperty(record, field, (value) => new Date(value)));
+  timeFields.forEach((field) => setProperty(record, field, (value: string) => new Date(value)));
 };
