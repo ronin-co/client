@@ -54,15 +54,15 @@
   },
   "devDependencies": {
     "@types/bun": "1.1.0",
-    "@typescript-eslint/eslint-plugin": "7.6.0",
-    "@typescript-eslint/parser": "7.6.0",
+    "@typescript-eslint/eslint-plugin": "7.7.1",
+    "@typescript-eslint/parser": "7.7.1",
     "bunchee": "5.1.2",
-    "eslint": "8.57.0",
+    "eslint": "9.1.1",
     "eslint-config-prettier": "9.1.0",
     "eslint-plugin-import": "2.29.1",
     "eslint-plugin-simple-import-sort": "12.1.0",
     "eslint-plugin-spellcheck": "0.0.20",
     "eslint-plugin-unused-imports": "3.1.0",
-    "typescript": "5.4.4"
+    "typescript": "5.4.5"
   }
 }
