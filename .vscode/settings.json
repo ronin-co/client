@@ -1,0 +1,6 @@
+{
+  "editor.formatOnSave": true,
+  "editor.rulers": [80, 120],
+  "javascript.updateImportsOnFileMove.enabled": "always",
+  "typescript.preferences.importModuleSpecifier": "non-relative"
+}

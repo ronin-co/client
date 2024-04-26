@@ -1,0 +1,58 @@
+{
+  "name": "ronin",
+  "version": "2.0.29-beta.8",
+  "type": "module",
+  "main": "dist/index.cjs",
+  "module": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "dev": "bun run build -- --watch",
+    "build": "bunchee",
+    "test": "bun test",
+    "lint": "bun run lint:tsc && bun run lint:eslint --",
+    "lint:eslint": "eslint . --ext .ts --ignore-path .gitignore",
+    "lint:tsc": "tsc --noEmit --pretty"
+  },
+  "files": [
+    "dist"
+  ],
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs",
+      "types": "./dist/index.d.ts"
+    },
+    "./types": {
+      "import": "./dist/types/index.js",
+      "require": "./dist/types/index.cjs",
+      "types": "./dist/types/index.d.ts"
+    }
+  },
+  "typesVersions": {
+    "*": {
+      "*": [
+        "dist/index.d.ts"
+      ],
+      "types": [
+        "dist/types/index.d.ts"
+      ]
+    }
+  },
+  "engines": {
+    "node": ">=18.17.0"
+  },
+  "devDependencies": {
+    "@types/bun": "1.1.0",
+    "@typescript-eslint/eslint-plugin": "7.6.0",
+    "@typescript-eslint/parser": "7.6.0",
+    "bunchee": "5.1.2",
+    "eslint": "8.57.0",
+    "eslint-config-prettier": "9.1.0",
+    "eslint-plugin-import": "2.29.1",
+    "eslint-plugin-simple-import-sort": "12.1.0",
+    "eslint-plugin-spellcheck": "0.0.20",
+    "eslint-plugin-unused-imports": "3.1.0",
+    "expect-type": "0.19.0",
+    "typescript": "5.4.4"
+  }
+}
