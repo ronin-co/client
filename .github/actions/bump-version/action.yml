@@ -1,12 +1,12 @@
-name: Bump and Publish Experimental NPM Packages
-description: Bumps the version of an NPM package and publishes it to NPM with an experimental tag.
+name: Publish Experimental Packages
+description: Bumps the version of an npm package and publishes it with an experimental tag.
 
 on:
   workflow_call: []
 
 inputs:
   package_dir:
-    description: Directory of the Package to Bump and Publish
+    description: Directory of the Package to Publish
     required: true
 
 outputs:
@@ -50,6 +50,6 @@ runs:
           npm version $(npx semver $LATEST_VERSION -i prerelease --preid="$VERSION_TAG") --no-git-tag-version
         fi
 
-    - name: Publish to NPM
+    - name: Publish to npm
       shell: bash
       run: cd ${{ inputs.package_dir }} && npm publish --tag="$VERSION_TAG"

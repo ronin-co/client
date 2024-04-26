@@ -1,4 +1,4 @@
-name: Manually Publish NPM Packages
+name: Manually Publish npm Packages
 
 on:
   workflow_dispatch:
@@ -31,7 +31,7 @@ jobs:
         with:
           token: ${{ steps.generate_token.outputs.token }}
 
-      # Needed only for bumping package version ad publishing NPM packages.
+      # Needed only for bumping package version and publishing npm packages.
       - name: Set up Node.js
         uses: actions/setup-node@v3.5.1
       - run: echo '//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN_READ_AND_WRITE }} > ~/.npmrc
@@ -42,7 +42,7 @@ jobs:
       - name: Install Dependencies
         run: bun install --frozen-lockfile
 
-      - name: Build Packages
+      - name: Build Package
         run: bun run build
 
       - name: Set Git Config
@@ -54,7 +54,7 @@ jobs:
       - name: Bump `ronin`
         run: npm version ${{ inputs.version_type }}
 
-      - name: Push new Version
+      - name: Push New Version
         run: |
           git fetch
           git checkout ${GITHUB_HEAD_REF}
@@ -62,5 +62,5 @@ jobs:
           git commit -a -m 'CI: Version bump for `ronin`'
           git push origin ${GITHUB_HEAD_REF}
 
-      - name: Publish NPM package
+      - name: Publish npm Package
         run: npm publish

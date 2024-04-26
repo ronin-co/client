@@ -3,6 +3,3 @@ dist
 
 # Dependencies
 node_modules
-
-# Local config
-.env

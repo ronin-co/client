@@ -57,7 +57,7 @@ export namespace RONIN {
     ?
         | {
             /**
-             * `being` instruction can't be used in combincation with other
+             * `being` instruction can't be used in combination with other
              * search instructions.
              */
             being: string;
@@ -68,7 +68,7 @@ export namespace RONIN {
           }
         | {
             /**
-             * `notBeing` instruction can't be used in combincation with other
+             * `notBeing` instruction can't be used in combination with other
              * search instructions.
              */
             notBeing: string;
@@ -88,7 +88,7 @@ export namespace RONIN {
     ?
         | {
             /**
-             * `being` instruction can't be used in combincation with other
+             * `being` instruction can't be used in combination with other
              * search instructions.
              */
             being: number;
@@ -98,7 +98,7 @@ export namespace RONIN {
           }
         | {
             /**
-             * `notBeing` instruction can't be used in combincation with other
+             * `notBeing` instruction can't be used in combination with other
              * search instructions.
              */
             notBeing: number;
@@ -116,7 +116,7 @@ export namespace RONIN {
     ?
         | {
             /**
-             * `being` instruction can't be used in combincation with other
+             * `being` instruction can't be used in combination with other
              * search instructions.
              */
             being: Date;
@@ -126,7 +126,7 @@ export namespace RONIN {
           }
         | {
             /**
-             * `notBeing` instruction can't be used in combincation with other
+             * `notBeing` instruction can't be used in combination with other
              * search instructions.
              */
             notBeing: Date;

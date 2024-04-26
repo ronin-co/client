@@ -1,7 +1,8 @@
 {
   "name": "ronin",
-  "version": "2.0.29-beta.8",
+  "version": "2.1.1",
   "type": "module",
+  "license": "Apache-2.0",
   "main": "dist/index.cjs",
   "module": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -15,6 +16,16 @@
   },
   "files": [
     "dist"
+  ],
+  "repository": "ronin-co/client",
+  "homepage": "https://ronin.co/docs/typescript-client",
+  "keywords": [
+    "ronin",
+    "client",
+    "database",
+    "orm",
+    "edge",
+    "serverless"
   ],
   "exports": {
     ".": {
@@ -52,7 +63,6 @@
     "eslint-plugin-simple-import-sort": "12.1.0",
     "eslint-plugin-spellcheck": "0.0.20",
     "eslint-plugin-unused-imports": "3.1.0",
-    "expect-type": "0.19.0",
     "typescript": "5.4.4"
   }
 }

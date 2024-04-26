@@ -39,7 +39,7 @@ export type RecursivePartial<T> = {
 };
 
 /**
- * Helper type to convert a tuple of promises into a tuple of their resolved types.
+ * Utility type to convert a tuple of promises into a tuple of their resolved types.
  */
 export type PromiseTuple<T extends [Promise<any>, ...Promise<any>[]]> = { [P in keyof T]: Awaited<T[P]> };
 

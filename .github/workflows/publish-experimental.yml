@@ -19,7 +19,7 @@ jobs:
       - name: Code Checkout
         uses: actions/checkout@v3.1.0
 
-      # Needed only for bumping package version ad publishing NPM packages.
+      # Needed only for bumping package version and publishing npm packages.
       - name: Set up Node.js
         uses: actions/setup-node@v3.5.1
       - run: echo '//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN_READ_AND_WRITE }}' > ~/.npmrc
@@ -30,7 +30,7 @@ jobs:
       - name: Install Dependencies
         run: bun install --frozen-lockfile
 
-      - name: Build Packages
+      - name: Build Package
         run: bun run build
 
       - name: Bump `ronin`
@@ -50,4 +50,4 @@ jobs:
             bun add ronin@${{ env.VERSION_TAG }}
             ```
 
-            This package will be removed after the Pull Request has been merged.
+            This package will be removed after the pull request has been merged.

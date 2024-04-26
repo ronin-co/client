@@ -316,7 +316,7 @@ describe('factory', () => {
     expect(result).toBeNull();
   });
 
-  test('can an upload image', async () => {
+  test('upload image', async () => {
     const bunFile = Bun.file('tests/assets/example.jpeg');
     const file = new File([await bunFile.arrayBuffer()], 'example.jpeg', { type: 'image/jpeg' });
 

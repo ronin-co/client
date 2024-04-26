@@ -149,7 +149,7 @@ export const toDashCase = (string?: string | null): string => {
  * Convert Time fields in a record to JavaScript `Date` objects.
  *
  * @param record - A record to format the Time fields of.
- * @param timeFields - An array of arrays containing the path to the fields.
+ * @param timeFields - An array of property keys for the time fields.
  */
 export const formatTimeFields = (record: object, timeFields: string[]) => {
   timeFields.forEach((field) => setProperty(record, field, (value) => new Date(value)));
