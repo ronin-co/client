@@ -3,6 +3,8 @@
 [![Tests](https://github.com/ronin-co/client/actions/workflows/validate.yml/badge.svg)](https://github.com/ronin-co/client/actions/workflows/validate.yml)
 [![Install Size](https://packagephobia.com/badge?p=ronin)](https://packagephobia.com/result?p=ronin)
 
+This package allows for querying data from [RONIN](https://ronin.co) with ease.
+
 ## Setup
 
 First, install the [package](https://www.npmjs.com/package/ronin) with a package manager of your choice:
