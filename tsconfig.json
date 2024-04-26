@@ -1,15 +1,26 @@
 {
   "compilerOptions": {
+    "esModuleInterop": true,
+    "resolveJsonModule": true,
+    "baseUrl": ".",
+
+    "lib": ["ESNext"],
     "target": "ESNext",
     "module": "ESNext",
+    "moduleDetection": "force",
+    "jsx": "react-jsx",
+    "allowJs": true,
+
     "moduleResolution": "node",
-    "declaration": true,
-    "declarationMap": true,
-    "types": ["@types/bun"],
-    "baseUrl": ".",
+    "allowImportingTsExtensions": true,
     "verbatimModuleSyntax": true,
-    "skipLibCheck": true
-  },
-  "include": ["index.ts", "src/**/*.ts", "tests/**/*.ts"],
-  "exclude": ["node_modules", "dist"]
+    "noEmit": true,
+
+    "strict": true,
+    "skipLibCheck": true,
+    "noFallthroughCasesInSwitch": true,
+
+    "noUnusedLocals": true,
+    "noUnusedParameters": true
+  }
 }
