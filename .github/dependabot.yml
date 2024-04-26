@@ -8,6 +8,10 @@ updates:
       interval: "weekly"
       timezone: "Europe/Berlin"
 
+    ignore:
+      # They shipped a bunch of breaking changes.
+      - dependency-name: "eslint"
+
     labels:
       - "enhancement"
 
