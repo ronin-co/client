@@ -8,6 +8,7 @@ inputs:
   package_dir:
     description: Directory of the Package to Publish
     required: true
+    default: './'
 
 outputs:
   VERSION_TAG:
