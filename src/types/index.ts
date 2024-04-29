@@ -56,7 +56,6 @@ export type {
 
   // Query Instructions
   WithInstruction,
-  WhereInstruction,
 } from './query';
 
 // Storage
