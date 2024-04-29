@@ -58,8 +58,6 @@ jobs:
         run: |
           git fetch
           git checkout ${GITHUB_HEAD_REF}
-          git pull origin ${GITHUB_HEAD_REF}
-          git commit -a -m 'CI: Version bump for `ronin`'
           git push origin ${GITHUB_HEAD_REF}
 
       - name: Publish npm Package
