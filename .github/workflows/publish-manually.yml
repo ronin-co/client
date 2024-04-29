@@ -52,13 +52,20 @@ jobs:
           git config --global user.email 135042755+ronin-app[bot]@users.noreply.github.com
 
       - name: Bump `ronin`
-        run: npm version ${{ inputs.version_type }}
+        run: |
+          npm version ${{ inputs.version_type }} --git-tag-version=false
+          echo "NEW_VERSION=$(npm pkg get version --workspaces=false | tr -d \")" >> $GITHUB_ENV
 
       - name: Push New Version
         run: |
           git fetch
           git checkout ${GITHUB_HEAD_REF}
+          git pull origin ${GITHUB_HEAD_REF}
+          git commit -a -m '${{ env.NEW_VERSION }}' --no-verify
+          git tag -a ${{ env.NEW_VERSION }} -m '${{ env.NEW_VERSION }}'
           git push origin ${GITHUB_HEAD_REF}
+          # Push tag
+          git push origin ${{ env.NEW_VERSION }}
 
       - name: Publish npm Package
         run: npm publish
