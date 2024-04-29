@@ -7,21 +7,21 @@ const EMPTY = Symbol('empty');
 
 export type FilteredHookQuery<
   TQuery extends CombinedInstructions,
-  TType extends QueryType
+  TType extends QueryType,
 > = RecursivePartial<TQuery> &
   Pick<
     TQuery,
     TType extends 'count'
       ? never
       : TType extends 'create'
-      ? 'with'
-      : TType extends 'get'
-      ? never
-      : TType extends 'set'
-      ? 'to'
-      : TType extends 'drop'
-      ? never
-      : never
+        ? 'with'
+        : TType extends 'get'
+          ? never
+          : TType extends 'set'
+            ? 'to'
+            : TType extends 'drop'
+              ? never
+              : never
   >;
 
 export type BeforeHookHandler<
@@ -29,18 +29,18 @@ export type BeforeHookHandler<
   TQuery extends FilteredHookQuery<CombinedInstructions, TType> = FilteredHookQuery<
     CombinedInstructions,
     TType
-  >
+  >,
 > = (query: TQuery, multipleRecords: boolean) => TQuery | Promise<TQuery>;
 
 export type DuringHookHandler<TType extends QueryType, TSchema = unknown> = (
   query: FilteredHookQuery<CombinedInstructions, TType>,
-  multipleRecords: boolean
+  multipleRecords: boolean,
 ) => TSchema | Promise<TSchema>;
 
 export type AfterHookHandler<TType extends QueryType, TSchema = unknown> = (
   query: FilteredHookQuery<CombinedInstructions, TType>,
   multipleRecords: boolean,
-  result: TSchema
+  result: TSchema,
 ) => void | Promise<void>;
 
 type HookType = 'before' | 'during' | 'after';
@@ -54,21 +54,21 @@ type HookKeys = (
 type Hook<
   TStage extends HookType,
   TType extends QueryType,
-  TSchema extends TStage extends 'before' ? never : unknown = never
+  TSchema extends TStage extends 'before' ? never : unknown = never,
 > = TStage extends 'before'
   ? BeforeHookHandler<TType>
   : TStage extends 'during'
-  ? DuringHookHandler<TType, TSchema>
-  : TStage extends 'after'
-  ? AfterHookHandler<TType, TSchema>
-  : never;
+    ? DuringHookHandler<TType, TSchema>
+    : TStage extends 'after'
+      ? AfterHookHandler<TType, TSchema>
+      : never;
 
 type HookList<TSchema = unknown> = {
   [K in HookKeys]?: K extends 'before'
     ? BeforeHookHandler<QueryType>
     : K extends 'after' | `after${string}`
-    ? AfterHookHandler<QueryType, TSchema>
-    : DuringHookHandler<QueryType, TSchema>;
+      ? AfterHookHandler<QueryType, TSchema>
+      : DuringHookHandler<QueryType, TSchema>;
 };
 
 export type Hooks<TSchema = unknown> = Record<string, HookList<TSchema>>;
@@ -96,7 +96,7 @@ export type AfterDropHook<TSchema = unknown> = AfterHook<'drop', TSchema>;
 export type AfterCountHook<TSchema = unknown> = AfterHook<'count', TSchema>;
 
 const getSchema = (
-  instruction: QuerySchemaType
+  instruction: QuerySchemaType,
 ): {
   key: string;
   schema: string;
@@ -159,7 +159,7 @@ const invokeHook = async (
     plural: boolean;
     instruction: unknown;
     result: object | null;
-  }
+  },
 ): Promise<{ ran: boolean; result: Query | Results<unknown> | void | null | unknown }> => {
   const hooksForSchema = hooks?.[query.schema];
   const hookName = getMethodName(hookType, query.type);
@@ -236,7 +236,7 @@ const invokeHooks = async (
     definition: Query;
     index: number;
     result: object | null | Array<unknown | null>;
-  }
+  },
 ): Promise<void> => {
   const queryType = Object.keys(query.definition)[0] as QueryType;
   const queryInstructions = query.definition[queryType] as QuerySchemaType;
@@ -313,7 +313,7 @@ const invokeHooks = async (
  */
 export const runQueriesWithHooks = async <T>(
   queries: Query[],
-  options: QueryHandlerOptions = {}
+  options: QueryHandlerOptions = {},
 ): Promise<Results<T>> => {
   let modifiableQueries = Array.from(queries);
   const modifiableResults = new Array<T>();
@@ -346,7 +346,7 @@ export const runQueriesWithHooks = async <T>(
         index,
         result: null,
       });
-    })
+    }),
   );
 
   // Invoke `create`, `get`, `set`, `drop`, and `count`.
@@ -357,7 +357,7 @@ export const runQueriesWithHooks = async <T>(
         index,
         result: null,
       });
-    })
+    }),
   );
 
   // Filter out queries that were marked as removable by the `invokeHooks`

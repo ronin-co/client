@@ -46,12 +46,12 @@ export namespace RONIN {
   type FilterFunction<T, R> = T extends string
     ? StringFilterFunction<T, R>
     : T extends number
-    ? NumberFilterFunction<T, R>
-    : T extends boolean
-    ? BooleanFilterFunction<T, R>
-    : T extends Date
-    ? DateFilterFunction<T, R>
-    : never;
+      ? NumberFilterFunction<T, R>
+      : T extends boolean
+        ? BooleanFilterFunction<T, R>
+        : T extends Date
+          ? DateFilterFunction<T, R>
+          : never;
 
   type FilterObject<T> = T extends string
     ?
@@ -85,64 +85,64 @@ export namespace RONIN {
             containing?: string;
           }
     : T extends number
-    ?
-        | {
-            /**
-             * `being` instruction can't be used in combination with other
-             * search instructions.
-             */
-            being: number;
-            notBeing: never;
-            greaterThan: never;
-            lessThan: never;
-          }
-        | {
-            /**
-             * `notBeing` instruction can't be used in combination with other
-             * search instructions.
-             */
-            notBeing: number;
-            being: never;
-            greaterThan: never;
-            lessThan: never;
-          }
-        | {
-            being: never;
-            notBeing: never;
-            greaterThan?: number;
-            lessThan?: number;
-          }
-    : T extends Date
-    ?
-        | {
-            /**
-             * `being` instruction can't be used in combination with other
-             * search instructions.
-             */
-            being: Date;
-            notBeing: never;
-            greaterThan: never;
-            lessThan: never;
-          }
-        | {
-            /**
-             * `notBeing` instruction can't be used in combination with other
-             * search instructions.
-             */
-            notBeing: Date;
-            being: never;
-            greaterThan: never;
-            lessThan: never;
-          }
-        | {
-            being: never;
-            notBeing: never;
-            greaterThan?: Date;
-            lessThan?: Date;
-          }
-    : T extends boolean
-    ? { being: boolean }
-    : never;
+      ?
+          | {
+              /**
+               * `being` instruction can't be used in combination with other
+               * search instructions.
+               */
+              being: number;
+              notBeing: never;
+              greaterThan: never;
+              lessThan: never;
+            }
+          | {
+              /**
+               * `notBeing` instruction can't be used in combination with other
+               * search instructions.
+               */
+              notBeing: number;
+              being: never;
+              greaterThan: never;
+              lessThan: never;
+            }
+          | {
+              being: never;
+              notBeing: never;
+              greaterThan?: number;
+              lessThan?: number;
+            }
+      : T extends Date
+        ?
+            | {
+                /**
+                 * `being` instruction can't be used in combination with other
+                 * search instructions.
+                 */
+                being: Date;
+                notBeing: never;
+                greaterThan: never;
+                lessThan: never;
+              }
+            | {
+                /**
+                 * `notBeing` instruction can't be used in combination with other
+                 * search instructions.
+                 */
+                notBeing: Date;
+                being: never;
+                greaterThan: never;
+                lessThan: never;
+              }
+            | {
+                being: never;
+                notBeing: never;
+                greaterThan?: Date;
+                lessThan?: Date;
+              }
+        : T extends boolean
+          ? { being: boolean }
+          : never;
 
   export type WithObject<TSchema, R, P = undefined> = {
     [K in keyof TSchema]: P extends undefined
@@ -197,7 +197,7 @@ export namespace RONIN {
     TReturn,
     TSlug extends SchemaSlugKey,
     TVariant extends string = string,
-    TWith = With<TSchema, TReturn | null>
+    TWith = With<TSchema, TReturn | null>,
   > extends ReducedFunction {
     (filter?: {
       with?: Partial<WithObject<TSchema, TReturn, true>>;
@@ -212,7 +212,7 @@ export namespace RONIN {
     TReturn,
     TSlug extends SchemaSlugKey,
     TVariant extends string = string,
-    TWith = With<TSchema, TReturn>
+    TWith = With<TSchema, TReturn>,
   > extends ReducedFunction {
     (filter?: {
       with?: Partial<WithObject<TSchema, TReturn, true>>;
@@ -256,7 +256,7 @@ export namespace RONIN {
     TSchema,
     TReturn,
     TVariant extends string = string,
-    TWith = With<TSchema, TReturn>
+    TWith = With<TSchema, TReturn>,
   > extends ReducedFunction {
     (filter?: { with?: Partial<WithObject<TSchema, TReturn, true>>; in?: TVariant }): Promise<TReturn>;
     with: TWith;

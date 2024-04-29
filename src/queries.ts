@@ -60,7 +60,7 @@ type Result<T> =
  */
 export const runQueries = async <T>(
   queries: Query[],
-  options: QueryHandlerOptions = {}
+  options: QueryHandlerOptions = {},
 ): Promise<Results<T>> => {
   const hasWriteQuery = queries.some((query) => ['create', 'set', 'drop'].includes(Object.keys(query)[0]));
 
@@ -139,7 +139,7 @@ export const runQueries = async <T>(
             .filter(([, type]) => type === 'time')
             .map(([name]) => name)
         : [];
-        
+
     // Handle single record result.
     if ('record' in result) {
       // This happens if no matching record was found for a singular query,
@@ -197,7 +197,7 @@ export const runQueries = async <T>(
  */
 export const runQueriesWithStorageAndHooks = async <T>(
   queries: Query[],
-  options: QueryHandlerOptions = {}
+  options: QueryHandlerOptions = {},
 ): Promise<Results<T>> => {
   // Extract and process `StorableObject`s, if any are present.
   // `queriesPopulatedWithReferences` are the given `queries`, just that any

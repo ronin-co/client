@@ -71,7 +71,7 @@ export const extractStorableObjects = (queries: Query[]): StorableObject[] =>
  */
 export const uploadStorableObjects = async (
   storableObjects: StorableObject[],
-  options: QueryHandlerOptions = {}
+  options: QueryHandlerOptions = {},
 ): Promise<StoredObject[]> => {
   const fetcher = typeof options?.fetch === 'function' ? options.fetch : fetch;
 
@@ -111,7 +111,7 @@ export const uploadStorableObjects = async (
  */
 export const processStorableObjects = async (
   queries: Query[],
-  upload: (objects: StorableObject[]) => Promise<StoredObject[]> | StoredObject[]
+  upload: (objects: StorableObject[]) => Promise<StoredObject[]> | StoredObject[],
 ): Promise<Query[]> => {
   const objects = extractStorableObjects(queries);
 

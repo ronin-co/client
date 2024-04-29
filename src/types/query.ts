@@ -13902,16 +13902,16 @@ type BindToArray<T, R> = {
 type Results<T> = T extends never | Array<never>
   ? T
   : T extends []
-  ? []
-  : T extends [infer First, ...infer Rest]
-  ? Rest extends unknown
-    ? First extends Promise<infer U>
-      ? [U]
-      : BindToArray<[First, ...Rest], QueryPaginationOptions>
-    : Array<First>
-  : T extends Promise<infer U>
-  ? [U]
-  : [T];
+    ? []
+    : T extends [infer First, ...infer Rest]
+      ? Rest extends unknown
+        ? First extends Promise<infer U>
+          ? [U]
+          : BindToArray<[First, ...Rest], QueryPaginationOptions>
+        : Array<First>
+      : T extends Promise<infer U>
+        ? [U]
+        : [T];
 
 export type {
   CombinedInstructions,

@@ -24,7 +24,7 @@ describe('queries handler', () => {
     import.meta.env.RONIN_TOKEN = undefined;
 
     expect(queriesHandler([], {})).rejects.toThrow(
-      'Please specify the `RONIN_TOKEN` environment variable or set the `token` option when invoking RONIN.'
+      'Please specify the `RONIN_TOKEN` environment variable or set the `token` option when invoking RONIN.',
     );
 
     // Restore the original token.
@@ -134,7 +134,7 @@ describe('queries handler', () => {
             ],
           });
         },
-      }
+      },
     );
 
     expect(requestPromise).rejects.toThrow('Invalid query provided.');

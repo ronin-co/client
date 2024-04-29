@@ -28,8 +28,8 @@ export const queriesHandler = async (queries: Query[], options: QueryHandlerOpti
       typeof process?.env !== 'undefined'
         ? process.env.RONIN_TOKEN
         : typeof import.meta?.env !== 'undefined'
-        ? import.meta.env.RONIN_TOKEN
-        : undefined;
+          ? import.meta.env.RONIN_TOKEN
+          : undefined;
 
     if (!token || token === 'undefined') {
       const message =

@@ -34,7 +34,7 @@ describe('edge runtime', () => {
     global.process = oldProcess;
 
     expect(error?.message).toMatch(
-      'When invoking RONIN from an edge runtime, the `token` option must be set.'
+      'When invoking RONIN from an edge runtime, the `token` option must be set.',
     );
   });
 
@@ -63,7 +63,7 @@ describe('edge runtime', () => {
     global.process = oldProcess;
 
     expect(error?.message).toMatch(
-      `In the case that the "ronin" package receives a value for its \`hooks\` option, it must also receive a value for its \`waitUntil\` option. This requirement only applies when using an edge runtime and ensures that the edge worker continues to execute until all "after" hooks have been executed.`
+      `In the case that the "ronin" package receives a value for its \`hooks\` option, it must also receive a value for its \`waitUntil\` option. This requirement only applies when using an edge runtime and ensures that the edge worker continues to execute until all "after" hooks have been executed.`,
     );
   });
 

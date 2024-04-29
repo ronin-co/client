@@ -93,21 +93,21 @@ describe('factory', () => {
     });
 
     expect(mockResolvedRequestText).toEqual(
-      '{"queries":[{"get":{"spaces":{"with":{"createdAt":{"lessThan":"2024-04-16T15:02:12.710Z"}},"including":["members"],"orderedBy":{"ascending":["createdAt"]}}}}]}'
+      '{"queries":[{"get":{"spaces":{"with":{"createdAt":{"lessThan":"2024-04-16T15:02:12.710Z"}},"including":["members"],"orderedBy":{"ascending":["createdAt"]}}}}]}',
     );
 
     // @ts-expect-error `emailVerified` is undefined due not not having the schema types.
     await drop.accounts.with.emailVerified(false);
 
     expect(mockResolvedRequestText).toEqual(
-      '{"queries":[{"drop":{"accounts":{"with":{"emailVerified":false}}}}]}'
+      '{"queries":[{"drop":{"accounts":{"with":{"emailVerified":false}}}}]}',
     );
 
     // @ts-expect-error `greaterThan` is undefined due not not having the schema types.
     await count.spaces.with.membersCount.greaterThan(10);
 
     expect(mockResolvedRequestText).toEqual(
-      '{"queries":[{"count":{"spaces":{"with":{"membersCount":{"greaterThan":10}}}}}]}'
+      '{"queries":[{"count":{"spaces":{"with":{"membersCount":{"greaterThan":10}}}}}]}',
     );
 
     await set.members({
@@ -124,7 +124,7 @@ describe('factory', () => {
     });
 
     expect(mockResolvedRequestText).toEqual(
-      '{"queries":[{"set":{"members":{"with":{"createdAt":{"lessThan":"2024-04-16T15:02:12.710Z"},"paid":true},"to":{"status":"active","activeFrom":"2024-04-16T15:02:12.710Z"}}}}]}'
+      '{"queries":[{"set":{"members":{"with":{"createdAt":{"lessThan":"2024-04-16T15:02:12.710Z"},"paid":true},"to":{"status":"active","activeFrom":"2024-04-16T15:02:12.710Z"}}}}]}',
     );
   });
 
@@ -152,7 +152,7 @@ describe('factory', () => {
     ]) as Parameters<typeof batch>[0]);
 
     expect(mockResolvedRequestText).toEqual(
-      '{"queries":[{"get":{"accounts":{}}},{"get":{"members":{"with":{"handle":{"startingWith":"ronin"}}}}},{"get":{"spaces":{"with":{"createdAt":{"lessThan":"2024-04-16T15:02:12.710Z"}},"including":["members"],"orderedBy":{"ascending":["createdAt"]}}}},{"get":{"members":{"limitedTo":100}}},{"get":{"spaces":{"orderedBy":{"descending":["handle"]}}}},{"get":{"member":{"with":{"id":"123"}}}}]}'
+      '{"queries":[{"get":{"accounts":{}}},{"get":{"members":{"with":{"handle":{"startingWith":"ronin"}}}}},{"get":{"spaces":{"with":{"createdAt":{"lessThan":"2024-04-16T15:02:12.710Z"}},"including":["members"],"orderedBy":{"ascending":["createdAt"]}}}},{"get":{"members":{"limitedTo":100}}},{"get":{"spaces":{"orderedBy":{"descending":["handle"]}}}},{"get":{"member":{"with":{"id":"123"}}}}]}',
     );
   });
 
@@ -183,7 +183,7 @@ describe('factory', () => {
     ]) as Parameters<typeof batch>[0]);
 
     expect(mockResolvedRequestText).toEqual(
-      '{"queries":[{"set":{"members":{"with":{"createdAt":{"lessThan":"2024-04-16T15:02:12.710Z"},"paid":true},"to":{"status":"active","activeFrom":"2024-04-16T15:02:12.710Z"}}}},{"get":{"accounts":{}}},{"count":{"spaces":{"with":{"membersCount":{"notBeing":0}}}}},{"drop":{"accounts":{"with":{"emailVerified":false}}}},{"create":{"spaces":{"with":{"handle":"test-space","members":["member1","member2"]}}}}]}'
+      '{"queries":[{"set":{"members":{"with":{"createdAt":{"lessThan":"2024-04-16T15:02:12.710Z"},"paid":true},"to":{"status":"active","activeFrom":"2024-04-16T15:02:12.710Z"}}}},{"get":{"accounts":{}}},{"count":{"spaces":{"with":{"membersCount":{"notBeing":0}}}}},{"drop":{"accounts":{"with":{"emailVerified":false}}}},{"create":{"spaces":{"with":{"handle":"test-space","members":["member1","member2"]}}}}]}',
     );
   });
 
@@ -192,7 +192,7 @@ describe('factory', () => {
     await get.accounts.with.handle.startingWith('a');
 
     expect(mockResolvedRequestText).toEqual(
-      '{"queries":[{"get":{"accounts":{"with":{"handle":{"startingWith":"a"}}}}}]}'
+      '{"queries":[{"get":{"accounts":{"with":{"handle":{"startingWith":"a"}}}}}]}',
     );
   });
 
@@ -214,21 +214,21 @@ describe('factory', () => {
     });
 
     expect(mockResolvedRequestText).toEqual(
-      '{"queries":[{"get":{"spaces":{"with":{"createdAt":{"lessThan":"2024-04-16T15:02:12.710Z"}},"including":["members"],"orderedBy":{"ascending":["createdAt"]}}}}]}'
+      '{"queries":[{"get":{"spaces":{"with":{"createdAt":{"lessThan":"2024-04-16T15:02:12.710Z"}},"including":["members"],"orderedBy":{"ascending":["createdAt"]}}}}]}',
     );
 
     // @ts-expect-error `emailVerified` is undefined due not not having the schema types.
     await drop.accounts.with.emailVerified(false);
 
     expect(mockResolvedRequestText).toEqual(
-      '{"queries":[{"drop":{"accounts":{"with":{"emailVerified":false}}}}]}'
+      '{"queries":[{"drop":{"accounts":{"with":{"emailVerified":false}}}}]}',
     );
 
     // @ts-expect-error `greaterThan` is undefined due not not having the schema types.
     await count.spaces.with.membersCount.greaterThan(10);
 
     expect(mockResolvedRequestText).toEqual(
-      '{"queries":[{"count":{"spaces":{"with":{"membersCount":{"greaterThan":10}}}}}]}'
+      '{"queries":[{"count":{"spaces":{"with":{"membersCount":{"greaterThan":10}}}}}]}',
     );
 
     await set.members({
@@ -245,7 +245,7 @@ describe('factory', () => {
     });
 
     expect(mockResolvedRequestText).toEqual(
-      '{"queries":[{"set":{"members":{"with":{"createdAt":{"lessThan":"2024-04-16T15:02:12.710Z"},"paid":true},"to":{"status":"active","activeFrom":"2024-04-16T15:02:12.710Z"}}}}]}'
+      '{"queries":[{"set":{"members":{"with":{"createdAt":{"lessThan":"2024-04-16T15:02:12.710Z"},"paid":true},"to":{"status":"active","activeFrom":"2024-04-16T15:02:12.710Z"}}}}]}',
     );
   });
 
@@ -276,7 +276,7 @@ describe('factory', () => {
     ]) as Parameters<typeof batch>[0]);
 
     expect(mockResolvedRequestText).toEqual(
-      '{"queries":[{"set":{"members":{"with":{"createdAt":{"lessThan":"2024-04-16T15:02:12.710Z"},"paid":true},"to":{"status":"active","activeFrom":"2024-04-16T15:02:12.710Z"}}}},{"get":{"accounts":{}}},{"count":{"spaces":{"with":{"membersCount":{"notBeing":0}}}}},{"drop":{"accounts":{"with":{"emailVerified":false}}}},{"create":{"spaces":{"with":{"handle":"test-space","members":["member1","member2"]}}}}]}'
+      '{"queries":[{"set":{"members":{"with":{"createdAt":{"lessThan":"2024-04-16T15:02:12.710Z"},"paid":true},"to":{"status":"active","activeFrom":"2024-04-16T15:02:12.710Z"}}}},{"get":{"accounts":{}}},{"count":{"spaces":{"with":{"membersCount":{"notBeing":0}}}}},{"drop":{"accounts":{"with":{"emailVerified":false}}}},{"create":{"spaces":{"with":{"handle":"test-space","members":["member1","member2"]}}}}]}',
     );
   });
 
@@ -357,12 +357,12 @@ describe('factory', () => {
     const body = await (mockResolvedStorageRequest as Request | undefined)?.text();
 
     expect((mockResolvedStorageRequest as Request | undefined)?.headers.get('Content-Type')).toBe(
-      'image/jpeg'
+      'image/jpeg',
     );
     expect(body).toBe(await file.text());
 
     expect(mockResolvedRequestText).toEqual(
-      '{"queries":[{"create":{"account":{"with":{"avatar":{"key":"test-key","src":"https://media.ronin.co/test-key","meta":{"height":100,"width":100,"size":100,"type":"image/jpeg"},"placeholder":{"base64":""}}}}}}]}'
+      '{"queries":[{"create":{"account":{"with":{"avatar":{"key":"test-key","src":"https://media.ronin.co/test-key","meta":{"height":100,"width":100,"size":100,"type":"image/jpeg"},"placeholder":{"base64":""}}}}}}]}',
     );
   });
 

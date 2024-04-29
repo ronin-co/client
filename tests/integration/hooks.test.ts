@@ -86,7 +86,7 @@ describe('hooks', () => {
     // Make sure the email address of all resolved accounts ends with the
     // `@ronin.co` domain name.
     expect(mockResolvedRequestText).toEqual(
-      '{"queries":[{"get":{"accounts":{"with":{"email":{"endingWith":"@ronin.co"}}}}}]}'
+      '{"queries":[{"get":{"accounts":{"with":{"email":{"endingWith":"@ronin.co"}}}}}]}',
     );
   });
 

@@ -52,7 +52,7 @@ const getPathSegments = (path: string): string[] => {
 const setPropertyViaPathSegments = (
   obj: object,
   pathSegments: string[],
-  value: any | ((value: any) => any)
+  value: any | ((value: any) => any),
 ) => {
   let current = obj as Record<string, object>;
 
