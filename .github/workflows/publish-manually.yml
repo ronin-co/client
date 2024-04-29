@@ -34,7 +34,7 @@ jobs:
       # Needed only for bumping package version and publishing npm packages.
       - name: Set up Node.js
         uses: actions/setup-node@v3.5.1
-      - run: echo '//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN_READ_AND_WRITE }} > ~/.npmrc
+      - run: echo '//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN_READ_AND_WRITE }}' > ~/.npmrc
 
       - name: Set up Bun
         uses: oven-sh/setup-bun@v1
