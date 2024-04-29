@@ -51,7 +51,9 @@ export namespace RONIN {
         ? BooleanFilterFunction<T, R>
         : T extends Date
           ? DateFilterFunction<T, R>
-          : never;
+          : T extends Record<string, any>
+            ? { [K in keyof T]: FilterFunction<T[K], R> }
+            : never;
 
   type FilterObject<T> = T extends string
     ?
@@ -142,7 +144,9 @@ export namespace RONIN {
               }
         : T extends boolean
           ? { being: boolean }
-          : never;
+          : T extends Record<string, any>
+            ? { [K in keyof T]: T[K] | Partial<FilterObject<T[K]>> }
+            : never;
 
   export type WithObject<TSchema, R, P = undefined> = {
     [K in keyof TSchema]: P extends undefined
