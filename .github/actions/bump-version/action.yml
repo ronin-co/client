@@ -26,6 +26,13 @@ runs:
         echo "VERSION_TAG=$(echo $BRANCH_NAME)-experimental" >> $GITHUB_ENV
         echo "VERSION_TAG=$(echo $VERSION_TAG)" >> $GITHUB_OUTPUT
 
+    - name: Configure Git
+      shell: bash
+      run: |
+        # See where these config values come from at https://stackoverflow.com/a/74071223
+        git config --global user.name "ronin-app[bot]"
+        git config --global user.email 135042755+ronin-app[bot]@users.noreply.github.com
+
     - name: Bump ${{ inputs.package_dir }}
       shell: bash
       run: |
