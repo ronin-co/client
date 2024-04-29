@@ -152,5 +152,7 @@ export const toDashCase = (string?: string | null): string => {
  * @param timeFields - An array of property keys for the time fields.
  */
 export const formatTimeFields = (record: object, timeFields: string[]) => {
-  timeFields.forEach((field) => setProperty(record, field, (value: string) => new Date(value)));
+  timeFields.forEach((field) =>
+    setProperty(record, field, (value: string | null) => (value !== null ? new Date(value) : null)),
+  );
 };
