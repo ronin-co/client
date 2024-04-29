@@ -43,11 +43,11 @@ runs:
         # Check if the experimental version already exists
         if ! echo "$ALL_VERSIONS" | grep -q "$REGEX"; then
           # If not, create it
-          npm version prerelease --preid=$VERSION_TAG --no-git-tag-version
+          npm version prerelease --preid=$VERSION_TAG
         else
           # Otherwise up it
           LATEST_VERSION=$(echo "$ALL_VERSIONS" | grep "$REGEX" | tail -1)
-          npm version $(npx semver $LATEST_VERSION -i prerelease --preid="$VERSION_TAG") --no-git-tag-version
+          npm version $(npx semver $LATEST_VERSION -i prerelease --preid="$VERSION_TAG")
         fi
 
     - name: Publish to npm
