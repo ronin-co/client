@@ -6,6 +6,7 @@
   "main": "dist/index.cjs",
   "module": "dist/index.js",
   "types": "dist/index.d.ts",
+  "description": "Access the RONIN data platform via TypeScript.",
   "scripts": {
     "dev": "bun run build -- --watch",
     "build": "bunchee",
