@@ -1,5 +1,5 @@
 {
-  "ignorePatterns": ["*.json", "*.md", "*.patch", "*.toml", "*.lockb", "*.gitignore"],
+  "ignorePatterns": ["*.json", "*.md", "*.patch", "*.toml", "*.lockb", "*.gitignore", "*.mp4"],
   "parser": "@typescript-eslint/parser",
   "env": {
     "node": true
