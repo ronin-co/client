@@ -33,7 +33,7 @@ export type StoredObject = {
     height: number;
     size: number;
     type: string;
-  };
+  } | null;
 };
 
 export type StorableObjectValue = File | ReadableStream | Buffer;
