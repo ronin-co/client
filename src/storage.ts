@@ -76,7 +76,7 @@ export const uploadStorableObjects = async (
   const fetcher = typeof options?.fetch === 'function' ? options.fetch : fetch;
 
   const requests: Promise<StoredObject>[] = storableObjects.map(async ({ value, contentType }) => {
-    const request = new Request('https://data.ronin.co/writable', {
+    const request = new Request('https://storage.ronin.co/', {
       method: 'PUT',
       body: value,
       headers: { 'Content-Type': contentType, Authorization: `Bearer ${options.token}` },
