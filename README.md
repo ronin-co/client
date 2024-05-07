@@ -49,7 +49,7 @@ Once that's done, link the package to make it available to all of your local pro
 bun link
 ```
 
-Inside your project, you can then run the following command, which is like `bun add ronin` or `npm install ronin`, except that it doesn't install `ronin` from npm, but instead uses your local clone of the package:
+Inside your project, you can then run the following command, which is similar to `bun add ronin` or `npm install ronin`, except that it doesn't install `ronin` from npm, but instead uses your local clone of the package:
 
 ```bash
 bun link ronin
