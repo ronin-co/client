@@ -380,7 +380,10 @@ describe('factory', () => {
           const responseBody: StoredObject = {
             key: 'test-key',
             src: 'https://storage.ronin.co/test-key',
-            meta: null,
+            meta: {
+              size: 100,
+              type: 'video/mp4',
+            },
             placeholder: null,
           };
 
@@ -405,7 +408,7 @@ describe('factory', () => {
     expect(body).toBe(await file.text());
 
     expect(mockResolvedRequestText).toEqual(
-      '{"queries":[{"create":{"account":{"with":{"video":{"key":"test-key","src":"https://storage.ronin.co/test-key","meta":null,"placeholder":null}}}}}]}',
+      '{"queries":[{"create":{"account":{"with":{"video":{"key":"test-key","src":"https://storage.ronin.co/test-key","meta":{"size":100,"type":"video/mp4"},"placeholder":null}}}}}]}',
     );
   });
 
