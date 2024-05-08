@@ -28,12 +28,17 @@ export type StoredObject = {
   placeholder: {
     base64: string | null;
   } | null;
-  meta: {
-    width: number;
-    height: number;
-    size: number;
-    type: string;
-  };
+  meta:
+    | {
+        size: number;
+        type: string;
+      }
+    | {
+        size: number;
+        type: string;
+        width: number;
+        height: number;
+      };
 };
 
 export type StorableObjectValue = File | ReadableStream | Buffer;

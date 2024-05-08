@@ -9,7 +9,7 @@ const mockFetch = mock(async (request) => {
   mockRequestResolvedValue = request;
   mockResolvedRequestText = await request.text();
 
-  if (request.url === 'https://data.ronin.co/writable') {
+  if (request.url === 'https://storage.ronin.co/') {
     return Response.json({
       results: [],
     });
@@ -324,12 +324,12 @@ describe('factory', () => {
 
     const factory = createSyntaxFactory({
       fetch: async (request) => {
-        if ((request as Request).url === 'https://data.ronin.co/writable') {
+        if ((request as Request).url === 'https://storage.ronin.co/') {
           mockResolvedStorageRequest = request as Request;
 
           const responseBody: StoredObject = {
             key: 'test-key',
-            src: 'https://media.ronin.co/test-key',
+            src: 'https://storage.ronin.co/test-key',
             meta: {
               height: 100,
               width: 100,
@@ -362,14 +362,60 @@ describe('factory', () => {
     expect(body).toBe(await file.text());
 
     expect(mockResolvedRequestText).toEqual(
-      '{"queries":[{"create":{"account":{"with":{"avatar":{"key":"test-key","src":"https://media.ronin.co/test-key","meta":{"height":100,"width":100,"size":100,"type":"image/jpeg"},"placeholder":{"base64":""}}}}}}]}',
+      '{"queries":[{"create":{"account":{"with":{"avatar":{"key":"test-key","src":"https://storage.ronin.co/test-key","meta":{"height":100,"width":100,"size":100,"type":"image/jpeg"},"placeholder":{"base64":""}}}}}}]}',
+    );
+  });
+
+  test('upload a video', async () => {
+    const bunFile = Bun.file('tests/assets/example.mp4');
+    const file = new File([bunFile], 'example.mp4', { type: 'video/mp4' });
+
+    let mockResolvedStorageRequest: Request | undefined = undefined;
+
+    const factory = createSyntaxFactory({
+      fetch: async (request) => {
+        if ((request as Request).url === 'https://storage.ronin.co/') {
+          mockResolvedStorageRequest = request as Request;
+
+          const responseBody: StoredObject = {
+            key: 'test-key',
+            src: 'https://storage.ronin.co/test-key',
+            meta: {
+              size: 100,
+              type: 'video/mp4',
+            },
+            placeholder: null,
+          };
+
+          return Response.json(responseBody);
+        }
+
+        return mockFetch(request);
+      },
+    });
+
+    await factory.create.account({
+      with: {
+        video: file,
+      },
+    });
+
+    const body = await (mockResolvedStorageRequest as Request | undefined)?.text();
+
+    expect((mockResolvedStorageRequest as Request | undefined)?.headers.get('Content-Type')).toBe(
+      'video/mp4',
+    );
+    expect(body).toBe(await file.text());
+
+    expect(mockResolvedRequestText).toEqual(
+      '{"queries":[{"create":{"account":{"with":{"video":{"key":"test-key","src":"https://storage.ronin.co/test-key","meta":{"size":100,"type":"video/mp4"},"placeholder":null}}}}}]}',
     );
   });
 
   test('handle storage service error', async () => {
     const factory = createSyntaxFactory({
       fetch: async (request) => {
-        if ((request as Request).url === 'https://data.ronin.co/writable') {
+        if ((request as Request).url === 'https://storage.ronin.co/') {
           return Response.error();
         }
         return mockFetch(request);
