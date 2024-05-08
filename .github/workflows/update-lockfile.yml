@@ -28,7 +28,7 @@ jobs:
       - name: Install Dependencies
         run: bun install
 
-      - name: Commit changes and push
+      - name: Commit Changes and Push
         run: |
           # See where these config values come from at https://stackoverflow.com/a/74071223
           git config --global user.name "ronin-app[bot]"
