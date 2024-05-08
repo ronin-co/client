@@ -1,23 +1,16 @@
-name: Dependabot Auto-Merge
-on: pull_request
+name: Update
+
+on:
+  pull_request:
+    branches:
+      - main
 
 permissions:
   contents: write
   pull-requests: write
 
 jobs:
-  dependabot:
-    runs-on: ubuntu-latest
+  update:
     if: github.actor == 'dependabot[bot]'
-    steps:
-      - name: Dependabot metadata
-        id: metadata
-        uses: dependabot/fetch-metadata@v1
-        with:
-          github-token: '${{ github.token }}'
-
-      - name: Enable auto-merge for Dependabot PRs
-        run: gh pr merge --auto --squash "$PR_URL"
-        env:
-          PR_URL: ${{ github.event.pull_request.html_url }}
-          GITHUB_TOKEN: ${{ github.token }}
+    uses: ronin-co/github-actions/.github/workflows/update-dependabot-pr.yml@main
+    secrets: inherit
