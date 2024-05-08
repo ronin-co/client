@@ -35,7 +35,7 @@ jobs:
 
       - name: Bump `ronin`
         id: bump-ronin
-        uses: ./.github/actions/bump-version
+        uses: ronin-co/github-actions/.github/actions/bump-version@main
 
       - name: Comment on PR
         uses: thollander/actions-comment-pull-request@v2
