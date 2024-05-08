@@ -1,23 +1,64 @@
-name: Dependabot Auto-Merge
-on: pull_request
+name: Update
+
+on:
+  pull_request:
+    branches:
+      - main
 
 permissions:
   contents: write
   pull-requests: write
 
 jobs:
-  dependabot:
+  merge:
+    name: Auto-Merge
     runs-on: ubuntu-latest
     if: github.actor == 'dependabot[bot]'
     steps:
-      - name: Dependabot metadata
-        id: metadata
-        uses: dependabot/fetch-metadata@v1
-        with:
-          github-token: '${{ github.token }}'
-
-      - name: Enable auto-merge for Dependabot PRs
+      - name: Enable Auto-Merge
         run: gh pr merge --auto --squash "$PR_URL"
         env:
           PR_URL: ${{ github.event.pull_request.html_url }}
           GITHUB_TOKEN: ${{ github.token }}
+
+  lockfile:
+    name: Lockfile Bump
+    runs-on: ubuntu-latest
+    if: github.actor == 'dependabot[bot]'
+    steps:
+      - name: Code Checkout
+        uses: actions/checkout@v3.1.0
+
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: 1.1.4
+
+      # Cache the local `node_modules` directory.
+      - name: Restore npm Cache
+        id: cache-node-modules
+        uses: actions/cache@v3.0.11
+        env:
+          cache-name: cache-node-modules
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('patches/**') }}-${{ hashFiles('bun.lockb') }}
+          restore-keys: |
+            ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('patches/**') }}-
+            ${{ runner.os }}-build-${{ hashFiles('patches/**') }}-
+            ${{ runner.os }}-${{ hashFiles('patches/**') }}-
+
+      - name: Install Dependencies
+        run: bun install
+
+      - name: Commit Changes and Push
+        run: |
+          # More details at https://stackoverflow.com/a/74071223
+          git config --global user.name "ronin-app[bot]"
+          git config --global user.email 135042755+ronin-app[bot]@users.noreply.github.com
+          # Commit changes
+          git fetch
+          git checkout ${GITHUB_HEAD_REF}
+          git pull origin ${GITHUB_HEAD_REF}
+          git commit -a -m 'Bump `bun.lockb`' --no-verify --allow-empty
+          git push origin ${GITHUB_HEAD_REF}
