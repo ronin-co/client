@@ -34,6 +34,6 @@ jobs:
           git config --global user.name "ronin-app[bot]"
           git config --global user.email 135042755+ronin-app[bot]@users.noreply.github.com
           # Commit changes
-          git checkout ${github.event.pull_request.head.ref}
+          git checkout ${{ github.event.pull_request.head.ref }}
           git commit -a -m 'Bump `bun.lockb`' --no-verify
-          git push origin ${github.event.pull_request.head.ref}
+          git push origin ${{ github.event.pull_request.head.ref }}
