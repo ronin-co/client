@@ -26,8 +26,17 @@ jobs:
     runs-on: ubuntu-latest
     if: github.actor == 'dependabot[bot]'
     steps:
+      - name: Generate GitHub App Token
+        id: generate_token
+        uses: tibdex/github-app-token@v1
+        with:
+          app_id: ${{ secrets.ORG_GH_RONIN_APP_ID }}
+          private_key: ${{ secrets.ORG_GH_RONIN_APP_PRIVATE_KEY }}
+
       - name: Code Checkout
         uses: actions/checkout@v3.1.0
+        with:
+          token: ${{ steps.generate_token.outputs.token }}
 
       - name: Set up Bun
         uses: oven-sh/setup-bun@v1
@@ -49,7 +58,10 @@ jobs:
             ${{ runner.os }}-${{ hashFiles('patches/**') }}-
 
       - name: Install Dependencies
-        run: bun install
+        env:
+          NPM_TOKEN: ${{ secrets.ORG_NPM_TOKEN_READ_ONLY }}
+          NPM_TOKEN_RONIN: ${{ secrets.ORG_RONIN_PACKAGE_REGISTRY_TOKEN }}
+        run: bun install --config="bunfig.ci.toml"
 
       - name: Commit Changes and Push
         run: |
