@@ -48,10 +48,7 @@ export const extractStorableObjects = (queries: Query[]): StorableObject[] =>
                     schema,
                     field: name,
                     value,
-                    contentType:
-                      typeof File === 'function' && value instanceof File
-                        ? value.type
-                        : 'application/octet-stream',
+                    contentType: 'type' in value ? value.type : 'application/octet-stream',
                   },
                 ];
               }, [] as any[]),
