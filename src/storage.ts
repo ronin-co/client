@@ -86,7 +86,7 @@ export const uploadStorableObjects = async (
   });
 
   return Promise.all(requests).catch((err) => {
-    const message = `An error occurred while uploading the binary objects included in the provided queries: ${err}`;
+    const message = `An error occurred while uploading the binary objects included in the provided queries. ${err}`;
     throw new Error(message);
   });
 };

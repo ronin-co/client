@@ -416,7 +416,9 @@ describe('factory', () => {
     const factory = createSyntaxFactory({
       fetch: async (request) => {
         if ((request as Request).url === 'https://storage.ronin.co/') {
-          return Response.error();
+          return new Response('Details here', {
+            status: 403,
+          });
         }
         return mockFetch(request);
       },
@@ -428,7 +430,9 @@ describe('factory', () => {
       },
     });
 
-    expect(promise).rejects.toThrow('An unexpected error occurred while uploading the object.');
+    expect(promise).rejects.toThrow(
+      'An error occurred while uploading the binary objects included in the provided queries. Error: Details here',
+    );
   });
 
   test('format time fields', async () => {
