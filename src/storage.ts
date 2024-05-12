@@ -81,9 +81,7 @@ export const uploadStorableObjects = async (
     });
 
     const response = await fetcher(request);
-
-    if (!response.ok) throw new Error('An unexpected error occurred while uploading the object.');
-
+    if (!response.ok) throw new Error(await response.text());
     return response.json() as Promise<StoredObject>;
   });
 
