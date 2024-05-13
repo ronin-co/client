@@ -62,9 +62,9 @@
     "node": ">=18.17.0"
   },
   "devDependencies": {
-    "@types/bun": "1.1.1",
-    "@typescript-eslint/eslint-plugin": "7.8.0",
-    "@typescript-eslint/parser": "7.8.0",
+    "@types/bun": "1.1.2",
+    "@typescript-eslint/eslint-plugin": "7.9.0",
+    "@typescript-eslint/parser": "7.9.0",
     "bunchee": "5.1.5",
     "eslint": "8.57.0",
     "eslint-config-prettier": "9.1.0",
