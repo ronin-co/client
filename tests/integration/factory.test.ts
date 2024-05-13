@@ -318,7 +318,7 @@ describe('factory', () => {
 
   test('upload image', async () => {
     const bunFile = Bun.file('tests/assets/example.jpeg');
-    const file = new File([bunFile], 'example.jpeg', { type: 'image/jpeg' });
+    const file = new File([Buffer.from(await bunFile.arrayBuffer())], 'example.jpeg', { type: 'image/jpeg' });
 
     let mockResolvedStorageRequest: Request | undefined = undefined;
 
@@ -329,6 +329,7 @@ describe('factory', () => {
 
           const responseBody: StoredObject = {
             key: 'test-key',
+            name: 'example.jpeg',
             src: 'https://storage.ronin.co/test-key',
             meta: {
               height: 100,
@@ -359,16 +360,20 @@ describe('factory', () => {
     expect((mockResolvedStorageRequest as Request | undefined)?.headers.get('Content-Type')).toBe(
       'image/jpeg',
     );
+
+    expect((mockResolvedStorageRequest as Request | undefined)?.headers.get('Content-Disposition')).toBe(
+      'form-data; filename="example.jpeg"',
+    );
     expect(body).toBe(await file.text());
 
     expect(mockResolvedRequestText).toEqual(
-      '{"queries":[{"create":{"account":{"with":{"avatar":{"key":"test-key","src":"https://storage.ronin.co/test-key","meta":{"height":100,"width":100,"size":100,"type":"image/jpeg"},"placeholder":{"base64":""}}}}}}]}',
+      '{"queries":[{"create":{"account":{"with":{"avatar":{"key":"test-key","name":"example.jpeg","src":"https://storage.ronin.co/test-key","meta":{"height":100,"width":100,"size":100,"type":"image/jpeg"},"placeholder":{"base64":""}}}}}}]}',
     );
   });
 
   test('upload a video', async () => {
     const bunFile = Bun.file('tests/assets/example.mp4');
-    const file = new File([bunFile], 'example.mp4', { type: 'video/mp4' });
+    const file = new File([Buffer.from(await bunFile.arrayBuffer())], 'example.mp4', { type: 'video/mp4' });
 
     let mockResolvedStorageRequest: Request | undefined = undefined;
 
@@ -379,6 +384,7 @@ describe('factory', () => {
 
           const responseBody: StoredObject = {
             key: 'test-key',
+            name: 'example.mp4',
             src: 'https://storage.ronin.co/test-key',
             meta: {
               size: 100,
@@ -405,10 +411,13 @@ describe('factory', () => {
     expect((mockResolvedStorageRequest as Request | undefined)?.headers.get('Content-Type')).toBe(
       'video/mp4',
     );
+    expect((mockResolvedStorageRequest as Request | undefined)?.headers.get('Content-Disposition')).toBe(
+      'form-data; filename="example.mp4"',
+    );
     expect(body).toBe(await file.text());
 
     expect(mockResolvedRequestText).toEqual(
-      '{"queries":[{"create":{"account":{"with":{"video":{"key":"test-key","src":"https://storage.ronin.co/test-key","meta":{"size":100,"type":"video/mp4"},"placeholder":null}}}}}]}',
+      '{"queries":[{"create":{"account":{"with":{"video":{"key":"test-key","name":"example.mp4","src":"https://storage.ronin.co/test-key","meta":{"size":100,"type":"video/mp4"},"placeholder":null}}}}}]}',
     );
   });
 
