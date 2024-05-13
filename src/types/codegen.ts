@@ -1,5 +1,4 @@
-import type { StorableObjectValue } from 'src/types/storage';
-
+import type { StorableObjectValue, StoredObject } from './/storage';
 import type { ReducedFunction, ReplaceRecursively } from './utils';
 
 export namespace RONIN {
@@ -19,24 +18,7 @@ export namespace RONIN {
     updatedBy: Record<string, any>;
   }
 
-  export interface Blob {
-    key: string;
-    meta:
-      | {
-          size: number;
-          type: string;
-        }
-      | {
-          size: number;
-          type: string;
-          width: number;
-          height: number;
-        };
-    placeholder: {
-      base64: string;
-    } | null;
-    src: string;
-  }
+  export interface Blob extends StoredObject {}
 
   interface StringFilterFunction<T, R> extends ReducedFunction {
     (value: T): Promise<R>;
