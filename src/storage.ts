@@ -88,7 +88,7 @@ export const uploadStorableObjects = async (
     }
 
     if (name) {
-      headers.set('Content-Disposition', ` form-data; filename="${name}"`);
+      headers.set('Content-Disposition', `form-data; filename="${name}"`);
     }
 
     const request = new Request('https://storage.ronin.co/', {
