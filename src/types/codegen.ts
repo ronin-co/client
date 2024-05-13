@@ -1,4 +1,6 @@
-import type { ReducedFunction } from './utils';
+import type { StorableObjectValue } from 'src/types/storage';
+
+import type { ReducedFunction, ReplaceRecursively } from './utils';
 
 export namespace RONIN {
   export interface RoninRecord<TId extends string = string> {
@@ -15,6 +17,25 @@ export namespace RONIN {
     status: 'draft' | 'published' | 'archived';
     updatedAt: Date;
     updatedBy: Record<string, any>;
+  }
+
+  export interface Blob {
+    key: string;
+    meta:
+      | {
+          size: number;
+          type: string;
+        }
+      | {
+          size: number;
+          type: string;
+          width: number;
+          height: number;
+        };
+    placeholder: {
+      base64: string;
+    } | null;
+    src: string;
   }
 
   interface StringFilterFunction<T, R> extends ReducedFunction {
@@ -239,14 +260,17 @@ export namespace RONIN {
   export interface ISetter<TSchema, TReturn, TVariant extends string = string> extends ReducedFunction {
     (filter: {
       with: Partial<WithObject<TSchema, TReturn, true>>;
-      to: Partial<TSchema>;
+      to: Partial<ReplaceRecursively<TSchema, RONIN.Blob, StorableObjectValue>>;
       in?: TVariant;
     }): Promise<TReturn>;
   }
 
   export interface ICreator<TSchema, TReturn, TVariant extends string = string> extends ReducedFunction {
-    (filter?: { with: Partial<TSchema>; in?: TVariant }): Promise<TReturn>;
-    with: (values: Partial<TSchema>) => Promise<TReturn>;
+    (filter?: {
+      with: Partial<ReplaceRecursively<TSchema, RONIN.Blob, StorableObjectValue>>;
+      in?: TVariant;
+    }): Promise<TReturn>;
+    with: (values: Partial<ReplaceRecursively<TSchema, RONIN.Blob, StorableObjectValue>>) => Promise<TReturn>;
   }
 
   export interface ICounter<TSchema, TVariant extends string = string, TWith = With<TSchema, number>>

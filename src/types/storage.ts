@@ -41,4 +41,4 @@ export type StoredObject = {
       };
 };
 
-export type StorableObjectValue = File | ReadableStream | Buffer;
+export type StorableObjectValue = File | ReadableStream | Buffer | ArrayBuffer | Blob;
