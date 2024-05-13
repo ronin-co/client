@@ -83,7 +83,7 @@ export const uploadStorableObjects = async (
       headers.set('Content-Type', contentType);
     }
 
-    const request = new Request('http://localhost:5001/', {
+    const request = new Request('https://storage.ronin.co/', {
       method: 'PUT',
       body: value,
       headers,
