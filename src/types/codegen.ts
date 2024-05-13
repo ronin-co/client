@@ -1,4 +1,4 @@
-import type { StorableObjectValue, StoredObject } from './/storage';
+import type { StorableObjectValue, StoredObject } from './storage';
 import type { ReducedFunction, ReplaceRecursively } from './utils';
 
 export namespace RONIN {
