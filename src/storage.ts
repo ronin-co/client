@@ -38,19 +38,21 @@ export const extractStorableObjects = (queries: Query[]): StorableObject[] =>
 
                 if (!isStorableObject) return references;
 
-                return [
-                  ...references,
-                  {
-                    query: {
-                      index: queryIndex,
-                      type: queryType,
-                    },
-                    schema,
-                    field: name,
-                    value,
-                    contentType: 'type' in value ? value.type : 'application/octet-stream',
+                const storarableObject = {
+                  query: {
+                    index: queryIndex,
+                    type: queryType,
                   },
-                ];
+                  schema,
+                  field: name,
+                  value,
+                } as StorableObject;
+
+                if ('type' in value) {
+                  storarableObject.contentType = value.type;
+                }
+
+                return [...references, storarableObject];
               }, [] as any[]),
             ];
           }, [] as StorableObject[]),
@@ -74,10 +76,17 @@ export const uploadStorableObjects = async (
   const fetcher = typeof options?.fetch === 'function' ? options.fetch : fetch;
 
   const requests: Promise<StoredObject>[] = storableObjects.map(async ({ value, contentType }) => {
-    const request = new Request('https://storage.ronin.co/', {
+    const headers = new Headers();
+    headers.set('Authorization', `Bearer ${options.token}`);
+
+    if (contentType) {
+      headers.set('Content-Type', contentType);
+    }
+
+    const request = new Request('http://localhost:5001/', {
       method: 'PUT',
       body: value,
-      headers: { 'Content-Type': contentType, Authorization: `Bearer ${options.token}` },
+      headers,
     });
 
     const response = await fetcher(request);
