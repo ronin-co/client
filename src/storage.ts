@@ -52,6 +52,10 @@ export const extractStorableObjects = (queries: Query[]): StorableObject[] =>
                   storarableObject.contentType = value.type;
                 }
 
+                if ('name' in value) {
+                  storarableObject.name = value.name as string;
+                }
+
                 return [...references, storarableObject];
               }, [] as any[]),
             ];
@@ -75,12 +79,16 @@ export const uploadStorableObjects = async (
 ): Promise<StoredObject[]> => {
   const fetcher = typeof options?.fetch === 'function' ? options.fetch : fetch;
 
-  const requests: Promise<StoredObject>[] = storableObjects.map(async ({ value, contentType }) => {
+  const requests: Promise<StoredObject>[] = storableObjects.map(async ({ name, value, contentType }) => {
     const headers = new Headers();
     headers.set('Authorization', `Bearer ${options.token}`);
 
     if (contentType) {
       headers.set('Content-Type', contentType);
+    }
+
+    if (name) {
+      headers.set('Content-Disposition', `filename="${name}"`);
     }
 
     const request = new Request('https://storage.ronin.co/', {

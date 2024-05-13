@@ -1,30 +1,7 @@
-export type StorableObject = {
-  query: {
-    index: number;
-    type: 'set' | 'create';
-  };
-  schema: string;
-  field: string;
-  value?: any;
-  contentType: string;
-  reference: {
-    key: string;
-    src: string;
-    placeholder: {
-      base64: string | null;
-    } | null;
-    meta: {
-      width: number;
-      height: number;
-      size: number;
-      type: string;
-    };
-  } | null;
-};
-
 export type StoredObject = {
   key: string;
   src: string;
+  name: string | null;
   placeholder: {
     base64: string | null;
   } | null;
@@ -39,6 +16,19 @@ export type StoredObject = {
         width: number;
         height: number;
       };
+};
+
+export type StorableObject = {
+  query: {
+    index: number;
+    type: 'set' | 'create';
+  };
+  name?: string;
+  schema: string;
+  field: string;
+  value?: any;
+  contentType: string;
+  reference: StoredObject | null;
 };
 
 export type StorableObjectValue = File | ReadableStream | Buffer | ArrayBuffer | Blob;
