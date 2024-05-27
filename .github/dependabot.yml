@@ -14,3 +14,9 @@ updates:
 
     labels:
       - 'enhancement'
+
+    # Create one pull request for all dependencies.
+    groups:
+      all:
+        patterns:
+          - '*'
