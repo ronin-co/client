@@ -5,17 +5,12 @@ export type StoredObject = {
   placeholder: {
     base64: string | null;
   } | null;
-  meta:
-    | {
-        size: number;
-        type: string;
-      }
-    | {
-        size: number;
-        type: string;
-        width: number;
-        height: number;
-      };
+  meta: {
+    size: number;
+    type: string;
+    width?: number;
+    height?: number;
+  };
 };
 
 export type StorableObject = {
