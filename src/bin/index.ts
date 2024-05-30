@@ -2,6 +2,8 @@ import chalkTemplate from 'chalk-template';
 import { parseArgs } from 'util';
 
 import { version } from '../../package.json';
+import logIn from './commands/login';
+import { getSession } from './utils';
 
 let values;
 let positionals;
@@ -66,4 +68,12 @@ if (values.version) {
   process.exit(0);
 }
 
-console.log(positionals);
+const session = await getSession();
+
+// If there is no active session or the `login` sub command was provided
+// explicitly, we want to log in.
+if (!session || positionals.includes('login')) {
+  logIn();
+} else {
+  console.log('Already logged in!');
+}
