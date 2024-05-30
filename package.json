@@ -6,6 +6,7 @@
   "main": "dist/index.cjs",
   "module": "dist/index.js",
   "types": "dist/index.d.ts",
+  "bin": "./dist/bin.js",
   "description": "Access the RONIN data platform via TypeScript.",
   "scripts": {
     "dev": "bun run build -- --watch",
@@ -76,5 +77,8 @@
     "lint-staged": "15.2.5",
     "prettier": "3.2.5",
     "typescript": "5.4.5"
+  },
+  "dependencies": {
+    "chalk-template": "1.1.0"
   }
 }
