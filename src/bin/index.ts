@@ -32,7 +32,12 @@ try {
     allowPositionals: true,
   }));
 } catch (err) {
-  if (err instanceof Error) console.error(err.message);
+  if (err instanceof Error) {
+    console.error(err.message);
+  } else {
+    throw err;
+  }
+
   process.exit(1);
 }
 
@@ -46,11 +51,15 @@ const run = async () => {
   const session = await getSession();
   if (!session) await logIn();
 
+  // This ensures that people can accidentally type uppercase letters and still
+  // get the command they are looking for.
+  const normalizedPositionals = positionals.map((positional) => positional.toLowerCase());
+
   // `login` command
-  if (positionals.includes('login')) return logIn();
+  if (normalizedPositionals.includes('login')) return logIn();
 
   // `init` command
-  if (positionals.includes('init')) return initializeProject(positionals);
+  if (normalizedPositionals.includes('init')) return initializeProject(positionals);
 
   // If no matching flags or commands were found, render the help, since we
   // don't want to use the main `ronin` command for anything yet.
