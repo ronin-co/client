@@ -26,8 +26,8 @@ export const printHelp = () => {
   {bold OPTIONS}
 
       -h, --help                          Shows this help message
-      -v, --version                       Displays the current version of the CLI
-      -d, --debug                         Show debugging information
+      -v, --version                       Shows the version of the CLI that is currently installed
+      -d, --debug                         Shows additional debugging information
   `;
   console.log(text);
   process.exit(0);
