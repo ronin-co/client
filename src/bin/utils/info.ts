@@ -9,7 +9,7 @@ export const printVersion = () => {
 
 export const printHelp = () => {
   const text = chalkTemplate`
-  {bold.magenta ronin} — Automatically set the types for your RONIN project
+  {bold.magenta ronin} — Data at the edge
 
   {bold USAGE}
 
