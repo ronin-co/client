@@ -13,10 +13,10 @@ export const printHelp = () => {
 
   {bold USAGE}
 
-      {bold $} {magenta ronin}
-      {bold $} {magenta ronin} login
-      {bold $} {magenta ronin} --help
-      {bold $} {magenta ronin} --version
+      {bold $} {bold.magenta ronin}
+      {bold $} {bold.magenta ronin} login
+      {bold $} {bold.magenta ronin} --help
+      {bold $} {bold.magenta ronin} --version
 
   {bold COMMANDS}
 
