@@ -3,7 +3,7 @@ import { parseArgs } from 'util';
 
 import { version } from '../../package.json';
 import logIn from './commands/login';
-import { getSession } from './utils';
+import { getSession } from './utils/session';
 
 let values;
 let positionals;
