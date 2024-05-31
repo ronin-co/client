@@ -75,5 +75,5 @@ const session = await getSession();
 if (!session || positionals.includes('login')) {
   logIn();
 } else {
-  console.log('Already logged in!');
+  console.log('Already logged in');
 }

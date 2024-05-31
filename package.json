@@ -79,6 +79,8 @@
     "typescript": "5.4.5"
   },
   "dependencies": {
-    "chalk-template": "1.1.0"
+    "chalk-template": "1.1.0",
+    "get-port": "7.1.0",
+    "open": "10.1.0"
   }
 }

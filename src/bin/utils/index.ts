@@ -3,7 +3,7 @@ import os from 'os';
 import path from 'path';
 
 export const CACHE_DIR = path.join(os.homedir(), '.ronin');
-export const CACHE_DIR_FILE = path.join(CACHE_DIR, 'auth.json');
+export const CACHE_DIR_FILE = path.join(CACHE_DIR, 'session.json');
 
 interface Session {
   token: string;
