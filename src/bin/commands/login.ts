@@ -1,11 +1,12 @@
 import getPort from 'get-port';
 import http from 'http';
 import open from 'open';
+import ora from 'ora';
 
 import { storeSession, storeSessionForBun, storeSessionforNPM } from '../utils/session';
 
 export default async () => {
-  console.log('Logging in...');
+  const spinner = ora('Logging in').start();
 
   let token: string | undefined;
 
@@ -18,8 +19,8 @@ export default async () => {
   const initURL = new URL(baseURL);
   initURL.searchParams.set('from', currentHost);
 
-  console.log(`Opening browser with the following URL:`);
-  console.log(initURL.href);
+  spinner.text = `Please log in using the following URL:\n${initURL.href}`;
+  spinner.suffixText = `\n`;
 
   try {
     [token] = await Promise.all([
@@ -48,5 +49,6 @@ export default async () => {
   // Initialize sessions for the RONIN CLI and all relevant package managers.
   await Promise.all([storeSession(token), storeSessionforNPM(token), storeSessionForBun(token)]);
 
-  console.log('Successfully logged in');
+  spinner.suffixText = '';
+  spinner.succeed('Logged in successfully!');
 };

@@ -1,7 +1,7 @@
-import chalkTemplate from 'chalk-template';
+import { printHelp, printVersion } from 'src/bin/utils/info';
 import { parseArgs } from 'util';
 
-import { version } from '../../package.json';
+import initializeProject from './commands/init';
 import logIn from './commands/login';
 import { getSession } from './utils/session';
 
@@ -36,44 +36,25 @@ try {
   process.exit(1);
 }
 
-if (values.help) {
-  const text = chalkTemplate`
-  {bold.magenta ronin} — Automatically set the types for your RONIN project
+const run = async () => {
+  // Flags for printing useful information about the CLI.
+  if (values.help) return printHelp();
+  if (values.version) return printVersion();
 
-  {bold USAGE}
+  // If there is no active session, automatically start one and then continue
+  // with the execution of the requested sub command, if there is one.
+  const session = await getSession();
+  if (!session) await logIn();
 
-    {bold $} {magenta ronin}
-    {bold $} {magenta ronin} login
-    {bold $} {magenta ronin} --help
-    {bold $} {magenta ronin} --version
+  // `login` command
+  if (positionals.includes('login')) return logIn();
 
-  {bold COMMANDS}
+  // `init` command
+  if (positionals.includes('init')) return initializeProject(positionals);
 
-    login                               Authenticate with RONIN (run by default for every command)
+  // If no matching flags or commands were found, render the help, since we
+  // don't want to use the main `ronin` command for anything yet.
+  return printHelp();
+};
 
-  {bold OPTIONS}
-
-    -h, --help                          Shows this help message
-
-    -v, --version                       Displays the current version of serve
-
-    -d, --debug                         Show debugging information
-`;
-  console.log(text);
-  process.exit(0);
-}
-
-if (values.version) {
-  console.log(version);
-  process.exit(0);
-}
-
-const session = await getSession();
-
-// If there is no active session or the `login` sub command was provided
-// explicitly, we want to log in.
-if (!session || positionals.includes('login')) {
-  logIn();
-} else {
-  console.log('Already logged in');
-}
+run();
