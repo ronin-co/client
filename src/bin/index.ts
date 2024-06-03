@@ -46,24 +46,26 @@ const run = async () => {
   if (values.help) return printHelp();
   if (values.version) return printVersion();
 
+  // This ensures that people can accidentally type uppercase letters and still
+  // get the command they are looking for.
+  const normalizedPositionals = positionals.map((positional) => positional.toLowerCase());
+
   // If this environment variable is provided, the CLI will authenticate as an
   // app for a particular space instead of authenticating as an account. This
   // is especially useful in CI, which must be independent of a team member.
   const appToken = process.env.RONIN_TOKEN;
 
   // If there is no active session, automatically start one and then continue
-  // with the execution of the requested sub command, if there is one.
+  // with the execution of the requested sub command, if there is one. If the
+  // `login` sub command is invoked, we don't need to auto-login, since the
+  // command itself will handle it already.
   const session = await getSession();
-  if (!session) await logIn(appToken);
+  if (!session && !normalizedPositionals.includes('login')) await logIn(appToken);
 
-  // This ensures that people can accidentally type uppercase letters and still
-  // get the command they are looking for.
-  const normalizedPositionals = positionals.map((positional) => positional.toLowerCase());
-
-  // `login` command
+  // `login` sub command
   if (normalizedPositionals.includes('login')) return logIn(appToken);
 
-  // `init` command
+  // `init` sub command
   if (normalizedPositionals.includes('init')) return initializeProject(positionals);
 
   // If no matching flags or commands were found, render the help, since we
