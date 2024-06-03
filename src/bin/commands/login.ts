@@ -3,12 +3,25 @@ import http from 'http';
 import open from 'open';
 import ora from 'ora';
 
-import { storeSession, storeSessionForBun, storeSessionforNPM } from '../utils/session';
+import { storeSession, storeTokenForBun, storeTokenForNPM } from '../utils/session';
 
-export default async () => {
+export default async (appToken?: string) => {
   const spinner = ora('Logging in').start();
 
-  let token: string | undefined;
+  // If an app token is provided, we don't want to store a session for the CLI,
+  // since all commands will instead use the provided app token directly.
+  // We do want to store the token for package managers, however, because those
+  // require config files to make the package scope work.
+  if (appToken) {
+    // Initialize config files for relevant package managers.
+    await Promise.all([storeTokenForNPM(appToken), storeTokenForBun(appToken)]);
+
+    spinner.succeed('Logged in successfully!');
+    return;
+  }
+
+  // Authenticates a particular RONIN account.
+  let sessionToken: string | undefined;
 
   const port = await getPort();
   const server = http.createServer().listen(port);
@@ -23,7 +36,7 @@ export default async () => {
   spinner.suffixText = `\n`;
 
   try {
-    [token] = await Promise.all([
+    [sessionToken] = await Promise.all([
       new Promise<string>((resolve, reject) => {
         server.once('request', (req, res) => {
           res.setHeader('connection', 'close');
@@ -46,8 +59,12 @@ export default async () => {
     server.close();
   }
 
-  // Initialize sessions for the RONIN CLI and all relevant package managers.
-  await Promise.all([storeSession(token), storeSessionforNPM(token), storeSessionForBun(token)]);
+  // Initialize config files for the CLI and all relevant package managers.
+  await Promise.all([
+    storeSession(sessionToken),
+    storeTokenForNPM(sessionToken),
+    storeTokenForBun(sessionToken),
+  ]);
 
   spinner.suffixText = '';
   spinner.succeed('Logged in successfully!');

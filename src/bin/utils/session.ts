@@ -64,7 +64,7 @@ export const storeSession = async (token: string) => {
   return writeConfigFile(CACHE_DIR_FILE, JSON.stringify({ token }, null, 2));
 };
 
-export const storeSessionforNPM = async (token: string) => {
+export const storeTokenForNPM = async (token: string) => {
   const npmConfigFile = process.env['npm_config_userconfig'] || path.join(os.homedir(), '.npmrc');
   const npmConfigContents = await readConfigFile(npmConfigFile, 'npm', ini.parse);
 
@@ -74,7 +74,7 @@ export const storeSessionforNPM = async (token: string) => {
   await writeConfigFile(npmConfigFile, ini.stringify(npmConfigContents));
 };
 
-export const storeSessionForBun = async (token: string) => {
+export const storeTokenForBun = async (token: string) => {
   const bunConfigFile = path.join(os.homedir(), '.bunfig.toml');
   const bunConfigContents = await readConfigFile(bunConfigFile, 'Bun', toml.parse);
 

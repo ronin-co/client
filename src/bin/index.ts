@@ -46,17 +46,22 @@ const run = async () => {
   if (values.help) return printHelp();
   if (values.version) return printVersion();
 
+  // If this environment variable is provided, the CLI will authenticate as an
+  // app for a particular space instead of authenticating as an account. This
+  // is especially useful in CI, which must be independent of a team member.
+  const appToken = process.env.RONIN_TOKEN;
+
   // If there is no active session, automatically start one and then continue
   // with the execution of the requested sub command, if there is one.
   const session = await getSession();
-  if (!session) await logIn();
+  if (!session) await logIn(appToken);
 
   // This ensures that people can accidentally type uppercase letters and still
   // get the command they are looking for.
   const normalizedPositionals = positionals.map((positional) => positional.toLowerCase());
 
   // `login` command
-  if (normalizedPositionals.includes('login')) return logIn();
+  if (normalizedPositionals.includes('login')) return logIn(appToken);
 
   // `init` command
   if (normalizedPositionals.includes('init')) return initializeProject(positionals);
