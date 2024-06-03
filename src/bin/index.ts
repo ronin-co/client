@@ -60,6 +60,15 @@ const run = async () => {
   // `login` sub command is invoked, we don't need to auto-login, since the
   // command itself will handle it already.
   const session = await getSession();
+
+  if (!process.stdout.isTTY && !session && !appToken) {
+    let message = 'If RONIN CLI is invoked from a non-interactive shell, ';
+    message += 'a `RONIN_TOKEN` environment variable containing an app token must be provided.';
+
+    console.error(message);
+    process.exit(1);
+  }
+
   if (!session && !normalizedPositionals.includes('login')) await logIn(appToken);
 
   // `login` sub command
