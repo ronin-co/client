@@ -153,14 +153,18 @@ interface HookContext {
  * hook, this context will contain information about the hook in which the
  * query is being run.
  */
-let HOOK_CONTEXT: AsyncLocalStorage<HookContext> | undefined;
+let HOOK_CONTEXT: Promise<AsyncLocalStorage<HookContext>> | undefined;
 
 // On certain edge runtimes (such as Cloudflare Workers), the `async_hooks`
 // module requires a compatibility config flag to be provided. Since the RONIN
 // TypeScript client must be usable without compatibility flags, we need to
 // wrap the code below into a try-catch block.
+//
+// We also can't use top-level `await`, as that would break the CJS bundle.
 try {
-  HOOK_CONTEXT = new (await import('async_hooks'))['AsyncLocalStorage']();
+  HOOK_CONTEXT = import('async_hooks').then(({ AsyncLocalStorage }) => {
+    return new AsyncLocalStorage<HookContext>();
+  });
 } catch (err) {
   // Ignore errors
 }
@@ -223,6 +227,8 @@ const invokeHook = async (
     hookArguments[2] = queryResult;
   }
 
+  const parentContext = HOOK_CONTEXT ? await HOOK_CONTEXT : null;
+
   // In order to prevent infinite recursions inside data hooks, we want to make
   // sure that queries that are run explicitly (by importing the client) inside
   // a data hook don't cause those same parent hooks to run again.
@@ -231,7 +237,7 @@ const invokeHook = async (
   // that nested query will run. If that query is for the same query type and
   // schema as the surrounding data hook, however, we only want to run data
   // hooks after the current (surrounding) data hook type.
-  const parentHook = HOOK_CONTEXT?.getStore();
+  const parentHook = parentContext?.getStore();
   const shouldSkip =
     parentHook &&
     parentHook.queryType === query.type &&
@@ -243,18 +249,22 @@ const invokeHook = async (
 
     const hook = hooksForSchema[hookName as keyof typeof hooksForSchema];
 
-    const result = await HOOK_CONTEXT?.run(
-      {
-        hookType,
-        queryType: query.type,
-        querySchema: query.schema,
-      },
-      async () => {
-        return hookType === 'after'
-          ? await (hook as AfterHook<QueryType, unknown>)(instructions, isMultiple, queryResults)
-          : await (hook as BeforeHook<QueryType> | DuringHook<QueryType>)(instructions, isMultiple);
-      },
-    );
+    const caller = async () => {
+      return hookType === 'after'
+        ? await (hook as AfterHook<QueryType, unknown>)(instructions, isMultiple, queryResults)
+        : await (hook as BeforeHook<QueryType> | DuringHook<QueryType>)(instructions, isMultiple);
+    };
+
+    const result = parentContext
+      ? await parentContext.run(
+          {
+            hookType,
+            queryType: query.type,
+            querySchema: query.schema,
+          },
+          caller,
+        )
+      : await caller();
 
     return { ran: true, result };
   }
