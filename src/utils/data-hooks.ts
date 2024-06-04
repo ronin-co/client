@@ -1,4 +1,4 @@
-import { AsyncLocalStorage } from 'async_hooks';
+import type { AsyncLocalStorage } from 'async_hooks';
 
 import { runQueries } from '../queries';
 import type { CombinedInstructions, Query, QuerySchemaType, QueryType, Results } from '../types/query';
@@ -153,7 +153,13 @@ interface HookContext {
  * hook, this context will contain information about the hook in which the
  * query is being run.
  */
-const HOOK_CONTEXT = new AsyncLocalStorage<HookContext>();
+let HOOK_CONTEXT: AsyncLocalStorage<HookContext> | undefined;
+
+try {
+  HOOK_CONTEXT = new (await import('async_hooks'))['AsyncLocalStorage']();
+} catch (err) {
+  // Ignore errors
+}
 
 /**
  * Based on which type of query is being executed (e.g. "get" or "create"),
@@ -221,7 +227,7 @@ const invokeHook = async (
   // that nested query will run. If that query is for the same query type and
   // schema as the surrounding data hook, however, we only want to run data
   // hooks after the current (surrounding) data hook type.
-  const parentHook = HOOK_CONTEXT.getStore();
+  const parentHook = HOOK_CONTEXT?.getStore();
   const shouldSkip =
     parentHook &&
     parentHook.queryType === query.type &&
@@ -233,7 +239,7 @@ const invokeHook = async (
 
     const hook = hooksForSchema[hookName as keyof typeof hooksForSchema];
 
-    const result = await HOOK_CONTEXT.run(
+    const result = await HOOK_CONTEXT?.run(
       {
         hookType,
         queryType: query.type,
