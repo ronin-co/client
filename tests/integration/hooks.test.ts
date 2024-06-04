@@ -90,6 +90,42 @@ describe('hooks', () => {
     );
   });
 
+  test('run `get` query through factory with dynamically generated data hooks', async () => {
+    const { get } = createSyntaxFactory({
+      hooks: () => ({
+        account: {
+          beforeGet(query, multiple) {
+            if (multiple) {
+              query.with = {
+                email: {
+                  endingWith: '@ronin.co',
+                },
+              };
+            } else {
+              query.with = {
+                handle: 'leo',
+              };
+            }
+
+            return query;
+          },
+        },
+      }),
+    });
+
+    // @ts-expect-error `handle` is undefined due not not having the schema types.
+    await get.account.with.handle('juri');
+    // Make sure `leo` is resolved as the account handle.
+    expect(mockResolvedRequestText).toEqual('{"queries":[{"get":{"account":{"with":{"handle":"leo"}}}}]}');
+
+    await get.accounts();
+    // Make sure the email address of all resolved accounts ends with the
+    // `@ronin.co` domain name.
+    expect(mockResolvedRequestText).toEqual(
+      '{"queries":[{"get":{"accounts":{"with":{"email":{"endingWith":"@ronin.co"}}}}}]}',
+    );
+  });
+
   test('run `get` query through factory containing `during` data hook', async () => {
     const { get } = createSyntaxFactory({
       hooks: {
