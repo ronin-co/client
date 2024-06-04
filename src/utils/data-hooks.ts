@@ -231,7 +231,7 @@ const invokeHook = async (
 
     const hook = hooksForSchema[hookName as keyof typeof hooksForSchema];
 
-    const result = HOOK_CONTEXT.run(
+    const result = await HOOK_CONTEXT.run(
       {
         hookType,
         queryType: query.type,

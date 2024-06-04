@@ -88,7 +88,7 @@ describe('edge runtime', () => {
         account: {
           afterCreate: async function () {
             // Sleep for 50 milliseconds to simulate an asynchronous action.
-            await new Promise((resolve) => setTimeout(resolve, 50));
+            await Bun.sleep(50);
 
             hookInvocation.happened();
           },

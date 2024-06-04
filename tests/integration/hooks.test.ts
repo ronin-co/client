@@ -302,4 +302,51 @@ describe('hooks', () => {
     });
     expect(finalMultiple).toBe(false);
   });
+
+  test('run a query inside a data hook and avoid recursion', async () => {
+    let hookInvoked = false;
+
+    const { create } = createSyntaxFactory({
+      fetch: async (request) => {
+        return Response.json({
+          results: [
+            {
+              record: {
+                id: '1234',
+                firstName: 'Juri',
+                handle: 'juri',
+              },
+            },
+          ],
+        });
+      },
+      hooks: {
+        account: {
+          async create() {
+            // If an infinite recursion is detected, we need to exit
+            // immediately instead of performing a test assertion, because the
+            // code will otherwise run forever (until memory is exceeded).
+            if (hookInvoked) {
+              console.error('Infinite recursion detected in test. Exiting.');
+              process.exit(1);
+            }
+
+            hookInvoked = true;
+
+            await create.account.with({
+              handle: 'not-juri',
+            });
+
+            return { handle: 'juri' };
+          },
+        },
+      },
+    });
+
+    const result = await create.account.with({
+      handle: 'juri',
+    });
+
+    expect(result).toMatchObject({ handle: 'juri' });
+  });
 });
