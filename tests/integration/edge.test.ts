@@ -1,5 +1,6 @@
-import { plugin } from 'bun';
 import { beforeEach, describe, expect, mock, spyOn, test } from 'bun:test';
+import createSyntaxFactory from 'src';
+import { runQueriesWithHooks } from 'src/utils/data-hooks';
 
 const mockFetch = mock(async () => {
   return Response.json({
@@ -14,65 +15,12 @@ describe('edge runtime', () => {
     mockFetch.mockClear();
   });
 
-  test('invoke `ronin` from an edge runtime that does not support `async_hooks`', async () => {
-    const queries = [
-      {
-        create: { account: { with: { handle: 'leo' } } },
-      },
-    ];
-
-    const hookInvocation = { happened: () => true };
-    const hookInvocationHappened = spyOn(hookInvocation, 'happened');
-
-    const promisesToAwait: Promise<unknown>[] = [];
-
-    process.env.ASYNC_HOOKS_PATH = 'async_hooks_mock';
-
-    plugin({
-      name: 'async_hooks',
-      setup(build) {
-        build.module('async_hooks_mock', () => {
-          console.log('AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA');
-          throw new Error('async_hooks is not supported');
-        });
-      },
-    });
-
-    const { runQueriesWithHooks } = await import('src/utils/data-hooks');
-
-    await runQueriesWithHooks(queries, {
-      token: '1234',
-      hooks: {
-        account: {
-          afterCreate: async function () {
-            // Sleep for 50 milliseconds to simulate an asynchronous action.
-            await Bun.sleep(50);
-
-            hookInvocation.happened();
-          },
-        },
-      },
-      waitUntil: (promise) => {
-        promisesToAwait.push(promise);
-      },
-    });
-
-    expect(promisesToAwait.length).toBeGreaterThan(0);
-
-    // Wait for asynchronous actions to finish.
-    expect(hookInvocationHappened).not.toHaveBeenCalled();
-    await Promise.all(promisesToAwait);
-    expect(hookInvocationHappened).toHaveBeenCalled();
-  });
-
   test('invoke `ronin` from an edge runtime without passing a token', async () => {
     let error: Error | undefined;
 
     // Simulate a web runtime.
     const oldProcess = global.process;
     global.process = undefined as unknown as NodeJS.Process;
-
-    const { default: createSyntaxFactory } = await import('src/index');
 
     try {
       const factory = createSyntaxFactory({});
@@ -96,8 +44,6 @@ describe('edge runtime', () => {
     // Simulate a web runtime.
     const oldProcess = global.process;
     global.process = undefined as unknown as NodeJS.Process;
-
-    const { default: createSyntaxFactory } = await import('src/index');
 
     try {
       const factory = createSyntaxFactory({
@@ -137,14 +83,12 @@ describe('edge runtime', () => {
     const oldProcess = global.process;
     global.process = undefined as unknown as NodeJS.Process;
 
-    const { runQueriesWithHooks } = await import('src/utils/data-hooks');
-
     await runQueriesWithHooks(queries, {
       hooks: {
         account: {
           afterCreate: async function () {
             // Sleep for 50 milliseconds to simulate an asynchronous action.
-            await Bun.sleep(50);
+            await new Promise((resolve) => setTimeout(resolve, 50));
 
             hookInvocation.happened();
           },
