@@ -149,7 +149,7 @@ interface HookContext {
 }
 
 // We don't want bundlers to error if `async_hooks` is not available, so we
-// obfuscate the module name to prevent static analysis.
+// prevent basic static analysis by using a dynamic variable import.
 const asyncHooksImport = 'node:async_hooks';
 
 /**
