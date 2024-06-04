@@ -153,21 +153,15 @@ interface HookContext {
  * hook, this context will contain information about the hook in which the
  * query is being run.
  */
-let HOOK_CONTEXT: Promise<AsyncLocalStorage<HookContext>> | undefined;
-
-// On certain edge runtimes (such as Cloudflare Workers), the `async_hooks`
-// module requires a compatibility config flag to be provided. Since the RONIN
-// TypeScript client must be usable without compatibility flags, we need to
-// wrap the code below into a try-catch block.
-//
-// We also can't use top-level `await`, as that would break the CJS bundle.
-try {
-  HOOK_CONTEXT = import('async_hooks').then(({ AsyncLocalStorage }) => {
-    return new AsyncLocalStorage<HookContext>();
+const HOOK_CONTEXT = import('async_hooks')
+  // We can't use top-level `await`, as that would break the CJS bundle.
+  .then(({ AsyncLocalStorage }) => new AsyncLocalStorage<HookContext>())
+  .catch(() => {
+    // On certain edge runtimes (such as Cloudflare Workers), the `async_hooks`
+    // module requires a compatibility config flag to be provided. Since the
+    // TypeScript client must be usable without compatibility flags, we need to
+    // catch the errors.
   });
-} catch (err) {
-  // Ignore errors
-}
 
 /**
  * Based on which type of query is being executed (e.g. "get" or "create"),
