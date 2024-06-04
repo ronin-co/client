@@ -221,20 +221,19 @@ const invokeHook = async (
 
   const parentContext = await HOOK_CONTEXT;
 
-  // In order to prevent infinite recursions inside data hooks, we want to make
-  // sure that queries that are run explicitly (by importing the client) inside
-  // a data hook don't cause those same parent hooks to run again.
+  // In order to make data hooks as easy as possible to use and prevent any
+  // kind of infinite recursion, we would like to ensure that queries inside
+  // data hooks only run data hooks that come after it in the lifecycle.
   //
-  // In other words: If a query is run inside a data hook, all data hooks of
-  // that nested query will run. If that query is for the same query type and
-  // schema as the surrounding data hook, however, we only want to run data
-  // hooks after the current (surrounding) data hook type.
+  // Additionally, if the query being run inside the data hook is for the same
+  // schema as the surrounding data hook, not even the data hooks after it in
+  // the lifecycle should run, meaning no data hooks should run at all.
   const parentHook = parentContext?.getStore();
   const shouldSkip =
     parentHook &&
-    parentHook.queryType === query.type &&
-    parentHook.querySchema === query.schema &&
-    HOOK_TYPES.indexOf(hookType) <= HOOK_TYPES.indexOf(parentHook.hookType);
+    (HOOK_TYPES.indexOf(hookType) <= HOOK_TYPES.indexOf(parentHook.hookType) ||
+      (query.schema === parentHook.querySchema &&
+        HOOK_TYPES.indexOf(hookType) > HOOK_TYPES.indexOf(parentHook.hookType)));
 
   if (hooksForSchema && hookName in hooksForSchema && !shouldSkip) {
     const [instructions, isMultiple, queryResults] = hookArguments;
