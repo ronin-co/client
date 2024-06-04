@@ -155,13 +155,7 @@ interface HookContext {
  */
 const HOOK_CONTEXT = import('async_hooks')
   // We can't use top-level `await`, as that would break the CJS bundle.
-  .then(({ AsyncLocalStorage }) => new AsyncLocalStorage<HookContext>())
-  .catch(() => {
-    // On certain edge runtimes (such as Cloudflare Workers), the `async_hooks`
-    // module requires a compatibility config flag to be provided. Since the
-    // TypeScript client must be usable without compatibility flags, we need to
-    // catch the errors.
-  });
+  .then(({ AsyncLocalStorage }) => new AsyncLocalStorage<HookContext>());
 
 /**
  * Based on which type of query is being executed (e.g. "get" or "create"),
@@ -221,7 +215,16 @@ const invokeHook = async (
     hookArguments[2] = queryResult;
   }
 
-  const parentContext = HOOK_CONTEXT ? await HOOK_CONTEXT : null;
+  let parentContext: AsyncLocalStorage<HookContext> | undefined;
+
+  try {
+    parentContext = HOOK_CONTEXT ? await HOOK_CONTEXT : undefined;
+  } catch (err) {
+    // On certain edge runtimes (such as Cloudflare Workers), the `async_hooks`
+    // module requires a compatibility config flag to be provided. Since the
+    // TypeScript client must be usable without compatibility flags, we need to
+    // catch the errors and ignore them.
+  }
 
   // In order to prevent infinite recursions inside data hooks, we want to make
   // sure that queries that are run explicitly (by importing the client) inside
