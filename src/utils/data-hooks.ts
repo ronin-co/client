@@ -377,11 +377,14 @@ export const runQueriesWithHooks = async <T>(
   let modifiableQueries = Array.from(queries);
   const modifiableResults = new Array<T>();
 
-  const { hooks, waitUntil } = options;
+  const { hooks: defaultHooks, waitUntil } = options;
 
   // If no hooks were provided, we can just run the queries and return
   // the results.
-  if (!hooks) return runQueries<T>(modifiableQueries, options);
+  if (!defaultHooks) return runQueries<T>(modifiableQueries, options);
+
+  // If a function for generating the list of hooks was provided, call it.
+  const hooks = typeof defaultHooks === 'function' ? defaultHooks() : defaultHooks;
 
   // We're intentionally considering the entire `hooks` option here, instead of
   // searching for "after" hooks inside of it, because the latter would increase

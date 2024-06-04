@@ -3,8 +3,12 @@ import type { Hooks } from '../utils/data-hooks';
 export interface QueryHandlerOptions {
   /**
    * Object containing data hooks for defined schemas.
+   *
+   * Alternatively, a function that returns the object may be provided instead,
+   * which is useful for cases in which the list of hooks might be generated
+   * dynamically or augmented with additional arguments.
    */
-  hooks?: Hooks;
+  hooks?: Hooks | (() => Hooks);
 
   /**
    * Token used to authenticate against RONIN. By default,
