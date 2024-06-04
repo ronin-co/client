@@ -1,3 +1,5 @@
+import { AsyncLocalStorage } from 'async_hooks';
+
 import { runQueries } from '../queries';
 import type { CombinedInstructions, Query, QuerySchemaType, QueryType, Results } from '../types/query';
 import type { QueryHandlerOptions, RecursivePartial } from '../types/utils';
@@ -43,7 +45,9 @@ export type AfterHookHandler<TType extends QueryType, TSchema = unknown> = (
   result: TSchema,
 ) => void | Promise<void>;
 
-type HookType = 'before' | 'during' | 'after';
+const HOOK_TYPES = ['before', 'during', 'after'] as const;
+
+type HookType = (typeof HOOK_TYPES)[number];
 
 type HookKeys = (
   | { [K in QueryType]: K }
@@ -131,10 +135,23 @@ const getSchema = (
  *
  * @returns The method name constructed from the hook and query types.
  */
-const getMethodName = (hookType: HookType, queryType: string): string => {
+const getMethodName = (hookType: HookType, queryType: QueryType): string => {
   const capitalizedQueryType = queryType[0].toUpperCase() + queryType.slice(1);
   return hookType === 'during' ? queryType : hookType + capitalizedQueryType;
 };
+
+interface HookContext {
+  hookType: HookType;
+  queryType: QueryType;
+  querySchema: string;
+}
+
+/**
+ * If a query is being run explicitly by importing the client inside a data
+ * hook, this context will contain information about the hook in which the
+ * query is being run.
+ */
+const HOOK_CONTEXT = new AsyncLocalStorage<HookContext>();
 
 /**
  * Based on which type of query is being executed (e.g. "get" or "create"),
@@ -154,7 +171,7 @@ const invokeHook = async (
   hooks: Hooks,
   hookType: HookType,
   query: {
-    type: string;
+    type: QueryType;
     schema: string;
     plural: boolean;
     instruction: unknown;
@@ -194,15 +211,38 @@ const invokeHook = async (
     hookArguments[2] = queryResult;
   }
 
-  if (hooksForSchema && hookName in hooksForSchema) {
+  // In order to prevent infinite recursions inside data hooks, we want to make
+  // sure that queries that are run explicitly (by importing the client) inside
+  // a data hook don't cause those same parent hooks to run again.
+  //
+  // In other words: If a query is run inside a data hook, all data hooks of
+  // that nested query will run. If that query is for the same query type and
+  // schema as the surrounding data hook, however, we only want to run data
+  // hooks after the current (surrounding) data hook type.
+  const parentHook = HOOK_CONTEXT.getStore();
+  const shouldSkip =
+    parentHook &&
+    parentHook.queryType === query.type &&
+    parentHook.querySchema === query.schema &&
+    HOOK_TYPES.indexOf(hookType) <= HOOK_TYPES.indexOf(parentHook.hookType);
+
+  if (hooksForSchema && hookName in hooksForSchema && !shouldSkip) {
     const [instructions, isMultiple, queryResults] = hookArguments;
 
     const hook = hooksForSchema[hookName as keyof typeof hooksForSchema];
 
-    const result =
-      hookType === 'after'
-        ? await (hook as AfterHook<QueryType, unknown>)(instructions, isMultiple, queryResults)
-        : await (hook as BeforeHook<QueryType> | DuringHook<QueryType>)(instructions, isMultiple);
+    const result = HOOK_CONTEXT.run(
+      {
+        hookType,
+        queryType: query.type,
+        querySchema: query.schema,
+      },
+      async () => {
+        return hookType === 'after'
+          ? await (hook as AfterHook<QueryType, unknown>)(instructions, isMultiple, queryResults)
+          : await (hook as BeforeHook<QueryType> | DuringHook<QueryType>)(instructions, isMultiple);
+      },
+    );
 
     return { ran: true, result };
   }
