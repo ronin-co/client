@@ -1,4 +1,4 @@
-import type asyncHooks from 'async_hooks';
+import type AsyncHooks from 'async_hooks';
 
 import { runQueries } from '../queries';
 import type { CombinedInstructions, Query, QuerySchemaType, QueryType, Results } from '../types/query';
@@ -157,7 +157,7 @@ const HOOK_CONTEXT =
   // We don't want bundlers to error if `async_hooks` is not available, so we
   // obfuscase the module name to prevent static analysis.
   // We can't use top-level `await`, as that would break the CJS bundle.
-  (import('async' + '_' + 'hooks') as Promise<typeof asyncHooks>).then(({ AsyncLocalStorage }) => {
+  (import('async' + '_' + 'hooks') as Promise<typeof AsyncHooks>).then(({ AsyncLocalStorage }) => {
     return new AsyncLocalStorage<HookContext>();
   });
 
@@ -219,7 +219,7 @@ const invokeHook = async (
     hookArguments[2] = queryResult;
   }
 
-  let parentContext: AsyncLocalStorage<HookContext> | undefined;
+  let parentContext: AsyncHooks.AsyncLocalStorage<HookContext> | undefined;
 
   try {
     parentContext = HOOK_CONTEXT ? await HOOK_CONTEXT : undefined;
