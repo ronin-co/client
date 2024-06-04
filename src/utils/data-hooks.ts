@@ -148,10 +148,6 @@ interface HookContext {
   querySchema: string;
 }
 
-// We don't want bundlers to error if `async_hooks` is not available, so we
-// prevent basic static analysis by using a dynamic variable import.
-const asyncHooksImport = 'node:async_hooks';
-
 /**
  * If a query is being run explicitly by importing the client inside a data
  * hook, this context will contain information about the hook in which the
@@ -160,7 +156,7 @@ const asyncHooksImport = 'node:async_hooks';
 const HOOK_CONTEXT =
   typeof process !== 'undefined'
     ? // We can't use top-level `await`, as that would break the CJS bundle.
-      (import(asyncHooksImport) as Promise<typeof AsyncHooks>).then(({ AsyncLocalStorage }) => {
+      (import('node:async_hooks') as Promise<typeof AsyncHooks>).then(({ AsyncLocalStorage }) => {
         return new AsyncLocalStorage<HookContext>();
       })
     : undefined;
