@@ -45,6 +45,8 @@ export type AfterHookHandler<TType extends QueryType, TSchema = unknown> = (
   result: TSchema,
 ) => void | Promise<void>;
 
+// The order of these types is important, as they determine the order in which
+// data hooks are run (the "data hook lifecycle").
 const HOOK_TYPES = ['before', 'during', 'after'] as const;
 
 type HookType = (typeof HOOK_TYPES)[number];

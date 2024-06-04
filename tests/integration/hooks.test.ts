@@ -307,7 +307,7 @@ describe('hooks', () => {
     let hookInvoked = false;
 
     const { create } = createSyntaxFactory({
-      fetch: async (request) => {
+      fetch: async () => {
         return Response.json({
           results: [
             {
