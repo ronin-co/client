@@ -155,7 +155,7 @@ interface HookContext {
  */
 const HOOK_CONTEXT =
   // We don't want bundlers to error if `async_hooks` is not available, so we
-  // obfuscase the module name to prevent static analysis.
+  // obfuscate the module name to prevent static analysis.
   // We can't use top-level `await`, as that would break the CJS bundle.
   (import('async' + '_' + 'hooks') as Promise<typeof AsyncHooks>).then(({ AsyncLocalStorage }) => {
     return new AsyncLocalStorage<HookContext>();
