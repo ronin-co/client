@@ -155,6 +155,10 @@ interface HookContext {
  */
 let HOOK_CONTEXT: AsyncLocalStorage<HookContext> | undefined;
 
+// On certain edge runtimes (such as Cloudflare Workers), the `async_hooks`
+// module requires a compatibility config flag to be provided. Since the RONIN
+// TypeScript client must be usable without compatibility flags, we need to
+// wrap the code below into a try-catch block.
 try {
   HOOK_CONTEXT = new (await import('async_hooks'))['AsyncLocalStorage']();
 } catch (err) {
