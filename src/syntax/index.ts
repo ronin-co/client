@@ -1,5 +1,5 @@
 import type { RONIN } from '../types/codegen';
-import type { QueryHandlerOptions } from '../types/utils';
+import type { QueryHandlerOptionsFactory } from '../types/utils';
 import { queriesHandler, queryHandler } from './handlers';
 import { batch, getSyntaxProxy } from './utils';
 
@@ -46,16 +46,12 @@ import { batch, getSyntaxProxy } from './utils';
  * ]);
  * ```
  */
-export const createSyntaxFactory = (options: QueryHandlerOptions | (() => QueryHandlerOptions)) => {
-  const normalizedOptions = typeof options === 'function' ? options() : options;
-
-  return {
-    create: getSyntaxProxy('create', (query) => queryHandler(query, normalizedOptions)) as RONIN.Creator,
-    get: getSyntaxProxy('get', (query) => queryHandler(query, normalizedOptions)) as RONIN.Getter,
-    set: getSyntaxProxy('set', (query) => queryHandler(query, normalizedOptions)) as RONIN.Setter,
-    drop: getSyntaxProxy('drop', (query) => queryHandler(query, normalizedOptions)) as RONIN.Dropper,
-    count: getSyntaxProxy('count', (query) => queryHandler(query, normalizedOptions)) as RONIN.Counter,
-    batch: <T extends [Promise<any>, ...Promise<any>[]]>(operations: () => T) =>
-      batch<T>(operations, (queries) => queriesHandler(queries, normalizedOptions)),
-  };
-};
+export const createSyntaxFactory = (options: QueryHandlerOptionsFactory) => ({
+  create: getSyntaxProxy('create', (query) => queryHandler(query, options)) as RONIN.Creator,
+  get: getSyntaxProxy('get', (query) => queryHandler(query, options)) as RONIN.Getter,
+  set: getSyntaxProxy('set', (query) => queryHandler(query, options)) as RONIN.Setter,
+  drop: getSyntaxProxy('drop', (query) => queryHandler(query, options)) as RONIN.Dropper,
+  count: getSyntaxProxy('count', (query) => queryHandler(query, options)) as RONIN.Counter,
+  batch: <T extends [Promise<any>, ...Promise<any>[]]>(operations: () => T) =>
+    batch<T>(operations, (queries) => queriesHandler(queries, options)),
+});

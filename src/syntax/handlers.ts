@@ -1,6 +1,6 @@
 import { runQueriesWithStorageAndHooks } from 'src/queries';
 import type { Query } from 'src/types/query';
-import type { QueryHandlerOptions } from 'src/types/utils';
+import type { QueryHandlerOptionsFactory } from 'src/types/utils';
 
 /**
  * Executes an array of queries and handles their results. It is used to execute
@@ -22,7 +22,9 @@ import type { QueryHandlerOptions } from 'src/types/utils';
  * The `RONIN_TOKEN` environment variable will be used (if available) to
  * authenticate requests if the `token` option is not provided.
  */
-export const queriesHandler = async (queries: Query[], options: QueryHandlerOptions = {}) => {
+export const queriesHandler = async (queries: Query[], optionsFactory: QueryHandlerOptionsFactory = {}) => {
+  const options = typeof optionsFactory === 'function' ? optionsFactory() : optionsFactory;
+
   if (!options.token && typeof process !== 'undefined') {
     const token =
       typeof process?.env !== 'undefined'
@@ -70,7 +72,7 @@ export const queriesHandler = async (queries: Query[], options: QueryHandlerOpti
  * );
  * ```
  */
-export const queryHandler = async (query: Query, options: QueryHandlerOptions) => {
+export const queryHandler = async (query: Query, options: QueryHandlerOptionsFactory) => {
   const results = await queriesHandler([query], options);
   return results[0];
 };
