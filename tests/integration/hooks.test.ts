@@ -90,9 +90,9 @@ describe('hooks', () => {
     );
   });
 
-  test('run `get` query through factory with dynamically generated data hooks', async () => {
-    const { get } = createSyntaxFactory({
-      hooks: () => ({
+  test('run `get` query through factory with dynamically generated config', async () => {
+    const { get } = createSyntaxFactory(() => ({
+      hooks: {
         account: {
           beforeGet(query, multiple) {
             if (multiple) {
@@ -110,8 +110,8 @@ describe('hooks', () => {
             return query;
           },
         },
-      }),
-    });
+      },
+    }));
 
     // @ts-expect-error `handle` is undefined due not not having the schema types.
     await get.account.with.handle('juri');
