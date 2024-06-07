@@ -1,5 +1,6 @@
 import childProcess from 'child_process';
 import fs from 'fs/promises';
+import json5 from 'json5';
 import ora from 'ora';
 import path from 'path';
 import util from 'util';
@@ -41,11 +42,28 @@ export default async (positionals: string[]) => {
   spinner.text = `Detected ${packageManagerName} — installing types package`;
 
   try {
+    // Install the types package using the preferred package manager
     if (packageManager === 'bun') {
       await exec(`bun add @ronin/${spaceHandle} --dev`);
     } else {
       await exec(`npm install @ronin/${spaceHandle} --save-dev`);
     }
+
+    // Add the types package to the users TypeScript config if one exists
+    const tsConfigPath = path.join(process.cwd(), 'tsconfig.json');
+
+    const tsConfigExists = await exists('tsconfig.json');
+    if (!tsConfigExists) return;
+
+    const contents = await fs.readFile(tsConfigPath, 'utf-8');
+    const tsConfig = json5.parse(contents);
+
+    if (!tsConfig.compilerOptions.types || !tsConfig.compilerOptions.types.includes(`@ronin/${spaceHandle}`))
+      Object.assign(tsConfig.compilerOptions, {
+        types: [...(tsConfig.compilerOptions.types || []), `@ronin/${spaceHandle}`],
+      });
+
+    await fs.writeFile(tsConfigPath, JSON.stringify(tsConfig, null, 2));
   } catch (err) {
     if (err instanceof Error && err.message.includes('401')) {
       spinner.fail(`You are not a member of the "${spaceHandle}" space or the space doesn't exist.`);
