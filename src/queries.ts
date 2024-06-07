@@ -177,7 +177,7 @@ export const runQueries = async <T>(
   const endFormatting = performance.now();
 
   const VERBOSE_LOGGING =
-    (typeof process?.env !== 'undefined' && process.env.__RENDER_DEBUG_LEVEL === 'verbose') ||
+    (typeof process !== 'undefined' && process?.env && process.env.__RENDER_DEBUG_LEVEL === 'verbose') ||
     (typeof import.meta?.env !== 'undefined' && import.meta.env.__RENDER_DEBUG_LEVEL === 'verbose');
 
   if (VERBOSE_LOGGING) {
