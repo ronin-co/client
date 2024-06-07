@@ -49,7 +49,7 @@ export default async (positionals: string[]) => {
       await exec(`npm install @ronin/${spaceHandle} --save-dev`);
     }
 
-    // Add the types package to the users TypeScript config if one exists
+    // Add the types package to the project's TypeScript config if one exists
     const tsConfigPath = path.join(process.cwd(), 'tsconfig.json');
 
     const tsConfigExists = await exists('tsconfig.json');
