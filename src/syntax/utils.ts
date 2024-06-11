@@ -88,7 +88,7 @@ export const getSyntaxProxy = (queryType: string, queryHandler: (query: Query) =
  * });
  * ```
  */
-export const batch = async <T extends [Promise<any>, ...Promise<any>[]]>(
+export const getBatchProxy = async <T extends [Promise<any>, ...Promise<any>[]]>(
   operations: () => T,
   queriesHandler: (queries: Query[]) => Promise<any>,
 ): Promise<PromiseTuple<T>> => {

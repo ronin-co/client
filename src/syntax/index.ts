@@ -1,7 +1,7 @@
 import type { RONIN } from '../types/codegen';
 import type { QueryHandlerOptionsFactory } from '../types/utils';
 import { queriesHandler, queryHandler } from './handlers';
-import { batch, getSyntaxProxy } from './utils';
+import { getBatchProxy, getSyntaxProxy } from './utils';
 
 /**
  * Creates a syntax factory for generating and executing queries.
@@ -53,5 +53,5 @@ export const createSyntaxFactory = (options: QueryHandlerOptionsFactory) => ({
   drop: getSyntaxProxy('drop', (query) => queryHandler(query, options)) as RONIN.Dropper,
   count: getSyntaxProxy('count', (query) => queryHandler(query, options)) as RONIN.Counter,
   batch: <T extends [Promise<any>, ...Promise<any>[]]>(operations: () => T) =>
-    batch<T>(operations, (queries) => queriesHandler(queries, options)),
+    getBatchProxy<T>(operations, (queries) => queriesHandler(queries, options)),
 });
