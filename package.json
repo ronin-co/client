@@ -47,6 +47,11 @@
       "import": "./dist/types/index.js",
       "require": "./dist/types/index.cjs",
       "types": "./dist/types/index.d.ts"
+    },
+    "./utils": {
+      "import": "./dist/utils/index.js",
+      "require": "./dist/utils/index.cjs",
+      "types": "./dist/utils/index.d.ts"
     }
   },
   "typesVersions": {
@@ -56,6 +61,9 @@
       ],
       "types": [
         "dist/types/index.d.ts"
+      ],
+      "utils": [
+        "dist/utils/index.d.ts"
       ]
     }
   },
