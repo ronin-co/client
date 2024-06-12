@@ -1,5 +1,5 @@
 import type { StorableObjectValue, StoredObject } from './storage';
-import type { QueryHandlerOptionsFactory, ReducedFunction, ReplaceRecursively } from './utils';
+import type { ReducedFunction, ReplaceRecursively } from './utils';
 
 export namespace RONIN {
   export interface RoninRecord<TId extends string = string> {
