@@ -10,7 +10,7 @@
   "description": "Access the RONIN data platform via TypeScript.",
   "scripts": {
     "dev": "bun run build -- --watch",
-    "build": "tsup ./src/index.ts ./src/bin/index.ts ./src/utils/index.ts --format esm",
+    "build": "tsup",
     "test": "bun test",
     "lint": "bun run lint:tsc && bun run lint:eslint --",
     "lint:eslint": "eslint . --ext .ts --ignore-path .gitignore",
@@ -36,6 +36,15 @@
       "prettier --ignore-unknown --write",
       "eslint --fix --ignore-path .gitignore"
     ]
+  },
+  "tsup": {
+    "entry": [
+      "src/index.ts",
+      "src/bin/index.ts",
+      "src/utils/index.ts"
+    ],
+    "format": "esm",
+    "dts": true
   },
   "exports": {
     ".": {
