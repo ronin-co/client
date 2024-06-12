@@ -1,5 +1,7 @@
 {
   "compilerOptions": {
+    "outDir": "dist",
+
     "esModuleInterop": true,
     "resolveJsonModule": true,
     "baseUrl": ".",
@@ -12,7 +14,6 @@
     "allowJs": true,
 
     "moduleResolution": "node",
-    "allowImportingTsExtensions": true,
     "verbatimModuleSyntax": true,
     "noEmit": true,
     "pretty": true,
@@ -23,6 +24,5 @@
 
     "noUnusedLocals": true,
     "noUnusedParameters": true
-  },
-  "references": [{ "path": "./src" }]
+  }
 }
