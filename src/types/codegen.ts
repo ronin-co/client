@@ -1,5 +1,5 @@
 import type { StorableObjectValue, StoredObject } from './storage';
-import type { ReducedFunction, ReplaceRecursively } from './utils';
+import type { QueryHandlerOptionsFactory, ReducedFunction, ReplaceRecursively } from './utils';
 
 export namespace RONIN {
   export interface RoninRecord<TId extends string = string> {
@@ -20,42 +20,42 @@ export namespace RONIN {
 
   export interface Blob extends StoredObject {}
 
-  interface StringFilterFunction<T, R> extends ReducedFunction {
-    (value: T): Promise<R>;
-    notBeing: (value: T) => Promise<R>;
-    startingWith: (value: T) => Promise<R>;
-    endingWith: (value: T) => Promise<R>;
-    containing: (value: T) => Promise<R>;
+  interface StringFilterFunction<T, R, O> extends ReducedFunction {
+    (value: T, options?: O): Promise<R>;
+    notBeing: (value: T, options?: O) => Promise<R>;
+    startingWith: (value: T, options?: O) => Promise<R>;
+    endingWith: (value: T, options?: O) => Promise<R>;
+    containing: (value: T, options?: O) => Promise<R>;
   }
 
-  interface NumberFilterFunction<T, R> extends ReducedFunction {
-    (value: T): Promise<R>;
-    notBeing: (value: T) => Promise<R>;
-    greaterThan: (value: T) => Promise<R>;
-    lessThan: (value: T) => Promise<R>;
+  interface NumberFilterFunction<T, R, O> extends ReducedFunction {
+    (value: T, options?: O): Promise<R>;
+    notBeing: (value: T, options?: O) => Promise<R>;
+    greaterThan: (value: T, options?: O) => Promise<R>;
+    lessThan: (value: T, options?: O) => Promise<R>;
   }
 
-  interface DateFilterFunction<T, R> extends ReducedFunction {
-    (value: T): Promise<R>;
-    notBeing: (value: T) => Promise<R>;
-    greaterThan: (value: T) => Promise<R>;
-    lessThan: (value: T) => Promise<R>;
+  interface DateFilterFunction<T, R, O> extends ReducedFunction {
+    (value: T, options?: O): Promise<R>;
+    notBeing: (value: T, options?: O) => Promise<R>;
+    greaterThan: (value: T, options?: O) => Promise<R>;
+    lessThan: (value: T, options?: O) => Promise<R>;
   }
 
-  interface BooleanFilterFunction<T, R> extends ReducedFunction {
-    (value: T): Promise<R>;
+  interface BooleanFilterFunction<T, R, O> extends ReducedFunction {
+    (value: T, options: O): Promise<R>;
   }
 
-  type FilterFunction<T, R> = T extends string
-    ? StringFilterFunction<T, R>
+  type FilterFunction<T, R, O> = T extends string
+    ? StringFilterFunction<T, R, O>
     : T extends number
-      ? NumberFilterFunction<T, R>
+      ? NumberFilterFunction<T, R, O>
       : T extends boolean
-        ? BooleanFilterFunction<T, R>
+        ? BooleanFilterFunction<T, R, O>
         : T extends Date
-          ? DateFilterFunction<T, R>
+          ? DateFilterFunction<T, R, O>
           : T extends Record<string, any>
-            ? { [K in keyof T]: FilterFunction<T[K], R> }
+            ? { [K in keyof T]: FilterFunction<T[K], R, O> }
             : never;
 
   type FilterObject<T> = T extends string
@@ -151,17 +151,17 @@ export namespace RONIN {
             ? { [K in keyof T]: T[K] | Partial<FilterObject<T[K]>> }
             : never;
 
-  export type WithObject<TSchema, R, P = undefined> = {
+  export type WithObject<TSchema, R, P = undefined, O = undefined> = {
     [K in keyof TSchema]: P extends undefined
-      ? FilterFunction<TSchema[K], R>
+      ? FilterFunction<TSchema[K], R, O>
       : TSchema[K] | Partial<FilterObject<TSchema[K]>>;
   };
 
-  interface WithFunction<TSchema, R> extends ReducedFunction {
-    (filter: Partial<WithObject<TSchema, R, true>>): Promise<R>;
+  interface WithFunction<TSchema, R, O> extends ReducedFunction {
+    (filter: Partial<WithObject<TSchema, R, true>>, options?: O): Promise<R>;
   }
 
-  type With<TSchema, R> = WithFunction<TSchema, R> & WithObject<TSchema, R>;
+  type With<TSchema, R, O> = WithFunction<TSchema, R, O> & WithObject<TSchema, R>;
 
   type AllFields<TSchema> = `ronin.${keyof RoninMetadata}` | Exclude<keyof TSchema, 'ronin'>;
 
@@ -204,13 +204,17 @@ export namespace RONIN {
     TReturn,
     TSlug extends SchemaSlugKey,
     TVariant extends string = string,
-    TWith = With<TSchema, TReturn | null>,
+    TOptions = QueryHandlerOptionsFactory,
+    TWith = With<TSchema, TReturn | null, TOptions>,
   > extends ReducedFunction {
-    (filter?: {
-      with?: Partial<WithObject<TSchema, TReturn, true>>;
-      in?: TVariant;
-      including?: Including<TSlug>;
-    }): Promise<TReturn | null>;
+    (
+      filter?: {
+        with?: Partial<WithObject<TSchema, TReturn, true>>;
+        in?: TVariant;
+        including?: Including<TSlug>;
+      },
+      options?: TOptions,
+    ): Promise<TReturn | null>;
     with: TWith;
   }
 
@@ -219,17 +223,21 @@ export namespace RONIN {
     TReturn,
     TSlug extends SchemaSlugKey,
     TVariant extends string = string,
-    TWith = With<TSchema, TReturn>,
+    TOptions = QueryHandlerOptionsFactory,
+    TWith = With<TSchema, TReturn, TOptions>,
   > extends ReducedFunction {
-    (filter?: {
-      with?: Partial<WithObject<TSchema, TReturn, true>>;
-      orderedBy?: Partial<OrderedByObject<TSchema, TReturn, true>>;
-      limitedTo?: number;
-      in?: TVariant;
-      including?: Including<TSlug>;
-      after?: string;
-      before?: string;
-    }): Promise<TReturn>;
+    (
+      filter?: {
+        with?: Partial<WithObject<TSchema, TReturn, true>>;
+        orderedBy?: Partial<OrderedByObject<TSchema, TReturn, true>>;
+        limitedTo?: number;
+        in?: TVariant;
+        including?: Including<TSlug>;
+        after?: string;
+        before?: string;
+      },
+      options?: TOptions,
+    ): Promise<TReturn>;
     with: TWith;
     orderedBy: OrderedBy<TSchema, TReturn>;
     limitedTo: (limit: number) => Promise<TReturn>;
@@ -239,24 +247,47 @@ export namespace RONIN {
     before: (cursor: string) => Promise<TReturn>;
   }
 
-  export interface ISetter<TSchema, TReturn, TVariant extends string = string> extends ReducedFunction {
-    (filter: {
-      with: Partial<WithObject<TSchema, TReturn, true>>;
-      to: Partial<ReplaceRecursively<TSchema, RONIN.Blob, StorableObjectValue>>;
-      in?: TVariant;
-    }): Promise<TReturn>;
+  export interface ISetter<
+    TSchema,
+    TReturn,
+    TVariant extends string = string,
+    TOptions = QueryHandlerOptionsFactory,
+  > extends ReducedFunction {
+    (
+      filter: {
+        with: Partial<WithObject<TSchema, TReturn, true>>;
+        to: Partial<ReplaceRecursively<TSchema, RONIN.Blob, StorableObjectValue>>;
+        in?: TVariant;
+      },
+      options?: TOptions,
+    ): Promise<TReturn>;
   }
 
-  export interface ICreator<TSchema, TReturn, TVariant extends string = string> extends ReducedFunction {
-    (filter?: {
-      with: Partial<ReplaceRecursively<TSchema, RONIN.Blob, StorableObjectValue>>;
-      in?: TVariant;
-    }): Promise<TReturn>;
-    with: (values: Partial<ReplaceRecursively<TSchema, RONIN.Blob, StorableObjectValue>>) => Promise<TReturn>;
+  export interface ICreator<
+    TSchema,
+    TReturn,
+    TVariant extends string = string,
+    TOptions = QueryHandlerOptionsFactory,
+  > extends ReducedFunction {
+    (
+      filter?: {
+        with: Partial<ReplaceRecursively<TSchema, RONIN.Blob, StorableObjectValue>>;
+        in?: TVariant;
+      },
+      options?: TOptions,
+    ): Promise<TReturn>;
+    with: (
+      values: Partial<ReplaceRecursively<TSchema, RONIN.Blob, StorableObjectValue>>,
+      options?: TOptions,
+    ) => Promise<TReturn>;
   }
 
-  export interface ICounter<TSchema, TVariant extends string = string, TWith = With<TSchema, number>>
-    extends ReducedFunction {
+  export interface ICounter<
+    TSchema,
+    TVariant extends string = string,
+    TOptions = QueryHandlerOptionsFactory,
+    TWith = With<TSchema, number, TOptions>,
+  > extends ReducedFunction {
     (filter?: { with?: Partial<WithObject<TSchema, number, true>>; in?: TVariant }): Promise<number>;
     with: TWith;
     in: (variant: TVariant) => Promise<number>;
@@ -266,20 +297,29 @@ export namespace RONIN {
     TSchema,
     TReturn,
     TVariant extends string = string,
-    TWith = With<TSchema, TReturn>,
+    TOptions = QueryHandlerOptionsFactory,
+    TWith = With<TSchema, TReturn, TOptions>,
   > extends ReducedFunction {
-    (filter?: { with?: Partial<WithObject<TSchema, TReturn, true>>; in?: TVariant }): Promise<TReturn>;
+    (
+      filter?: { with?: Partial<WithObject<TSchema, TReturn, true>>; in?: TVariant },
+      options?: TOptions,
+    ): Promise<TReturn>;
     with: TWith;
-    in: (variant: TVariant) => Promise<TReturn>;
+    in: (variant: TVariant, options?: TOptions) => Promise<TReturn>;
   }
 
-  export interface Creator extends Record<string, ICreator<Record<string, unknown>, unknown>> {}
+  export interface Creator<TOptions = QueryHandlerOptionsFactory>
+    extends Record<string, ICreator<Record<string, unknown>, unknown, string, TOptions>> {}
 
-  export interface Getter extends Record<string, IGetterPlural<Record<string, unknown>, unknown, string>> {}
+  export interface Getter<TOptions = QueryHandlerOptionsFactory>
+    extends Record<string, IGetterPlural<Record<string, unknown>, unknown, string, string, TOptions>> {}
 
-  export interface Setter extends Record<string, ISetter<Record<string, unknown>, unknown>> {}
+  export interface Setter<TOptions = QueryHandlerOptionsFactory>
+    extends Record<string, ISetter<Record<string, unknown>, unknown, string, TOptions>> {}
 
-  export interface Dropper extends Record<string, IDropper<Record<string, unknown>, unknown>> {}
+  export interface Dropper<TOptions = QueryHandlerOptionsFactory>
+    extends Record<string, IDropper<Record<string, unknown>, unknown, string, TOptions>> {}
 
-  export interface Counter extends Record<string, ICounter<Record<string, unknown>>> {}
+  export interface Counter<TOptions = QueryHandlerOptionsFactory>
+    extends Record<string, ICounter<Record<string, unknown>, string, TOptions>> {}
 }
