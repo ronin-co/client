@@ -10,11 +10,11 @@
   "description": "Access the RONIN data platform via TypeScript.",
   "scripts": {
     "dev": "bun run build -- --watch",
-    "build": "bunchee",
+    "build": "tsc --build",
     "test": "bun test",
     "lint": "bun run lint:tsc && bun run lint:eslint --",
     "lint:eslint": "eslint . --ext .ts --ignore-path .gitignore",
-    "lint:tsc": "tsc --noEmit --pretty",
+    "lint:tsc": "tsc --pretty",
     "prepare": "husky",
     "prettify": "prettier --write --ignore-unknown \"**/*.{css,js,json,jsx,ts,tsx}\""
   },
@@ -40,17 +40,14 @@
   "exports": {
     ".": {
       "import": "./dist/index.js",
-      "require": "./dist/index.cjs",
       "types": "./dist/index.d.ts"
     },
     "./types": {
       "import": "./dist/types/index.js",
-      "require": "./dist/types/index.cjs",
       "types": "./dist/types/index.d.ts"
     },
     "./utils": {
       "import": "./dist/utils/index.js",
-      "require": "./dist/utils/index.cjs",
       "types": "./dist/utils/index.d.ts"
     }
   },
