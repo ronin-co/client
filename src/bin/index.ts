@@ -1,6 +1,6 @@
-import { printHelp, printVersion } from 'src/bin/utils/info';
 import { parseArgs } from 'util';
 
+import { printHelp, printVersion } from '../bin/utils/info';
 import initializeProject from './commands/init';
 import logIn from './commands/login';
 import { getSession } from './utils/session';

@@ -1,6 +1,6 @@
-import { runQueriesWithStorageAndHooks } from 'src/queries';
-import type { Query } from 'src/types/query';
-import type { QueryHandlerOptionsFactory } from 'src/types/utils';
+import { runQueriesWithStorageAndHooks } from '../queries';
+import type { Query } from '../types/query';
+import type { QueryHandlerOptionsFactory } from '../types/utils';
 
 /**
  * Executes an array of queries and handles their results. It is used to execute

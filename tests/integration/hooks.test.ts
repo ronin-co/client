@@ -1,7 +1,8 @@
 import { beforeEach, describe, expect, mock, test } from 'bun:test';
-import { createSyntaxFactory } from 'src/syntax';
-import type { CombinedInstructions, QueryType } from 'src/types/query';
-import { type FilteredHookQuery, runQueriesWithHooks } from 'src/utils/data-hooks';
+
+import { createSyntaxFactory } from '../../src/syntax';
+import type { CombinedInstructions, QueryType } from '../../src/types/query';
+import { type FilteredHookQuery, runQueriesWithHooks } from '../../src/utils/data-hooks';
 
 let mockResolvedRequestText: any = undefined;
 
