@@ -27,7 +27,10 @@ let inBatch = false;
  * const result = await get.account.with.email('mike@gmail.com');
  * ```
  */
-export const getSyntaxProxy = (queryType: string, queryHandler: (query: Query) => Promise<any>) => {
+export const getSyntaxProxy = (
+  queryType: string,
+  queryHandler: (query: Query, options?: Record<string, unknown>) => Promise<any>,
+) => {
   return new Proxy(
     {},
     {
@@ -43,6 +46,7 @@ export const getSyntaxProxy = (queryType: string, queryHandler: (query: Query) =
           return new Proxy(proxyTargetFunction, {
             async apply(_target: any, _thisArg: any, args: any[]) {
               const value = args[0];
+              const options = args[1];
               const expanded = objectFromAccessor(path.join('.'), typeof value === 'undefined' ? {} : value);
 
               const query = { [queryType]: expanded };
@@ -51,7 +55,7 @@ export const getSyntaxProxy = (queryType: string, queryHandler: (query: Query) =
                 return query;
               }
 
-              return queryHandler(query);
+              return queryHandler(query, options);
             },
 
             get(_target: any, nextProp: string): any {
@@ -90,7 +94,7 @@ export const getSyntaxProxy = (queryType: string, queryHandler: (query: Query) =
  */
 export const getBatchProxy = async <T extends [Promise<any>, ...Promise<any>[]]>(
   operations: () => T,
-  queriesHandler: (queries: Query[]) => Promise<any>,
+  queriesHandler: (queries: Query[], options?: Record<string, unknown>) => Promise<any>,
 ): Promise<PromiseTuple<T>> => {
   inBatch = true;
   const queries = (await Promise.all(operations())) as Query[];

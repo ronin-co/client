@@ -47,11 +47,21 @@ import { getBatchProxy, getSyntaxProxy } from './utils';
  * ```
  */
 export const createSyntaxFactory = (options: QueryHandlerOptionsFactory) => ({
-  create: getSyntaxProxy('create', (query) => queryHandler(query, options)) as RONIN.Creator,
-  get: getSyntaxProxy('get', (query) => queryHandler(query, options)) as RONIN.Getter,
-  set: getSyntaxProxy('set', (query) => queryHandler(query, options)) as RONIN.Setter,
-  drop: getSyntaxProxy('drop', (query) => queryHandler(query, options)) as RONIN.Dropper,
-  count: getSyntaxProxy('count', (query) => queryHandler(query, options)) as RONIN.Counter,
+  create: getSyntaxProxy('create', (query, queryOptions) =>
+    queryHandler(query, queryOptions || options),
+  ) as RONIN.Creator,
+  get: getSyntaxProxy('get', (query, queryOptions) =>
+    queryHandler(query, queryOptions || options),
+  ) as RONIN.Getter,
+  set: getSyntaxProxy('set', (query, queryOptions) =>
+    queryHandler(query, queryOptions || options),
+  ) as RONIN.Setter,
+  drop: getSyntaxProxy('drop', (query, queryOptions) =>
+    queryHandler(query, queryOptions || options),
+  ) as RONIN.Dropper,
+  count: getSyntaxProxy('count', (query, queryOptions) =>
+    queryHandler(query, queryOptions || options),
+  ) as RONIN.Counter,
   batch: <T extends [Promise<any>, ...Promise<any>[]]>(operations: () => T) =>
-    getBatchProxy<T>(operations, (queries) => queriesHandler(queries, options)),
+    getBatchProxy<T>(operations, (queries, queryOptions) => queriesHandler(queries, queryOptions || options)),
 });
