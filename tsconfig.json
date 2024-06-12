@@ -25,5 +25,5 @@
     "noUnusedParameters": true
   },
   "references": [{ "path": "./src" }],
-  "exclude": ["dist"]
+  "include": ["src", "tests"]
 }
