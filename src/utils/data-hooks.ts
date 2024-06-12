@@ -1,9 +1,9 @@
 import type AsyncHooks from 'node:async_hooks';
 
-import { runQueries } from '../queries';
-import type { CombinedInstructions, Query, QuerySchemaType, QueryType, Results } from '../types/query';
-import type { QueryHandlerOptions, RecursivePartial } from '../types/utils';
-import { toDashCase } from './helpers';
+import { runQueries } from '@/src/queries';
+import type { CombinedInstructions, Query, QuerySchemaType, QueryType, Results } from '@/src/types/query';
+import type { QueryHandlerOptions, RecursivePartial } from '@/src/types/utils';
+import { toDashCase } from '@/src/utils/helpers';
 
 const EMPTY = Symbol('empty');
 

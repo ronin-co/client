@@ -1,5 +1,5 @@
-import type { StorableObjectValue, StoredObject } from './storage';
-import type { ReducedFunction, ReplaceRecursively } from './utils';
+import type { StorableObjectValue, StoredObject } from '@/src/types/storage';
+import type { ReducedFunction, ReplaceRecursively } from '@/src/types/utils';
 
 export namespace RONIN {
   export interface RoninRecord<TId extends string = string> {

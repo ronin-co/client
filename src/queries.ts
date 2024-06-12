@@ -1,9 +1,9 @@
-import { processStorableObjects, uploadStorableObjects } from './storage';
-import type { Query, Results } from './types/query';
-import type { QueryHandlerOptions } from './types/utils';
-import { runQueriesWithHooks } from './utils/data-hooks';
-import { getDotNotatedPath, InvalidQueryError } from './utils/errors';
-import { formatTimeFields, getProperty } from './utils/helpers';
+import { processStorableObjects, uploadStorableObjects } from '@/src/storage';
+import type { Query, Results } from '@/src/types/query';
+import type { QueryHandlerOptions } from '@/src/types/utils';
+import { runQueriesWithHooks } from '@/src/utils/data-hooks';
+import { getDotNotatedPath, InvalidQueryError } from '@/src/utils/errors';
+import { formatTimeFields, getProperty } from '@/src/utils/helpers';
 
 type QueryResponse<T> = {
   results: Result<T>[];

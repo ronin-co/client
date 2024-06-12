@@ -1,6 +1,6 @@
 import chalkTemplate from 'chalk-template';
 
-import { version } from '../../../package.json';
+import { version } from '@/src/../package.json';
 
 export const printVersion = () => {
   console.log(version);

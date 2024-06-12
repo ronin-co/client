@@ -1,6 +1,6 @@
-import type { Query } from '../types/query';
-import type { PromiseTuple } from '../types/utils';
-import { objectFromAccessor } from '../utils/helpers';
+import type { Query } from '@/src/types/query';
+import type { PromiseTuple } from '@/src/types/utils';
+import { objectFromAccessor } from '@/src/utils/helpers';
 
 let inBatch = false;
 

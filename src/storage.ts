@@ -1,6 +1,6 @@
-import type { CombinedInstructions, Query } from './types/query';
-import type { StorableObject, StoredObject } from './types/storage';
-import type { QueryHandlerOptions } from './types/utils';
+import type { CombinedInstructions, Query } from '@/src/types/query';
+import type { StorableObject, StoredObject } from '@/src/types/storage';
+import type { QueryHandlerOptions } from '@/src/types/utils';
 
 /**
  * Extract `StorableObject`s from queries. These will be uploaded separately

@@ -1,4 +1,4 @@
-import type { Hooks } from '../utils/data-hooks';
+import type { Hooks } from '@/src/utils/data-hooks';
 
 export interface QueryHandlerOptions {
   /**

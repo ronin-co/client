@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, mock, spyOn, test } from 'bun:test';
 
-import createSyntaxFactory from '../../src';
-import { runQueriesWithHooks } from '../../src/utils/data-hooks';
+import createSyntaxFactory from '@/src/index';
+import { runQueriesWithHooks } from '@/src/utils/data-hooks';
 
 const mockFetch = mock(async () => {
   return Response.json({

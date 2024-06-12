@@ -28,7 +28,7 @@ export type {
   BeforeHookHandler,
   AfterHookHandler,
   DuringHookHandler,
-} from '../utils/data-hooks';
+} from '@/src/utils/data-hooks';
 
 export type {
   // Queries
@@ -56,7 +56,7 @@ export type {
 
   // Query Instructions
   WithInstruction,
-} from './query';
+} from '@/src/types/query';
 
 // Storage
-export type { StorableObjectValue, StoredObject } from './storage';
+export type { StorableObjectValue, StoredObject } from '@/src/types/storage';

@@ -3,7 +3,7 @@ import http from 'http';
 import open from 'open';
 import ora from 'ora';
 
-import { storeSession, storeTokenForBun, storeTokenForNPM } from '../utils/session';
+import { storeSession, storeTokenForBun, storeTokenForNPM } from '@/src/bin/utils/session';
 
 export default async (appToken?: string) => {
   const spinner = ora('Logging in').start();
