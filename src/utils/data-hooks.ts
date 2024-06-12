@@ -1,3 +1,5 @@
+import type AsyncHooks from 'node:async_hooks';
+
 import { runQueries } from '../queries';
 import type { CombinedInstructions, Query, QuerySchemaType, QueryType, Results } from '../types/query';
 import type { QueryHandlerOptions, RecursivePartial } from '../types/utils';
@@ -146,6 +148,15 @@ interface HookContext {
   querySchema: string;
 }
 
+// We are heavily obfuscating the name of the native module here, in order to
+// prevent static analysis in build tools that would cause warnings. The build
+// tools should not warn anyways, because we're importing the module
+// conditionally, but because they're not smart enough to know that, a useless
+// warning is printed that would annoy people.
+const asyncHooksModule = new TextDecoder().decode(
+  new Uint8Array([110, 111, 100, 101, 58, 97, 115, 121, 110, 99, 95, 104, 111, 111, 107, 115]),
+);
+
 /**
  * If a query is being run explicitly by importing the client inside a data
  * hook, this context will contain information about the hook in which the
@@ -153,7 +164,7 @@ interface HookContext {
  */
 const HOOK_CONTEXT =
   typeof process !== 'undefined'
-    ? new (await import('./native')).AsyncLocalStorage<HookContext>()
+    ? new ((await import(asyncHooksModule)) as typeof AsyncHooks).AsyncLocalStorage<HookContext>()
     : undefined;
 
 /**
