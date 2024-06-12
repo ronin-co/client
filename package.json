@@ -15,7 +15,7 @@
     "lint": "bun run lint:tsc && bun run lint:eslint --",
     "lint:eslint": "eslint . --ext .ts --ignore-path .gitignore",
     "lint:tsc": "tsc",
-    "postinstall": "husky && bun run build",
+    "prepare": "husky && bun run build",
     "prettify": "prettier --write --ignore-unknown \"**/*.{css,js,json,jsx,ts,tsx}\""
   },
   "files": [
