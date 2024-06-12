@@ -1,6 +1,6 @@
 import { expect, test } from 'bun:test';
 
-import { toDashCase } from '../../src/utils/helpers';
+import { toDashCase } from '@/src/utils/helpers';
 
 test('correctly convert strings to dash case', async () => {
   expect(toDashCase('superLongSlug')).toBe('super-long-slug');

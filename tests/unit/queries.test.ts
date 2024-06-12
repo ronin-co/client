@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, mock, spyOn, test } from 'bun:test';
 
-import { queriesHandler } from '../../src/syntax/handlers';
+import { queriesHandler } from '@/src/syntax/handlers';
 
 let mockRequestResolvedValue: Request | undefined;
 

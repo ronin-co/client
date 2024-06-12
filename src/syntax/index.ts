@@ -1,7 +1,7 @@
-import type { RONIN } from '../types/codegen';
-import type { QueryHandlerOptionsFactory } from '../types/utils';
-import { queriesHandler, queryHandler } from './handlers';
-import { getBatchProxy, getSyntaxProxy } from './utils';
+import { queriesHandler, queryHandler } from '@/src/syntax/handlers';
+import { getBatchProxy, getSyntaxProxy } from '@/src/syntax/utils';
+import type { RONIN } from '@/src/types/codegen';
+import type { QueryHandlerOptionsFactory } from '@/src/types/utils';
 
 /**
  * Creates a syntax factory for generating and executing queries.

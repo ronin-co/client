@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'bun:test';
 
-import { getDotNotatedPath } from '../../src/utils/errors';
+import { getDotNotatedPath } from '@/src/utils/errors';
 
 describe('generate dot notation', () => {
   test('generate path from segments containing only strings', () => {

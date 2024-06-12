@@ -2,10 +2,10 @@
 
 import { parseArgs } from 'util';
 
-import { printHelp, printVersion } from '../bin/utils/info';
-import initializeProject from './commands/init';
-import logIn from './commands/login';
-import { getSession } from './utils/session';
+import initializeProject from '@/src/bin/commands/init';
+import logIn from '@/src/bin/commands/login';
+import { printHelp, printVersion } from '@/src/bin/utils/info';
+import { getSession } from '@/src/bin/utils/session';
 
 let values;
 let positionals;
