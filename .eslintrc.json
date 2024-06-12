@@ -28,7 +28,8 @@
           "storable",
           "gmail",
           "cloudflare",
-          "runtimes"
+          "runtimes",
+          "usr"
         ],
         "comments": true,
         "strings": false,
