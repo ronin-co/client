@@ -153,7 +153,7 @@ interface HookContext {
  */
 const HOOK_CONTEXT =
   typeof process !== 'undefined'
-    ? new (await import('./native')).AsyncLocalStorage<HookContext>()
+    ? new (await import('node:async_hooks')).AsyncLocalStorage<HookContext>()
     : undefined;
 
 /**
