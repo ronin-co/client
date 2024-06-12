@@ -24,6 +24,5 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true
   },
-  "references": [{ "path": "./src" }],
-  "exclude": ["dist"]
+  "references": [{ "path": "./src" }]
 }
