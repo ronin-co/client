@@ -36,6 +36,9 @@ jobs:
         if: steps.cache-node-modules.outputs.cache-hit != 'true'
         run: bun install --frozen-lockfile
 
+      - name: Build
+        run: bun run build
+
       - name: Code Linting
         run: bun run --bun lint
 
@@ -68,6 +71,9 @@ jobs:
       - name: Install Dependencies
         if: steps.cache-node-modules.outputs.cache-hit != 'true'
         run: bun install --frozen-lockfile
+
+      - name: Build
+        run: bun run build
 
       - name: Testing
         run: bun test
