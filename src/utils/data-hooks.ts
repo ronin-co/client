@@ -1,5 +1,3 @@
-import type AsyncHooks from 'async_hooks';
-
 import { runQueries } from '../queries';
 import type { CombinedInstructions, Query, QuerySchemaType, QueryType, Results } from '../types/query';
 import type { QueryHandlerOptions, RecursivePartial } from '../types/utils';
@@ -155,10 +153,7 @@ interface HookContext {
  */
 const HOOK_CONTEXT =
   typeof process !== 'undefined'
-    ? // We can't use top-level `await`, as that would break the CJS bundle.
-      (import('node:async_hooks') as Promise<typeof AsyncHooks>).then(({ AsyncLocalStorage }) => {
-        return new AsyncLocalStorage<HookContext>();
-      })
+    ? new (await import('./native')).AsyncLocalStorage<HookContext>()
     : undefined;
 
 /**
