@@ -148,24 +148,27 @@ interface HookContext {
   querySchema: string;
 }
 
-// We are heavily obfuscating the name of the native module here, in order to
-// prevent static analysis in build tools that would cause warnings. The build
-// tools should not warn anyways, because we're importing the module
-// conditionally, but because they're not smart enough to know that, a useless
-// warning is printed that would annoy people.
-const asyncHooksModule = new TextDecoder().decode(
-  new Uint8Array([110, 111, 100, 101, 58, 97, 115, 121, 110, 99, 95, 104, 111, 111, 107, 115]),
-);
-
 /**
  * If a query is being run explicitly by importing the client inside a data
  * hook, this context will contain information about the hook in which the
  * query is being run.
  */
-const HOOK_CONTEXT =
-  typeof process !== 'undefined'
-    ? new ((await import(asyncHooksModule)) as typeof AsyncHooks).AsyncLocalStorage<HookContext>()
-    : undefined;
+let HOOK_CONTEXT: InstanceType<typeof AsyncHooks.AsyncLocalStorage<HookContext>>;
+
+try {
+  // We are heavily obfuscating the name of the native module here, in order to
+  // prevent static analysis in build tools that would cause warnings. The build
+  // tools should not warn anyways, because we're importing the module
+  // conditionally, but because they're not smart enough to know that, a useless
+  // warning is printed that would annoy people.
+  const moduleNameSource = [110, 111, 100, 101, 58, 97, 115, 121, 110, 99, 95, 104, 111, 111, 107, 115];
+  const moduleName = new TextDecoder().decode(new Uint8Array(moduleNameSource));
+  const { AsyncLocalStorage } = (await import(moduleName)) as typeof AsyncHooks;
+
+  HOOK_CONTEXT = new AsyncLocalStorage<HookContext>();
+} catch (err) {
+  // If the module is not available, we just want to proceed without it.
+}
 
 /**
  * Based on which type of query is being executed (e.g. "get" or "create"),
