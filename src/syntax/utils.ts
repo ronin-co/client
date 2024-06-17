@@ -44,7 +44,7 @@ export const getSyntaxProxy = (
           proxyTargetFunction();
 
           return new Proxy(proxyTargetFunction, {
-            async apply(_target: any, _thisArg: any, args: any[]) {
+            apply(_target: any, _thisArg: any, args: any[]) {
               const value = args[0];
               const options = args[1];
               const expanded = objectFromAccessor(path.join('.'), typeof value === 'undefined' ? {} : value);
@@ -97,7 +97,7 @@ export const getBatchProxy = async <T extends [Promise<any>, ...Promise<any>[]]>
   queriesHandler: (queries: Query[], options?: Record<string, unknown>) => Promise<any>,
 ): Promise<PromiseTuple<T>> => {
   inBatch = true;
-  const queries = (await Promise.all(operations())) as Query[];
+  const queries = operations() as Query[];
   inBatch = false;
 
   return queriesHandler(queries) as PromiseTuple<T>;

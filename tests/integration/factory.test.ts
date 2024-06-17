@@ -188,6 +188,35 @@ describe('factory', () => {
     );
   });
 
+  test('make sure `batch` extracts queries synchronously', async () => {
+    const mockFetchNew = mock((request) => {
+      mockRequestResolvedValue = request;
+
+      return Response.json({
+        results: [{ ok: true }],
+      });
+    });
+
+    const factory = createSyntaxFactory({
+      fetch: async (request) => mockFetchNew(request),
+      token: 'takashitoken',
+    });
+
+    // If `batch` does not extract queries synchronously, the following
+    // `get` requests will be triggered while the `batch` is still being
+    // processed and that in turn will make the `get` requests act like they
+    // are part of
+    const res = (await Promise.all([
+      factory.batch(() => [factory.drop.accounts(), factory.drop.spaces()]),
+      factory.get.members(),
+      factory.get.users(),
+    ])) as any;
+
+    expect(res[0][0].ok).toBe(true);
+    expect(res[1].ok).toBe(true);
+    expect(res[2].ok).toBe(true);
+  });
+
   test('send correct `queries` for single `get` request using `with`', async () => {
     // @ts-expect-error `startingWith` is undefined due not not having the schema types.
     await get.accounts.with.handle.startingWith('a');
