@@ -205,7 +205,7 @@ describe('factory', () => {
     // If `batch` does not extract queries synchronously, the following
     // `get` requests will be triggered while the `batch` is still being
     // processed and that in turn will make the `get` requests act like they
-    // are part of
+    // are in a batch.
     const res = (await Promise.all([
       factory.batch(() => [factory.drop.accounts(), factory.drop.spaces()]),
       factory.get.members(),
