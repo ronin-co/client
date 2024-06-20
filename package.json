@@ -42,6 +42,7 @@
       "src/index.ts",
       "src/bin/index.ts",
       "src/types/index.ts",
+      "src/schema/index.ts",
       "src/utils/index.ts"
     ],
     "format": "esm",
@@ -56,6 +57,10 @@
       "import": "./dist/types/index.js",
       "types": "./dist/types/index.d.ts"
     },
+    "./schema": {
+      "import": "./dist/schema/index.js",
+      "types": "./dist/schema/index.d.ts"
+    },
     "./utils": {
       "import": "./dist/utils/index.js",
       "types": "./dist/utils/index.d.ts"
@@ -68,6 +73,9 @@
       ],
       "types": [
         "dist/types/index.d.ts"
+      ],
+      "schema": [
+        "dist/schema/index.d.ts"
       ],
       "utils": [
         "dist/utils/index.d.ts"
@@ -89,6 +97,7 @@
   "devDependencies": {
     "@types/bun": "1.1.4",
     "@types/ini": "4.1.1",
+    "@types/uuid": "9.0.8",
     "@typescript-eslint/eslint-plugin": "7.13.1",
     "@typescript-eslint/parser": "7.13.1",
     "eslint": "8.57.0",
