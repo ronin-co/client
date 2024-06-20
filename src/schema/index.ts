@@ -49,7 +49,7 @@ export interface SchemaRecords<
     never,
     never,
     undefined,
-    RONIN.EnrichProvidedIncluding<ExtractRecordKeys<Required<T>>>
+    RONIN.EnrichProvidedIncluding<ExtractRecordKeys<Required<T['base']>>>
   >;
   dropper: RONIN.IDropper<TSchema, TReturn, never, undefined>;
   counter: RONIN.ICounter<TSchema, never, undefined>;
