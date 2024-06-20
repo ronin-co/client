@@ -1,11 +1,11 @@
-import * as fs from 'fs';
-import * as path from 'path';
-import * as ts from 'typescript';
+import fs from 'fs/promises';
+import path from 'path';
+import ts from 'typescript';
 import { v4 as uuidv4 } from 'uuid';
 
-export function parseSchemaDtsFile(filePath: string = './schemas/index.d.ts') {
+export async function parseSchemaDtsFile(filePath: string = './schemas/index.d.ts') {
   const fullPath = path.resolve(process.cwd(), filePath);
-  const fileContent = fs.readFileSync(fullPath, 'utf-8');
+  const fileContent = await fs.readFile(fullPath, 'utf-8');
   const sourceFile = ts.createSourceFile('temp.d.ts', fileContent, ts.ScriptTarget.Latest, true);
 
   const results: any[] = [];

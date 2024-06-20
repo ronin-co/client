@@ -11,7 +11,7 @@ export default async (positionals: string[]) => {
   const schemaDtsFile = path.join(process.cwd(), schemasDir, 'index.d.ts');
 
   try {
-    const schemaJson = parseSchemaDtsFile(schemaDtsFile);
+    const schemaJson = await parseSchemaDtsFile(schemaDtsFile);
     console.log(schemaJson);
   } catch (err) {
     spinner.fail('Failed to read schema definitions');
