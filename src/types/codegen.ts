@@ -308,33 +308,34 @@ export namespace RONIN {
     in: (variant: TVariant, options?: TOptions) => Promise<TReturn>;
   }
 
-  export type Creator<TOptions = undefined> = Schemas extends undefined
-    ? Record<string, ICreator<Record<string, unknown>, unknown, string, TOptions>>
-    : {
-        [K in keyof Schemas]: Schemas[K]['creator'];
-      };
+  export interface ExtendedGetter<TOptions = undefined>
+    extends Record<string, IGetterPlural<Record<string, unknown>, unknown, string, string, TOptions>> {}
+  export interface ExtendedSetter<TOptions = undefined>
+    extends Record<string, ISetter<Record<string, unknown>, unknown, string, TOptions>> {}
+  export interface ExtendedCreator<TOptions = undefined>
+    extends Record<string, ICreator<Record<string, unknown>, unknown, string, TOptions>> {}
+  export interface ExtendedDropper<TOptions = undefined>
+    extends Record<string, IDropper<Record<string, unknown>, unknown, string, TOptions>> {}
+  export interface ExtendedCounter<TOptions = undefined>
+    extends Record<string, ICounter<Record<string, unknown>, string, TOptions>> {}
 
-  export type Getter<TOptions = undefined> = Schemas extends undefined
-    ? Record<string, IGetterPlural<Record<string, unknown>, unknown, string, string, TOptions>>
-    : {
-        [K in keyof Schemas]: Schemas[K]['getter'];
-      };
+  export type Creator<TOptions = undefined> = {
+    [K in keyof Schemas]: Schemas[K]['creator'];
+  } & RONIN.ExtendedCreator<TOptions>;
 
-  export type Setter<TOptions = undefined> = Schemas extends undefined
-    ? Record<string, ISetter<Record<string, unknown>, unknown, string, TOptions>>
-    : {
-        [K in keyof Schemas]: Schemas[K]['setter'];
-      };
+  export type Getter<TOptions = undefined> = {
+    [K in keyof Schemas]: Schemas[K]['getter'];
+  } & RONIN.ExtendedGetter<TOptions>;
 
-  export type Dropper<TOptions = undefined> = Schemas extends undefined
-    ? Record<string, IDropper<Record<string, unknown>, unknown, string, TOptions>>
-    : {
-        [K in keyof Schemas]: Schemas[K]['dropper'];
-      };
+  export type Setter<TOptions = undefined> = {
+    [K in keyof Schemas]: Schemas[K]['setter'];
+  } & RONIN.ExtendedSetter<TOptions>;
 
-  export type Counter<TOptions = undefined> = Schemas extends undefined
-    ? Record<string, ICounter<Record<string, unknown>, string, TOptions>>
-    : {
-        [K in keyof Schemas]: Schemas[K]['counter'];
-      };
+  export type Dropper<TOptions = undefined> = {
+    [K in keyof Schemas]: Schemas[K]['dropper'];
+  } & RONIN.ExtendedDropper<TOptions>;
+
+  export type Counter<TOptions = undefined> = {
+    [K in keyof Schemas]: Schemas[K]['counter'];
+  } & RONIN.ExtendedCounter<TOptions>;
 }

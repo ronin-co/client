@@ -25,7 +25,7 @@ export interface SchemaRecord<T extends Record<string, any>, TSchema = RoninReco
   getter: RONIN.IGetterSingular<
     TSchema,
     TReturn,
-    string,
+    never,
     never,
     undefined,
     RONIN.EnrichProvidedIncluding<ExtractRecordKeys<Required<T>>>
@@ -46,7 +46,7 @@ export interface SchemaRecords<
   getter: RONIN.IGetterPlural<
     TSchema,
     TReturn,
-    string,
+    never,
     never,
     undefined,
     RONIN.EnrichProvidedIncluding<ExtractRecordKeys<Required<T>>>
