@@ -3,10 +3,6 @@ import type { Schemas } from 'ronin';
 import type { StorableObjectValue, StoredObject } from '@/src/types/storage';
 import type { ReducedFunction, ReplaceRecursively } from '@/src/types/utils';
 
-declare module 'ronin' {
-  export type Schemas = undefined;
-}
-
 export namespace RONIN {
   export interface RoninRecord<TId extends string = string> {
     id: TId;
