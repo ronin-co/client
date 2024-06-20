@@ -1,5 +1,11 @@
+import type { Schemas } from 'ronin';
+
 import type { StorableObjectValue, StoredObject } from '@/src/types/storage';
 import type { ReducedFunction, ReplaceRecursively } from '@/src/types/utils';
+
+declare module 'ronin' {
+  export type Schemas = undefined;
+}
 
 export namespace RONIN {
   export interface RoninRecord<TId extends string = string> {
@@ -157,9 +163,9 @@ export namespace RONIN {
       : TSchema[K] | Partial<FilterObject<TSchema[K]>>;
   };
 
-  interface WithFunction<TSchema, R, O> extends ReducedFunction {
-    (filter: Partial<WithObject<TSchema, R, true>>, options?: O): Promise<R>;
-  }
+  type WithFunction<TSchema, TReturn, TOptions> = Omit<ReducedFunction, keyof TSchema> & {
+    (filter: Partial<RONIN.WithObject<TSchema, TReturn, true>>, options?: TOptions): Promise<TReturn>;
+  };
 
   type With<TSchema, R, O> = WithFunction<TSchema, R, O> & WithObject<TSchema, R>;
 
@@ -196,9 +202,11 @@ export namespace RONIN {
 
   export interface Includes extends Record<SchemaSlugKey, string> {}
 
-  type Including<TSlug extends SchemaSlugKey> =
+  export type EnrichProvidedIncluding<T extends string> =
     | 'all'
-    | Array<RONIN.Includes[TSlug] | `ronin.${keyof Pick<RoninMetadata, 'createdBy' | 'updatedBy'>}`>;
+    | Array<T | 'ronin.createdBy' | 'ronin.updatedBy'>;
+
+  type Including<TSlug extends SchemaSlugKey> = EnrichProvidedIncluding<RONIN.Includes[TSlug]>;
 
   export interface IGetterSingular<
     TSchema,
@@ -206,17 +214,17 @@ export namespace RONIN {
     TSlug extends SchemaSlugKey,
     TVariant extends string = string,
     TOptions = undefined,
-    TWith = With<TSchema, TReturn | null, TOptions>,
+    TIncluding = undefined,
   > extends ReducedFunction {
     (
       filter?: {
         with?: Partial<WithObject<TSchema, TReturn, true>>;
         in?: TVariant;
-        including?: Including<TSlug>;
+        including?: TIncluding extends undefined ? Including<TSlug> : TIncluding;
       },
       options?: TOptions,
     ): Promise<TReturn | null>;
-    with: TWith;
+    with: With<TSchema, TReturn | null, TOptions>;
   }
 
   export interface IGetterPlural<
@@ -225,7 +233,7 @@ export namespace RONIN {
     TSlug extends SchemaSlugKey,
     TVariant extends string = string,
     TOptions = undefined,
-    TWith = With<TSchema, TReturn, TOptions>,
+    TIncluding = undefined,
   > extends ReducedFunction {
     (
       filter?: {
@@ -233,17 +241,20 @@ export namespace RONIN {
         orderedBy?: Partial<OrderedByObject<TSchema, TReturn, true>>;
         limitedTo?: number;
         in?: TVariant;
-        including?: Including<TSlug>;
+        including?: TIncluding extends undefined ? Including<TSlug> : TIncluding;
         after?: string;
         before?: string;
       },
       options?: TOptions,
     ): Promise<TReturn>;
-    with: TWith;
+    with: With<TSchema, TReturn | null, TOptions>;
     orderedBy: OrderedBy<TSchema, TReturn, TOptions>;
     limitedTo: (limit: number, options?: TOptions) => Promise<TReturn>;
     in: (variant: TVariant, options?: TOptions) => Promise<TReturn>;
-    including: (values: Including<TSlug>, options?: TOptions) => Promise<TReturn>;
+    including: (
+      values: TIncluding extends undefined ? Including<TSlug> : TIncluding,
+      options?: TOptions,
+    ) => Promise<TReturn>;
     after: (cursor: string, options?: TOptions) => Promise<TReturn>;
     before: (cursor: string, options?: TOptions) => Promise<TReturn>;
   }
@@ -301,18 +312,33 @@ export namespace RONIN {
     in: (variant: TVariant, options?: TOptions) => Promise<TReturn>;
   }
 
-  export interface Creator<TOptions = undefined>
-    extends Record<string, ICreator<Record<string, unknown>, unknown, string, TOptions>> {}
+  export type Creator<TOptions = undefined> = Schemas extends undefined
+    ? Record<string, ICreator<Record<string, unknown>, unknown, string, TOptions>>
+    : {
+        [K in keyof Schemas]: Schemas[K]['creator'];
+      };
 
-  export interface Getter<TOptions = undefined>
-    extends Record<string, IGetterPlural<Record<string, unknown>, unknown, string, string, TOptions>> {}
+  export type Getter<TOptions = undefined> = Schemas extends undefined
+    ? Record<string, IGetterPlural<Record<string, unknown>, unknown, string, string, TOptions>>
+    : {
+        [K in keyof Schemas]: Schemas[K]['getter'];
+      };
 
-  export interface Setter<TOptions = undefined>
-    extends Record<string, ISetter<Record<string, unknown>, unknown, string, TOptions>> {}
+  export type Setter<TOptions = undefined> = Schemas extends undefined
+    ? Record<string, ISetter<Record<string, unknown>, unknown, string, TOptions>>
+    : {
+        [K in keyof Schemas]: Schemas[K]['setter'];
+      };
 
-  export interface Dropper<TOptions = undefined>
-    extends Record<string, IDropper<Record<string, unknown>, unknown, string, TOptions>> {}
+  export type Dropper<TOptions = undefined> = Schemas extends undefined
+    ? Record<string, IDropper<Record<string, unknown>, unknown, string, TOptions>>
+    : {
+        [K in keyof Schemas]: Schemas[K]['dropper'];
+      };
 
-  export interface Counter<TOptions = undefined>
-    extends Record<string, ICounter<Record<string, unknown>, string, TOptions>> {}
+  export type Counter<TOptions = undefined> = Schemas extends undefined
+    ? Record<string, ICounter<Record<string, unknown>, string, TOptions>>
+    : {
+        [K in keyof Schemas]: Schemas[K]['counter'];
+      };
 }
