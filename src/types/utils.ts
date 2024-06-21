@@ -31,7 +31,8 @@ export interface QueryHandlerOptions {
 
   /**
    * Allows for preventing recursions when running queries from data hooks
-   * provided with the `hooks` option.
+   * provided with the `hooks` option. If the `hooks` option is provided, this
+   * option is required.
    */
   asyncContext?: AsyncLocalStorage<HookContext>;
 }

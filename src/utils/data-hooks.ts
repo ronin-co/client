@@ -377,13 +377,22 @@ export const runQueriesWithHooks = async <T>(
     throw new Error(message);
   }
 
+  // We can't import `AsyncLocalStorage` directly inside the package, because
+  // that would require either importing it from a separate entrypoint of the
+  // package (in which case people would need to import that separate
+  // entrypoint, making the import statement longer) or importing it
+  // conditionally from the top-level, which would require top-level `await`,
+  // which, at the time of writing, doesn't work in certain ESM environments,
+  // like Next.js Server Actions. We could also import it from inside a
+  // function, but then the module would be booted the first time that function
+  // is called, thereby slowing down the function.
   if (!asyncContext) {
     let message = 'In the case that the "ronin" package receives a value for';
     message += ' its `hooks` option, the `node:async_hooks` module must be';
     message += ' available for use by the package. Node.js, Bun, Deno, and';
     message += ' other runtimes support this module natively. On certain edge';
     message += ' runtimes like Cloudflare Workers, you might need to enable';
-    message += ' the module explicitly';
+    message += ' the module explicitly.';
 
     throw new Error(message);
   }
