@@ -142,18 +142,16 @@ const getMethodName = (hookType: HookType, queryType: QueryType): string => {
   return hookType === 'during' ? queryType : hookType + capitalizedQueryType;
 };
 
-interface HookContext {
+interface HookCallerOptions extends Omit<QueryHandlerOptions, 'hooks' | 'asyncContext'> {
+  hooks: NonNullable<QueryHandlerOptions['hooks']>;
+  asyncContext: NonNullable<QueryHandlerOptions['asyncContext']>;
+}
+
+export interface HookContext {
   hookType: HookType;
   queryType: QueryType;
   querySchema: string;
 }
-
-/**
- * If a query is being run explicitly by importing the client inside a data
- * hook, this context will contain information about the hook in which the
- * query is being run.
- */
-let HOOK_CONTEXT: InstanceType<typeof AsyncHooks.AsyncLocalStorage<HookContext>>;
 
 /**
  * Based on which type of query is being executed (e.g. "get" or "create"),
@@ -163,14 +161,13 @@ let HOOK_CONTEXT: InstanceType<typeof AsyncHooks.AsyncLocalStorage<HookContext>>
  * is `before`, then the `beforeCreate` hook would be invoked if one is defined
  * for the "account" schema in the list of hooks.
  *
- * @param hooks - A map of all schemas with their respective hooks.
  * @param hookType - The type of hook, so "before", "during", or "after".
  * @param query - A deconstructed query for which the hook should be run.
+ * @param options - A list of options to change how the queries are executed.
  *
  * @returns Information about whether a hook was run, and its potential output.
  */
 const invokeHook = async (
-  hooks: Hooks,
   hookType: HookType,
   query: {
     type: QueryType;
@@ -179,8 +176,11 @@ const invokeHook = async (
     instruction: unknown;
     result: object | null;
   },
+  options: HookCallerOptions,
 ): Promise<{ ran: boolean; result: Query | Results<unknown> | void | null | unknown }> => {
-  const hooksForSchema = hooks?.[query.schema];
+  const { hooks, asyncContext } = options;
+
+  const hooksForSchema = hooks[query.schema];
   const hookName = getMethodName(hookType, query.type);
 
   // If `oldInstruction` is falsy (e.g. `null`), we want to default to `{}`.
@@ -220,7 +220,7 @@ const invokeHook = async (
   // Additionally, if the query being run inside the data hook is for the same
   // schema as the surrounding data hook, not even the data hooks after it in
   // the lifecycle should run, meaning no data hooks should run at all.
-  const parentHook = HOOK_CONTEXT?.getStore();
+  const parentHook = asyncContext.getStore();
   const shouldSkip =
     parentHook &&
     (HOOK_TYPES.indexOf(hookType) <= HOOK_TYPES.indexOf(parentHook.hookType) ||
@@ -232,22 +232,18 @@ const invokeHook = async (
 
     const hook = hooksForSchema[hookName as keyof typeof hooksForSchema];
 
-    const caller = async () => {
-      return hookType === 'after'
-        ? await (hook as AfterHook<QueryType, unknown>)(instructions, isMultiple, queryResults)
-        : await (hook as BeforeHook<QueryType> | DuringHook<QueryType>)(instructions, isMultiple);
-    };
-
-    const result = HOOK_CONTEXT
-      ? await HOOK_CONTEXT.run(
-          {
-            hookType,
-            queryType: query.type,
-            querySchema: query.schema,
-          },
-          caller,
-        )
-      : await caller();
+    const result = await asyncContext.run(
+      {
+        hookType,
+        queryType: query.type,
+        querySchema: query.schema,
+      },
+      async () => {
+        return hookType === 'after'
+          ? await (hook as AfterHook<QueryType, unknown>)(instructions, isMultiple, queryResults)
+          : await (hook as BeforeHook<QueryType> | DuringHook<QueryType>)(instructions, isMultiple);
+      },
+    );
 
     return { ran: true, result };
   }
@@ -263,17 +259,16 @@ const invokeHook = async (
  * final list of results. In the case of an "after" hook, nothing must be done
  * because no output is returned by the hook.
  *
- * @param hooks - A map of all schemas with their respective hooks.
  * @param hookType - The type of hook, so "before", "during", or "after".
  * @param modifiableQueries - The final list of queries.
  * @param modifiableResults - The final list of query results.
  * @param query - The definition and other details of a query that is being run.
+ * @param options - A list of options to change how the queries are executed.
  *
  * @returns Nothing, because `modifiableQueries` and `modifiableResults` are
  * directly modified instead.
  */
 const invokeHooks = async (
-  hooks: Hooks,
   hookType: HookType,
   modifiableQueries: (RecursivePartial<Query> | typeof EMPTY)[],
   modifiableResults: unknown[],
@@ -282,22 +277,27 @@ const invokeHooks = async (
     index: number;
     result: object | null | Array<unknown | null>;
   },
+  options: HookCallerOptions,
 ): Promise<void> => {
   const queryType = Object.keys(query.definition)[0] as QueryType;
   const queryInstructions = query.definition[queryType] as QuerySchemaType;
   const { key, schema, multipleRecords } = getSchema(queryInstructions);
   const oldInstruction = queryInstructions[key];
 
-  const executedHookResults = await invokeHook(hooks, hookType, {
-    type: queryType,
-    schema,
-    plural: multipleRecords,
-    instruction: oldInstruction,
+  const executedHookResults = await invokeHook(
+    hookType,
+    {
+      type: queryType,
+      schema,
+      plural: multipleRecords,
+      instruction: oldInstruction,
 
-    // For "after" hooks, we want to pass the final result associated with a
-    // particular query, so that the hook can read it.
-    result: hookType === 'after' ? query.result : null,
-  });
+      // For "after" hooks, we want to pass the final result associated with a
+      // particular query, so that the hook can read it.
+      result: hookType === 'after' ? query.result : null,
+    },
+    options,
+  );
 
   // We can't assert based on what the hook returned, only based on whether the
   // hook ran or not. That's because a hook might return any falsy value and
@@ -363,26 +363,23 @@ export const runQueriesWithHooks = async <T>(
   let modifiableQueries = Array.from(queries);
   const modifiableResults = new Array<T>();
 
-  const { hooks, waitUntil } = options;
+  const { hooks, waitUntil, asyncContext } = options;
 
   // If no hooks were provided, we can just run the queries and return
   // the results.
   if (!hooks) return runQueries<T>(modifiableQueries, options);
 
-  try {
-    if (!HOOK_CONTEXT) {
-      // We are heavily obfuscating the name of the native module in order to
-      // prevent static analysis in build tools that would cause warnings. The
-      // build tools should not warn anyways, because we're importing the
-      // module conditionally, but because they're not smart enough to know
-      // that, a useless warning is printed that would annoy people.
-      const moduleNameSource = [110, 111, 100, 101, 58, 97, 115, 121, 110, 99, 95, 104, 111, 111, 107, 115];
-      const moduleName = new TextDecoder().decode(new Uint8Array(moduleNameSource));
-      const { AsyncLocalStorage } = (await import(moduleName)) as typeof AsyncHooks;
+  if (typeof process === 'undefined' && !waitUntil) {
+    let message = 'In the case that the "ronin" package receives a value for';
+    message += ' its `hooks` option, it must also receive a value for its';
+    message += ' `waitUntil` option. This requirement only applies when using';
+    message += ' an edge runtime and ensures that the edge worker continues to';
+    message += ' execute until all "after" hooks have been executed.';
 
-      HOOK_CONTEXT = new AsyncLocalStorage<HookContext>();
-    }
-  } catch (err) {
+    throw new Error(message);
+  }
+
+  if (!asyncContext) {
     let message = 'In the case that the "ronin" package receives a value for';
     message += ' its `hooks` option, the `node:async_hooks` module must be';
     message += ' available for use by the package. Node.js, Bun, Deno, and';
@@ -393,39 +390,40 @@ export const runQueriesWithHooks = async <T>(
     throw new Error(message);
   }
 
-  // We're intentionally considering the entire `hooks` option here, instead of
-  // searching for "after" hooks inside of it, because the latter would increase
-  // the error surface and make the logic less reliable.
-  if (typeof process === 'undefined' && hooks && !waitUntil) {
-    let message = 'In the case that the "ronin" package receives a value for';
-    message += ' its `hooks` option, it must also receive a value for its';
-    message += ' `waitUntil` option. This requirement only applies when using';
-    message += ' an edge runtime and ensures that the edge worker continues to';
-    message += ' execute until all "after" hooks have been executed.';
-
-    throw new Error(message);
-  }
+  const hookCallerOptions = { hooks, asyncContext };
 
   // Invoke `beforeCreate`, `beforeGet`, `beforeSet`, `beforeDrop`, and
   // also `beforeCount`.
   await Promise.all(
     queries.map((query, index) => {
-      return invokeHooks(hooks, 'before', modifiableQueries, modifiableResults, {
-        definition: query,
-        index,
-        result: null,
-      });
+      return invokeHooks(
+        'before',
+        modifiableQueries,
+        modifiableResults,
+        {
+          definition: query,
+          index,
+          result: null,
+        },
+        hookCallerOptions,
+      );
     }),
   );
 
   // Invoke `create`, `get`, `set`, `drop`, and `count`.
   await Promise.all(
     queries.map((query, index) => {
-      return invokeHooks(hooks, 'during', modifiableQueries, modifiableResults, {
-        definition: query,
-        index,
-        result: null,
-      });
+      return invokeHooks(
+        'during',
+        modifiableQueries,
+        modifiableResults,
+        {
+          definition: query,
+          index,
+          result: null,
+        },
+        hookCallerOptions,
+      );
     }),
   );
 
@@ -472,11 +470,17 @@ export const runQueriesWithHooks = async <T>(
     ) as Array<unknown | null>;
 
     // Run the actual hook functions.
-    const promise = invokeHooks(hooks, 'after', queries, [], {
-      definition: query,
-      index: queryIndex,
-      result: queryResult,
-    });
+    const promise = invokeHooks(
+      'after',
+      queries,
+      [],
+      {
+        definition: query,
+        index: queryIndex,
+        result: queryResult,
+      },
+      hookCallerOptions,
+    );
 
     // If the configuration option for extending the lifetime of the edge
     // worker invocation was passed, provide it with the resulting promise of

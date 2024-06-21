@@ -28,6 +28,9 @@ export type {
   BeforeHookHandler,
   AfterHookHandler,
   DuringHookHandler,
+
+  // Async Context Surrounding Hooks
+  HookContext,
 } from '@/src/utils/data-hooks';
 
 export type {
