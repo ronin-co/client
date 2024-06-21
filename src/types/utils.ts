@@ -22,7 +22,8 @@ export interface QueryHandlerOptions {
 
   /**
    * Allows for extending the lifetime of the edge worker invocation until the
-   * provided promise has been resolved.
+   * provided promise has been resolved. If the `hooks` option is provided on
+   * an edge runtime, this option is required.
    */
   waitUntil?: (promise: Promise<unknown>) => void;
 }

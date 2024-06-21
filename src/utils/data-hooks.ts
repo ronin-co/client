@@ -155,21 +155,6 @@ interface HookContext {
  */
 let HOOK_CONTEXT: InstanceType<typeof AsyncHooks.AsyncLocalStorage<HookContext>>;
 
-try {
-  // We are heavily obfuscating the name of the native module here, in order to
-  // prevent static analysis in build tools that would cause warnings. The build
-  // tools should not warn anyways, because we're importing the module
-  // conditionally, but because they're not smart enough to know that, a useless
-  // warning is printed that would annoy people.
-  const moduleNameSource = [110, 111, 100, 101, 58, 97, 115, 121, 110, 99, 95, 104, 111, 111, 107, 115];
-  const moduleName = new TextDecoder().decode(new Uint8Array(moduleNameSource));
-  const { AsyncLocalStorage } = (await import(moduleName)) as typeof AsyncHooks;
-
-  HOOK_CONTEXT = new AsyncLocalStorage<HookContext>();
-} catch (err) {
-  // If the module is not available, we just want to proceed without it.
-}
-
 /**
  * Based on which type of query is being executed (e.g. "get" or "create"),
  * this function checks if a hook is defined for the affected schema and runs
@@ -383,6 +368,30 @@ export const runQueriesWithHooks = async <T>(
   // If no hooks were provided, we can just run the queries and return
   // the results.
   if (!hooks) return runQueries<T>(modifiableQueries, options);
+
+  try {
+    if (!HOOK_CONTEXT) {
+      // We are heavily obfuscating the name of the native module in order to
+      // prevent static analysis in build tools that would cause warnings. The
+      // build tools should not warn anyways, because we're importing the
+      // module conditionally, but because they're not smart enough to know
+      // that, a useless warning is printed that would annoy people.
+      const moduleNameSource = [110, 111, 100, 101, 58, 97, 115, 121, 110, 99, 95, 104, 111, 111, 107, 115];
+      const moduleName = new TextDecoder().decode(new Uint8Array(moduleNameSource));
+      const { AsyncLocalStorage } = (await import(moduleName)) as typeof AsyncHooks;
+
+      HOOK_CONTEXT = new AsyncLocalStorage<HookContext>();
+    }
+  } catch (err) {
+    let message = 'In the case that the "ronin" package receives a value for';
+    message += ' its `hooks` option, the `node:async_hooks` module must be';
+    message += ' available for use by the package. Node.js, Bun, Deno, and';
+    message += ' other runtimes support this module natively. On certain edge';
+    message += ' runtimes like Cloudflare Workers, you might need to enable';
+    message += ' the module explicitly';
+
+    throw new Error(message);
+  }
 
   // We're intentionally considering the entire `hooks` option here, instead of
   // searching for "after" hooks inside of it, because the latter would increase
