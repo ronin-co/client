@@ -29,7 +29,8 @@
           "gmail",
           "cloudflare",
           "runtimes",
-          "usr"
+          "usr",
+          "entrypoint"
         ],
         "comments": true,
         "strings": false,

@@ -1,4 +1,6 @@
-import type { Hooks } from '@/src/utils/data-hooks';
+import type { AsyncLocalStorage } from 'node:async_hooks';
+
+import type { HookContext, Hooks } from '@/src/utils/data-hooks';
 
 export interface QueryHandlerOptions {
   /**
@@ -22,9 +24,17 @@ export interface QueryHandlerOptions {
 
   /**
    * Allows for extending the lifetime of the edge worker invocation until the
-   * provided promise has been resolved.
+   * provided promise has been resolved. If the `hooks` option is provided on
+   * an edge runtime, this option is required.
    */
   waitUntil?: (promise: Promise<unknown>) => void;
+
+  /**
+   * Allows for preventing recursions when running queries from data hooks
+   * provided with the `hooks` option. If the `hooks` option is provided, this
+   * option is required.
+   */
+  asyncContext?: AsyncLocalStorage<HookContext>;
 }
 
 export type QueryHandlerOptionsFactory = QueryHandlerOptions | (() => QueryHandlerOptions);
