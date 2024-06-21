@@ -388,11 +388,8 @@ export const runQueriesWithHooks = async <T>(
   // is called, thereby slowing down the function.
   if (!asyncContext) {
     let message = 'In the case that the "ronin" package receives a value for';
-    message += ' its `hooks` option, the `node:async_hooks` module must be';
-    message += ' available for use by the package. Node.js, Bun, Deno, and';
-    message += ' other runtimes support this module natively. On certain edge';
-    message += ' runtimes like Cloudflare Workers, you might need to enable';
-    message += ' the module explicitly.';
+    message += ' its `hooks` option, it must also receive a value for its';
+    message += ' `asyncContext` option.';
 
     throw new Error(message);
   }

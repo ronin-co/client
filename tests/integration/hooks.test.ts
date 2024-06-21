@@ -416,6 +416,6 @@ test('invoke `ronin` with `hooks` defined, but no `asyncContext` defined', async
   }
 
   expect(error?.message).toMatch(
-    `In the case that the "ronin" package receives a value for its \`hooks\` option, the \`node:async_hooks\` module must be available for use by the package. Node.js, Bun, Deno, and other runtimes support this module natively. On certain edge runtimes like Cloudflare Workers, you might need to enable the module explicitly.`,
+    `In the case that the "ronin" package receives a value for its \`hooks\` option, it must also receive a value for its \`asyncContext\` option.`,
   );
 });
