@@ -1,5 +1,3 @@
-import type AsyncHooks from 'node:async_hooks';
-
 import { runQueries } from '@/src/queries';
 import type { CombinedInstructions, Query, QuerySchemaType, QueryType, Results } from '@/src/types/query';
 import type { QueryHandlerOptions, RecursivePartial } from '@/src/types/utils';
