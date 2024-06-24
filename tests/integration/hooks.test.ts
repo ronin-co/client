@@ -1,3 +1,5 @@
+import { AsyncLocalStorage } from 'node:async_hooks';
+
 import { beforeEach, describe, expect, mock, test } from 'bun:test';
 
 import { createSyntaxFactory } from '@/src/syntax';
@@ -49,6 +51,7 @@ describe('hooks', () => {
           get: mockHook as any,
         },
       },
+      asyncContext: new AsyncLocalStorage(),
     });
 
     expect(mockHook).toHaveBeenCalled();
@@ -76,6 +79,7 @@ describe('hooks', () => {
           },
         },
       },
+      asyncContext: new AsyncLocalStorage(),
     });
 
     // @ts-expect-error `handle` is undefined due not not having the schema types.
@@ -112,6 +116,7 @@ describe('hooks', () => {
           },
         },
       },
+      asyncContext: new AsyncLocalStorage(),
     }));
 
     // @ts-expect-error `handle` is undefined due not not having the schema types.
@@ -149,6 +154,7 @@ describe('hooks', () => {
           },
         },
       },
+      asyncContext: new AsyncLocalStorage(),
     });
 
     // @ts-expect-error `id` is undefined due not not having the schema types.
@@ -192,6 +198,7 @@ describe('hooks', () => {
           },
         },
       },
+      asyncContext: new AsyncLocalStorage(),
     });
 
     const account = await create.account({
@@ -248,6 +255,7 @@ describe('hooks', () => {
           },
         },
       },
+      asyncContext: new AsyncLocalStorage(),
     });
 
     const accounts = (await set.accounts({
@@ -309,6 +317,7 @@ describe('hooks', () => {
           },
         },
       },
+      asyncContext: new AsyncLocalStorage(),
     });
 
     const result = (await batch(() => [
@@ -378,6 +387,7 @@ describe('hooks', () => {
           },
         },
       },
+      asyncContext: new AsyncLocalStorage(),
     });
 
     const result = await create.account.with({
@@ -386,4 +396,26 @@ describe('hooks', () => {
 
     expect(result).toMatchObject({ handle: 'juri' });
   });
+});
+
+test('invoke `ronin` with `hooks` defined, but no `asyncContext` defined', async () => {
+  let error: Error | undefined;
+
+  try {
+    const factory = createSyntaxFactory({
+      token: 'supertoken',
+      hooks: {
+        // @ts-expect-error - We are deliberately causing an error.
+        beforeCreate: () => undefined,
+      },
+    });
+
+    await factory.create.account({ with: { handle: 'leo' } });
+  } catch (err) {
+    error = err as Error;
+  }
+
+  expect(error?.message).toMatch(
+    `In the case that the "ronin" package receives a value for its \`hooks\` option, it must also receive a value for its \`asyncContext\` option.`,
+  );
 });

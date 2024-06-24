@@ -1,3 +1,5 @@
+import { AsyncLocalStorage } from 'node:async_hooks';
+
 import { beforeEach, describe, expect, mock, spyOn, test } from 'bun:test';
 
 import createSyntaxFactory from '@/src/index';
@@ -53,6 +55,7 @@ describe('edge runtime', () => {
           // @ts-expect-error - We are deliberately causing an error.
           beforeCreate: () => undefined,
         },
+        asyncContext: new AsyncLocalStorage(),
       });
 
       await factory.create.account({ with: { handle: 'leo' } });
@@ -98,6 +101,7 @@ describe('edge runtime', () => {
       waitUntil: (promise) => {
         promisesToAwait.push(promise);
       },
+      asyncContext: new AsyncLocalStorage(),
     });
 
     // Restore the old runtime.
