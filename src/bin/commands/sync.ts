@@ -29,9 +29,6 @@ export default async (positionals: string[], token: string) => {
       const text = await res.text();
       throw new Error(text);
     }
-
-    const json = await res.text();
-    // console.log(json);
   } catch (err) {
     spinner.fail(
       `Failed to ${status === 'reading' ? 'read schema definitions' : 'apply new schema changes'}:\n`,
