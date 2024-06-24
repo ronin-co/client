@@ -16,7 +16,6 @@ export type RoninRecords<T> = T[] & {
   moreAfter?: string;
 };
 
-// Type that extract only properties keys as union that are Record from given object
 type ExtractRecordKeys<T extends Record<string, any>> = {
   [K in keyof T]: T[K]['_record'] extends true ? (K extends string ? K : never) : never;
 }[keyof T];
