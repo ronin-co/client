@@ -12,7 +12,7 @@ export default defineConfig({
   dts: true,
   esbuildOptions(options) {
     // This is required in order to make `typescript` work with `esbuild`.
-    // Otherwise, you will get an error like:
+    // Otherwise, you will get:
     // Error: "Dynamic required of 'fs' is not supported".
     options.inject = ['scripts/cjs-shim.ts'];
   },
