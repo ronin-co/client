@@ -8,7 +8,6 @@ export default defineConfig({
     'src/schema/index.ts',
     'src/utils/index.ts',
   ],
-  external: ['@paralleldrive/cuid2'],
   format: 'esm',
   dts: true,
   esbuildOptions(options) {
