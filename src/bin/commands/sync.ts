@@ -1,7 +1,7 @@
 import ora from 'ora';
 import path from 'path';
 
-import { parseSchemaDtsFile } from '@/src/bin/utils/schema';
+import { parseSchemaDefinitionFile } from '@/src/bin/utils/schema';
 
 export default async (positionals: string[], token: string) => {
   const spinner = ora('Reading schema definitions').start();
@@ -12,7 +12,7 @@ export default async (positionals: string[], token: string) => {
 
   let status: 'reading' | 'uploading' = 'reading';
   try {
-    const schemaJson = await parseSchemaDtsFile(schemaDtsFile);
+    const schemaJson = await parseSchemaDefinitionFile(schemaDtsFile);
     spinner.text = 'Uploading schema definitions';
     status = 'uploading';
 

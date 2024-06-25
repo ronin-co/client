@@ -32,7 +32,8 @@
           "usr",
           "entrypoint",
           "esbuild",
-          "fs"
+          "fs",
+          "cryptographically"
         ],
         "comments": true,
         "strings": false,

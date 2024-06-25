@@ -1,9 +1,10 @@
 import fs from 'fs/promises';
 import path from 'path';
 import ts from 'typescript';
-import { v4 as uuidv4 } from 'uuid';
 
-export async function parseSchemaDtsFile(filePath: string = './schemas/index.d.ts') {
+import { generateUniqueId } from '@/src/utils/id';
+
+export async function parseSchemaDefinitionFile(filePath: string = './schemas/index.d.ts') {
   const fullPath = path.resolve(process.cwd(), filePath);
   const fileContent = await fs.readFile(fullPath, 'utf-8');
   const sourceFile = ts.createSourceFile('temp.d.ts', fileContent, ts.ScriptTarget.Latest, true);
@@ -187,13 +188,12 @@ export async function parseSchemaDtsFile(filePath: string = './schemas/index.d.t
                 }
                 const field = {
                   type: fieldType,
-                  id: `${fieldType}-${uuidv4()}`,
+                  id: `${fieldType}-${generateUniqueId()}`,
                   slug: fieldName,
                   name: name || fieldName.charAt(0).toUpperCase() + fieldName.slice(1),
                   description: description || undefined,
                   details: details,
                   unique: false,
-                  isNew: true,
                 };
                 result.fields.push(field);
               }
