@@ -50,6 +50,14 @@ export namespace RONIN {
     (value: T, options?: O): Promise<R>;
   }
 
+  interface RecordFilterFunction<R, O> extends ReducedFunction {
+    (value: string, options?: O): Promise<R>;
+  }
+  type RecordFilterObject<T, R, O> = {
+    [K in keyof T]: FilterFunction<T[K], R, O>;
+  };
+  type RecordFilter<T, R, O> = RecordFilterFunction<R, O> & RecordFilterObject<T, R, O>;
+
   type FilterFunction<T, R, O> = T extends string
     ? StringFilterFunction<T, R, O>
     : T extends number
@@ -58,9 +66,11 @@ export namespace RONIN {
         ? BooleanFilterFunction<T, R, O>
         : T extends Date
           ? DateFilterFunction<T, R, O>
-          : T extends Record<string, any>
-            ? { [K in keyof T]: FilterFunction<T[K], R, O> }
-            : never;
+          : T extends RONIN.RoninRecord<string>
+            ? RecordFilter<T, R, O>
+            : T extends Record<string, any>
+              ? RecordFilterObject<T, R, O>
+              : never;
 
   type FilterObject<T> = T extends string
     ?
@@ -151,9 +161,15 @@ export namespace RONIN {
               }
         : T extends boolean
           ? { being: boolean }
-          : T extends Record<string, any>
-            ? { [K in keyof T]: T[K] | Partial<FilterObject<T[K]>> }
-            : never;
+          : T extends RONIN.RoninRecord<string>
+            ?
+                | string
+                | {
+                    [K in keyof T]: T[K] | Partial<FilterObject<T[K]>>;
+                  }
+            : T extends Record<string, any>
+              ? { [K in keyof T]: T[K] | Partial<FilterObject<T[K]>> }
+              : never;
 
   export type WithObject<TSchema, R, P = undefined, O = undefined> = {
     [K in keyof TSchema]: P extends undefined
