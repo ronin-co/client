@@ -108,3 +108,11 @@ export type ReplaceRecursively<TValue, TType, TReplacement> = {
       ? ReplaceRecursively<TValue[K], TType, TReplacement>
       : TValue[K];
 };
+
+export type ReplaceRecursivelyWithOptionalString<TValue, TType> = {
+  [K in keyof TValue]: TValue[K] extends TType
+    ? ReplaceIfExtends<TValue[K], TType, TValue[K] | string>
+    : TValue[K] extends object
+      ? ReplaceRecursivelyWithOptionalString<TValue[K], TType>
+      : TValue[K];
+};

@@ -1,5 +1,9 @@
 import type { StorableObjectValue, StoredObject } from '@/src/types/storage';
-import type { ReducedFunction, ReplaceRecursively } from '@/src/types/utils';
+import type {
+  ReducedFunction,
+  ReplaceRecursively,
+  ReplaceRecursivelyWithOptionalString,
+} from '@/src/types/utils';
 
 export namespace RONIN {
   export interface RoninRecord<TId extends string = string> {
@@ -206,16 +210,17 @@ export namespace RONIN {
     TSlug extends SchemaSlugKey,
     TVariant extends string = string,
     TOptions = undefined,
+    TModifiedReturn = ReplaceRecursivelyWithOptionalString<TReturn, RONIN.RoninRecord>,
   > extends ReducedFunction {
     (
       filter?: {
-        with?: Partial<WithObject<TSchema, TReturn, true>>;
+        with?: Partial<WithObject<TSchema, TModifiedReturn, true>>;
         in?: TVariant;
         including?: Including<TSlug>;
       },
       options?: TOptions,
-    ): Promise<TReturn | null>;
-    with: With<TSchema, TReturn | null, TOptions>;
+    ): Promise<TModifiedReturn | null>;
+    with: With<TSchema, TModifiedReturn | null, TOptions>;
   }
 
   export interface IGetterPlural<
@@ -224,11 +229,12 @@ export namespace RONIN {
     TSlug extends SchemaSlugKey,
     TVariant extends string = string,
     TOptions = undefined,
+    TModifiedReturn = ReplaceRecursivelyWithOptionalString<TReturn, RONIN.RoninRecord>,
   > extends ReducedFunction {
     (
       filter?: {
-        with?: Partial<WithObject<TSchema, TReturn, true>>;
-        orderedBy?: Partial<OrderedByObject<TSchema, TReturn, true>>;
+        with?: Partial<WithObject<TSchema, TModifiedReturn, true>>;
+        orderedBy?: Partial<OrderedByObject<TSchema, TModifiedReturn, true>>;
         limitedTo?: number;
         in?: TVariant;
         including?: Including<TSlug>;
@@ -236,41 +242,51 @@ export namespace RONIN {
         before?: string;
       },
       options?: TOptions,
-    ): Promise<TReturn>;
+    ): Promise<TModifiedReturn>;
     with: With<TSchema, TReturn | null, TOptions>;
-    orderedBy: OrderedBy<TSchema, TReturn, TOptions>;
-    limitedTo: (limit: number, options?: TOptions) => Promise<TReturn>;
-    in: (variant: TVariant, options?: TOptions) => Promise<TReturn>;
-    including: (values: Including<TSlug>, options?: TOptions) => Promise<TReturn>;
-    after: (cursor: string, options?: TOptions) => Promise<TReturn>;
-    before: (cursor: string, options?: TOptions) => Promise<TReturn>;
+    orderedBy: OrderedBy<TSchema, TModifiedReturn, TOptions>;
+    limitedTo: (limit: number, options?: TOptions) => Promise<TModifiedReturn>;
+    in: (variant: TVariant, options?: TOptions) => Promise<TModifiedReturn>;
+    including: (values: Including<TSlug>, options?: TOptions) => Promise<TModifiedReturn>;
+    after: (cursor: string, options?: TOptions) => Promise<TModifiedReturn>;
+    before: (cursor: string, options?: TOptions) => Promise<TModifiedReturn>;
   }
 
-  export interface ISetter<TSchema, TReturn, TVariant extends string = string, TOptions = undefined>
-    extends ReducedFunction {
+  export interface ISetter<
+    TSchema,
+    TReturn,
+    TVariant extends string = string,
+    TOptions = undefined,
+    TModifiedReturn = ReplaceRecursivelyWithOptionalString<TReturn, RONIN.RoninRecord>,
+  > extends ReducedFunction {
     (
       filter: {
-        with: Partial<WithObject<TSchema, TReturn, true>>;
+        with: Partial<WithObject<TSchema, TModifiedReturn, true>>;
         to: Partial<ReplaceRecursively<TSchema, RONIN.Blob, StorableObjectValue>>;
         in?: TVariant;
       },
       options?: TOptions,
-    ): Promise<TReturn>;
+    ): Promise<TModifiedReturn>;
   }
 
-  export interface ICreator<TSchema, TReturn, TVariant extends string = string, TOptions = undefined>
-    extends ReducedFunction {
+  export interface ICreator<
+    TSchema,
+    TReturn,
+    TVariant extends string = string,
+    TOptions = undefined,
+    TModifiedReturn = ReplaceRecursivelyWithOptionalString<TReturn, RONIN.RoninRecord>,
+  > extends ReducedFunction {
     (
       filter?: {
         with: Partial<ReplaceRecursively<TSchema, RONIN.Blob, StorableObjectValue>>;
         in?: TVariant;
       },
       options?: TOptions,
-    ): Promise<TReturn>;
+    ): Promise<TModifiedReturn>;
     with: (
       values: Partial<ReplaceRecursively<TSchema, RONIN.Blob, StorableObjectValue>>,
       options?: TOptions,
-    ) => Promise<TReturn>;
+    ) => Promise<TModifiedReturn>;
   }
 
   export interface ICounter<
@@ -290,13 +306,14 @@ export namespace RONIN {
     TVariant extends string = string,
     TOptions = undefined,
     TWith = With<TSchema, TReturn, TOptions>,
+    TModifiedReturn = ReplaceRecursivelyWithOptionalString<TReturn, RONIN.RoninRecord>,
   > extends ReducedFunction {
     (
-      filter?: { with?: Partial<WithObject<TSchema, TReturn, true>>; in?: TVariant },
+      filter?: { with?: Partial<WithObject<TSchema, TModifiedReturn, true>>; in?: TVariant },
       options?: TOptions,
-    ): Promise<TReturn>;
+    ): Promise<TModifiedReturn>;
     with: TWith;
-    in: (variant: TVariant, options?: TOptions) => Promise<TReturn>;
+    in: (variant: TVariant, options?: TOptions) => Promise<TModifiedReturn>;
   }
 
   export interface Creator<TOptions = undefined>
