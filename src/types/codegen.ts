@@ -157,9 +157,9 @@ export namespace RONIN {
       : TSchema[K] | Partial<FilterObject<TSchema[K]>>;
   };
 
-  interface WithFunction<TSchema, R, O> extends ReducedFunction {
-    (filter: Partial<WithObject<TSchema, R, true>>, options?: O): Promise<R>;
-  }
+  type WithFunction<TSchema, TReturn, TOptions> = Omit<ReducedFunction, keyof TSchema> & {
+    (filter: Partial<WithObject<TSchema, TReturn, true>>, options?: TOptions): Promise<TReturn>;
+  };
 
   type With<TSchema, R, O> = WithFunction<TSchema, R, O> & WithObject<TSchema, R>;
 
@@ -206,7 +206,6 @@ export namespace RONIN {
     TSlug extends SchemaSlugKey,
     TVariant extends string = string,
     TOptions = undefined,
-    TWith = With<TSchema, TReturn | null, TOptions>,
   > extends ReducedFunction {
     (
       filter?: {
@@ -216,7 +215,7 @@ export namespace RONIN {
       },
       options?: TOptions,
     ): Promise<TReturn | null>;
-    with: TWith;
+    with: With<TSchema, TReturn | null, TOptions>;
   }
 
   export interface IGetterPlural<
@@ -225,7 +224,6 @@ export namespace RONIN {
     TSlug extends SchemaSlugKey,
     TVariant extends string = string,
     TOptions = undefined,
-    TWith = With<TSchema, TReturn, TOptions>,
   > extends ReducedFunction {
     (
       filter?: {
@@ -239,7 +237,7 @@ export namespace RONIN {
       },
       options?: TOptions,
     ): Promise<TReturn>;
-    with: TWith;
+    with: With<TSchema, TReturn | null, TOptions>;
     orderedBy: OrderedBy<TSchema, TReturn, TOptions>;
     limitedTo: (limit: number, options?: TOptions) => Promise<TReturn>;
     in: (variant: TVariant, options?: TOptions) => Promise<TReturn>;
