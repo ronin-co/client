@@ -216,9 +216,9 @@ export namespace RONIN {
     [K in keyof T]: T[K] extends RONIN.RoninRecord<string> ? (K extends string ? K : never) : never;
   }[keyof T];
 
-  type Including<T> = RelatedFieldKeys<T>[] | 'all';
+  export type Including<T> = RelatedFieldKeys<T>[] | 'all';
 
-  type ReturnBasedOnIncluding<T, Keys extends string[] | 'all'> = {
+  export type ReturnBasedOnIncluding<T, Keys extends string[] | 'all'> = {
     [K in keyof T]: K extends 'ronin' ? T[K] : K extends Keys[number] ? T[K] : string;
   };
 
