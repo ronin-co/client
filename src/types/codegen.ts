@@ -1,9 +1,6 @@
+import type { Records } from '@/src/schema';
 import type { StorableObjectValue, StoredObject } from '@/src/types/storage';
-import type {
-  ReducedFunction,
-  ReplaceRecursively,
-  ReplaceRecursivelyWithOptionalString,
-} from '@/src/types/utils';
+import type { ReducedFunction, ReplaceRecursively } from '@/src/types/utils';
 
 export namespace RONIN {
   export interface RoninRecord<TId extends string = string> {
@@ -13,13 +10,13 @@ export namespace RONIN {
 
   export interface RoninMetadata {
     createdAt: Date;
-    createdBy: Record<string, any>;
+    createdBy: string | Record<string, any>;
     deletedAt: Date | null;
-    deletedBy: Record<string, any> | null;
+    deletedBy: string | Record<string, any> | null;
     locked: boolean;
     status: 'draft' | 'published' | 'archived';
     updatedAt: Date;
-    updatedBy: Record<string, any>;
+    updatedBy: string | Record<string, any>;
   }
 
   export interface Blob extends StoredObject {}
@@ -207,6 +204,7 @@ export namespace RONIN {
   type OrderedBy<TSchema, R, O> = OrderedByObject<TSchema, R, undefined, O> &
     OrderedByFunction<TSchema, R, O>;
 
+  // TODO: Remove this once its all references are removed
   export type SchemaSlugKey =
     | keyof RONIN.Creator
     | keyof RONIN.Getter
@@ -214,66 +212,68 @@ export namespace RONIN {
     | keyof RONIN.Dropper
     | keyof RONIN.Counter;
 
-  export interface Includes extends Record<SchemaSlugKey, string> {}
+  type RelatedFieldKeys<T> = {
+    [K in keyof T]: T[K] extends RONIN.RoninRecord<string> ? (K extends string ? K : never) : never;
+  }[keyof T];
 
-  type Including<TSlug extends SchemaSlugKey> =
-    | 'all'
-    | Array<RONIN.Includes[TSlug] | `ronin.${keyof Pick<RoninMetadata, 'createdBy' | 'updatedBy'>}`>;
+  type Including<T> = RelatedFieldKeys<T>[] | 'all';
+
+  type ReturnBasedOnIncluding<T, Keys extends string[] | 'all'> = {
+    [K in keyof T]: K extends 'ronin' ? T[K] : K extends Keys[number] ? T[K] : string;
+  };
 
   export interface IGetterSingular<
     TSchema,
-    TReturn,
-    TSlug extends SchemaSlugKey,
     TVariant extends string = string,
     TOptions = undefined,
-    TModifiedReturn = ReplaceRecursivelyWithOptionalString<TReturn, RONIN.RoninRecord>,
+    TModifiedReturn = ReplaceRecursively<TSchema, RONIN.RoninRecord, string>,
   > extends ReducedFunction {
-    (
+    <TIncluding extends Including<TSchema> = []>(
       filter?: {
-        with?: Partial<WithObject<TSchema, TModifiedReturn, true>>;
+        with?: Partial<WithObject<TSchema, TSchema, true>>;
         in?: TVariant;
-        including?: Including<TSlug>;
+        including?: TIncluding;
       },
       options?: TOptions,
-    ): Promise<TModifiedReturn | null>;
+    ): Promise<ReturnBasedOnIncluding<TSchema, TIncluding> | null>;
     with: With<TSchema, TModifiedReturn | null, TOptions>;
   }
 
   export interface IGetterPlural<
     TSchema,
-    TReturn,
-    TSlug extends SchemaSlugKey,
     TVariant extends string = string,
     TOptions = undefined,
-    TModifiedReturn = ReplaceRecursivelyWithOptionalString<TReturn, RONIN.RoninRecord>,
+    TModifiedReturn = Records<ReplaceRecursively<TSchema, RONIN.RoninRecord, string>>,
   > extends ReducedFunction {
-    (
+    <TIncluding extends Including<TSchema> = []>(
       filter?: {
         with?: Partial<WithObject<TSchema, TModifiedReturn, true>>;
         orderedBy?: Partial<OrderedByObject<TSchema, TModifiedReturn, true>>;
         limitedTo?: number;
         in?: TVariant;
-        including?: Including<TSlug>;
+        including?: TIncluding;
         after?: string;
         before?: string;
       },
       options?: TOptions,
-    ): Promise<TModifiedReturn>;
-    with: With<TSchema, TReturn | null, TOptions>;
+    ): Promise<Records<ReturnBasedOnIncluding<TSchema, TIncluding>>>;
+    with: With<TSchema, TModifiedReturn, TOptions>;
     orderedBy: OrderedBy<TSchema, TModifiedReturn, TOptions>;
     limitedTo: (limit: number, options?: TOptions) => Promise<TModifiedReturn>;
     in: (variant: TVariant, options?: TOptions) => Promise<TModifiedReturn>;
-    including: (values: Including<TSlug>, options?: TOptions) => Promise<TModifiedReturn>;
+    including: <TIncluding extends Including<TSchema> = []>(
+      values: TIncluding,
+      options?: TOptions,
+    ) => Promise<Records<ReturnBasedOnIncluding<TSchema, TIncluding>>>;
     after: (cursor: string, options?: TOptions) => Promise<TModifiedReturn>;
     before: (cursor: string, options?: TOptions) => Promise<TModifiedReturn>;
   }
 
   export interface ISetter<
     TSchema,
-    TReturn,
     TVariant extends string = string,
     TOptions = undefined,
-    TModifiedReturn = ReplaceRecursivelyWithOptionalString<TReturn, RONIN.RoninRecord>,
+    TModifiedReturn = ReplaceRecursively<TSchema, RONIN.RoninRecord, string>,
   > extends ReducedFunction {
     (
       filter: {
@@ -287,10 +287,9 @@ export namespace RONIN {
 
   export interface ICreator<
     TSchema,
-    TReturn,
     TVariant extends string = string,
     TOptions = undefined,
-    TModifiedReturn = ReplaceRecursivelyWithOptionalString<TReturn, RONIN.RoninRecord>,
+    TModifiedReturn = ReplaceRecursively<TSchema, RONIN.RoninRecord, string>,
   > extends ReducedFunction {
     (
       filter?: {
@@ -305,44 +304,38 @@ export namespace RONIN {
     ) => Promise<TModifiedReturn>;
   }
 
-  export interface ICounter<
-    TSchema,
-    TVariant extends string = string,
-    TOptions = undefined,
-    TWith = With<TSchema, number, TOptions>,
-  > extends ReducedFunction {
+  export interface ICounter<TSchema, TVariant extends string = string, TOptions = undefined>
+    extends ReducedFunction {
     (filter?: { with?: Partial<WithObject<TSchema, number, true>>; in?: TVariant }): Promise<number>;
-    with: TWith;
+    with: With<TSchema, number, TOptions>;
     in: (variant: TVariant, options?: TOptions) => Promise<number>;
   }
 
   export interface IDropper<
     TSchema,
-    TReturn,
     TVariant extends string = string,
     TOptions = undefined,
-    TWith = With<TSchema, TReturn, TOptions>,
-    TModifiedReturn = ReplaceRecursivelyWithOptionalString<TReturn, RONIN.RoninRecord>,
+    TModifiedReturn = ReplaceRecursively<TSchema, RONIN.RoninRecord, string>,
   > extends ReducedFunction {
     (
       filter?: { with?: Partial<WithObject<TSchema, TModifiedReturn, true>>; in?: TVariant },
       options?: TOptions,
     ): Promise<TModifiedReturn>;
-    with: TWith;
+    with: With<TSchema, TSchema, TOptions>;
     in: (variant: TVariant, options?: TOptions) => Promise<TModifiedReturn>;
   }
 
   export interface Creator<TOptions = undefined>
-    extends Record<string, ICreator<Record<string, unknown>, unknown, string, TOptions>> {}
+    extends Record<string, ICreator<Record<string, unknown>, string, TOptions>> {}
 
   export interface Getter<TOptions = undefined>
-    extends Record<string, IGetterPlural<Record<string, unknown>, unknown, string, string, TOptions>> {}
+    extends Record<string, IGetterPlural<Record<string, unknown>, string, TOptions>> {}
 
   export interface Setter<TOptions = undefined>
-    extends Record<string, ISetter<Record<string, unknown>, unknown, string, TOptions>> {}
+    extends Record<string, ISetter<Record<string, unknown>, string, TOptions>> {}
 
   export interface Dropper<TOptions = undefined>
-    extends Record<string, IDropper<Record<string, unknown>, unknown, string, TOptions>> {}
+    extends Record<string, IDropper<Record<string, unknown>, string, TOptions>> {}
 
   export interface Counter<TOptions = undefined>
     extends Record<string, ICounter<Record<string, unknown>, string, TOptions>> {}
