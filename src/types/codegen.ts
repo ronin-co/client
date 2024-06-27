@@ -272,19 +272,22 @@ export namespace RONIN {
 
   export type Including<T> = RelatedFieldKeys<T>[] | 'all';
 
-  export type ReturnBasedOnIncluding<T, Keys extends string[] | 'all'> = Keys extends []
+  // TODO: Modify this type to return a static schema type which already
+  // has the record fields as `string` instead of `RONIN.RoninRecord` IF
+  // the `including` is empty. This improved the debugging experience and
+  // makes the types easier to work with in general, because we don't have to
+  // programatically modify the schema type.
+  export type ReturnBasedOnIncluding<T, Keys extends string[] | 'all'> = Keys extends 'all'
     ? T
-    : Keys extends 'all'
-      ? T
-      : {
-          [K in keyof T]: K extends 'ronin'
+    : {
+        [K in keyof T]: K extends 'ronin'
+          ? T[K]
+          : K extends Keys[number]
             ? T[K]
-            : K extends Keys[number]
-              ? T[K]
-              : T[K] extends RONIN.RoninRecord
-                ? string
-                : T[K];
-        };
+            : T[K] extends RONIN.RoninRecord
+              ? string
+              : T[K];
+      };
 
   export interface IGetterSingular<
     TSchema,
