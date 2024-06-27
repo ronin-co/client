@@ -266,14 +266,6 @@ export namespace RONIN {
     ascending: (order: Array<AllFields<TSchema>>, options?: O) => Promise<R>;
   }
 
-  // TODO: Remove this once its all references are removed
-  export type SchemaSlugKey =
-    | keyof RONIN.Creator
-    | keyof RONIN.Getter
-    | keyof RONIN.Setter
-    | keyof RONIN.Dropper
-    | keyof RONIN.Counter;
-
   type RelatedFieldKeys<T> = {
     [K in keyof T]: T[K] extends RONIN.RoninRecord<string> ? (K extends string ? K : never) : never;
   }[keyof T];
