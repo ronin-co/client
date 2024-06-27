@@ -256,12 +256,12 @@ export namespace RONIN {
     (order: OrderedByObject<TSchema>, options?: O): Promise<R>;
 
     /**
-     * Order the resulting records in descending order using a specific field.
+     * Returns records in descending order using a specific field.
      */
     descending: (order: Array<AllFields<TSchema>>, options?: O) => Promise<R>;
 
     /**
-     * Order the resulting records in ascending order using a specific field.
+     * Returns records in ascending order using a specific field.
      */
     ascending: (order: Array<AllFields<TSchema>>, options?: O) => Promise<R>;
   }
