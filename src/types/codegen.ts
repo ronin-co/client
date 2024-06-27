@@ -1,6 +1,6 @@
 import type { Records } from '@/src/schema';
 import type { StorableObjectValue, StoredObject } from '@/src/types/storage';
-import type { ReducedFunction, ReplaceRecursively } from '@/src/types/utils';
+import type { ReducedFunction, Replace, ReplaceRecursively } from '@/src/types/utils';
 
 export namespace RONIN {
   export interface RoninRecord<TId extends string = string> {
@@ -226,7 +226,7 @@ export namespace RONIN {
     TSchema,
     TVariant extends string = string,
     TOptions = undefined,
-    TModifiedReturn = ReplaceRecursively<TSchema, RONIN.RoninRecord, string>,
+    TModifiedReturn = Replace<TSchema, RONIN.RoninRecord, string>,
   > extends ReducedFunction {
     <TIncluding extends Including<TSchema> = []>(
       filter?: {
@@ -243,7 +243,7 @@ export namespace RONIN {
     TSchema,
     TVariant extends string = string,
     TOptions = undefined,
-    TModifiedReturn = Records<ReplaceRecursively<TSchema, RONIN.RoninRecord, string>>,
+    TModifiedReturn = Records<Replace<TSchema, RONIN.RoninRecord, string>>,
   > extends ReducedFunction {
     <TIncluding extends Including<TSchema> = []>(
       filter?: {
@@ -273,7 +273,7 @@ export namespace RONIN {
     TSchema,
     TVariant extends string = string,
     TOptions = undefined,
-    TModifiedReturn = ReplaceRecursively<TSchema, RONIN.RoninRecord, string>,
+    TModifiedReturn = Replace<TSchema, RONIN.RoninRecord, string>,
   > extends ReducedFunction {
     (
       filter: {
@@ -289,7 +289,7 @@ export namespace RONIN {
     TSchema,
     TVariant extends string = string,
     TOptions = undefined,
-    TModifiedReturn = ReplaceRecursively<TSchema, RONIN.RoninRecord, string>,
+    TModifiedReturn = Replace<TSchema, RONIN.RoninRecord, string>,
   > extends ReducedFunction {
     (
       filter?: {
@@ -315,7 +315,7 @@ export namespace RONIN {
     TSchema,
     TVariant extends string = string,
     TOptions = undefined,
-    TModifiedReturn = ReplaceRecursively<TSchema, RONIN.RoninRecord, string>,
+    TModifiedReturn = Replace<TSchema, RONIN.RoninRecord, string>,
   > extends ReducedFunction {
     (
       filter?: { with?: Partial<WithObject<TSchema, TModifiedReturn, true>>; in?: TVariant },
