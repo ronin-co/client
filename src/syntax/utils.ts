@@ -29,7 +29,7 @@ let inBatch = false;
  */
 export const getSyntaxProxy = (
   queryType: string,
-  queryHandler: (query: Query, options?: Record<string, unknown>) => Promise<any>,
+  queryHandler: (query: Query, options?: Record<string, unknown>) => Promise<any> | any,
 ) => {
   return new Proxy(
     {},
@@ -94,7 +94,7 @@ export const getSyntaxProxy = (
  */
 export const getBatchProxy = async <T extends [Promise<any>, ...Promise<any>[]]>(
   operations: () => T,
-  queriesHandler: (queries: Query[], options?: Record<string, unknown>) => Promise<any>,
+  queriesHandler: (queries: Query[], options?: Record<string, unknown>) => Promise<any> | any,
 ): Promise<PromiseTuple<T>> => {
   inBatch = true;
   const queries = operations() as Query[];
