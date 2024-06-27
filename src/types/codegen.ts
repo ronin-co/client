@@ -280,15 +280,19 @@ export namespace RONIN {
 
   export type Including<T> = RelatedFieldKeys<T>[] | 'all';
 
-  export type ReturnBasedOnIncluding<T, Keys extends string[] | 'all'> = {
-    [K in keyof T]: K extends 'ronin'
-      ? T[K]
-      : K extends Keys[number]
-        ? T[K]
-        : T[K] extends RONIN.RoninRecord
-          ? string
-          : T[K];
-  };
+  export type ReturnBasedOnIncluding<T, Keys extends string[] | 'all'> = Keys extends []
+    ? T
+    : Keys extends 'all'
+      ? T
+      : {
+          [K in keyof T]: K extends 'ronin'
+            ? T[K]
+            : K extends Keys[number]
+              ? T[K]
+              : T[K] extends RONIN.RoninRecord
+                ? string
+                : T[K];
+        };
 
   export interface IGetterSingular<
     TSchema,
