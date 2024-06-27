@@ -24,19 +24,19 @@ export namespace RONIN {
   interface StringFilterFunction<T, R, O> extends ReducedFunction {
     (value: T, options?: O): Promise<R>;
     /**
-     * Matches records where the field is not equal to the provided value.
+     * Returns records where the field is not equal to the provided value.
      */
     notBeing: (value: T, options?: O) => Promise<R>;
     /**
-     * Matches records where the field starts with the provided value.
+     * Returns records where the field starts with the provided value.
      */
     startingWith: (value: T, options?: O) => Promise<R>;
     /**
-     * Matches records where the field ends with the provided value.
+     * Returns records where the field ends with the provided value.
      */
     endingWith: (value: T, options?: O) => Promise<R>;
     /**
-     * Matches records where the field contains the provided value.
+     * Returns records where the field contains the provided value.
      */
     containing: (value: T, options?: O) => Promise<R>;
   }
@@ -44,15 +44,15 @@ export namespace RONIN {
   interface NumberFilterFunction<T, R, O> extends ReducedFunction {
     (value: T, options?: O): Promise<R>;
     /**
-     * Matches records where the field is not equal to the provided value.
+     * Returns records where the field is not equal to the provided value.
      */
     notBeing: (value: T, options?: O) => Promise<R>;
     /**
-     * Matches records where the field is greater than the provided value.
+     * Returns records where the field is greater than the provided value.
      */
     greaterThan: (value: T, options?: O) => Promise<R>;
     /**
-     * Matches records where the field is less than the provided value.
+     * Returns records where the field is less than the provided value.
      */
     lessThan: (value: T, options?: O) => Promise<R>;
   }
@@ -60,15 +60,15 @@ export namespace RONIN {
   interface DateFilterFunction<T, R, O> extends ReducedFunction {
     (value: T, options?: O): Promise<R>;
     /**
-     * Matches records where the field is not equal to the provided value.
+     * Returns records where the field is not equal to the provided value.
      */
     notBeing: (value: T, options?: O) => Promise<R>;
     /**
-     * Matches records where the field is greater than the provided value.
+     * Returns records where the field is greater than the provided value.
      */
     greaterThan: (value: T, options?: O) => Promise<R>;
     /**
-     * Matches records where the field is less than the provided value.
+     * Returns records where the field is less than the provided value.
      */
     lessThan: (value: T, options?: O) => Promise<R>;
   }
