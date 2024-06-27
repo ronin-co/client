@@ -23,23 +23,53 @@ export namespace RONIN {
 
   interface StringFilterFunction<T, R, O> extends ReducedFunction {
     (value: T, options?: O): Promise<R>;
+    /**
+     * Matches records where the field is not equal to the provided value.
+     */
     notBeing: (value: T, options?: O) => Promise<R>;
+    /**
+     * Matches records where the field starts with the provided value.
+     */
     startingWith: (value: T, options?: O) => Promise<R>;
+    /**
+     * Matches records where the field ends with the provided value.
+     */
     endingWith: (value: T, options?: O) => Promise<R>;
+    /**
+     * Matches records where the field contains the provided value.
+     */
     containing: (value: T, options?: O) => Promise<R>;
   }
 
   interface NumberFilterFunction<T, R, O> extends ReducedFunction {
     (value: T, options?: O): Promise<R>;
+    /**
+     * Matches records where the field is not equal to the provided value.
+     */
     notBeing: (value: T, options?: O) => Promise<R>;
+    /**
+     * Matches records where the field is greater than the provided value.
+     */
     greaterThan: (value: T, options?: O) => Promise<R>;
+    /**
+     * Matches records where the field is less than the provided value.
+     */
     lessThan: (value: T, options?: O) => Promise<R>;
   }
 
   interface DateFilterFunction<T, R, O> extends ReducedFunction {
     (value: T, options?: O): Promise<R>;
+    /**
+     * Matches records where the field is not equal to the provided value.
+     */
     notBeing: (value: T, options?: O) => Promise<R>;
+    /**
+     * Matches records where the field is greater than the provided value.
+     */
     greaterThan: (value: T, options?: O) => Promise<R>;
+    /**
+     * Matches records where the field is less than the provided value.
+     */
     lessThan: (value: T, options?: O) => Promise<R>;
   }
 
@@ -96,8 +126,17 @@ export namespace RONIN {
         | {
             being: never;
             notBeing: never;
+            /**
+             * Matches records where the field starts with the provided value.
+             */
             startingWith?: string;
+            /**
+             * Matches records where the field ends with the provided value.
+             */
             endingWith?: string;
+            /**
+             * Matches records where the field contains the provided value.
+             */
             containing?: string;
           }
     : T extends number
@@ -125,7 +164,13 @@ export namespace RONIN {
           | {
               being: never;
               notBeing: never;
+              /**
+               * Matches records where the field is greater than the provided value.
+               */
               greaterThan?: number;
+              /**
+               * Matches records where the field is less than the provided value.
+               */
               lessThan?: number;
             }
       : T extends Date
@@ -153,11 +198,23 @@ export namespace RONIN {
             | {
                 being: never;
                 notBeing: never;
+
+                /**
+                 * Matches records where the field is greater than the provided value.
+                 */
                 greaterThan?: Date;
+                /**
+                 * Matches records where the field is less than the provided value.
+                 */
                 lessThan?: Date;
               }
         : T extends boolean
-          ? { being: boolean }
+          ? {
+              /**
+               * Matches records where the field is equal to the provided value.
+               */
+              being: boolean;
+            }
           : T extends RONIN.RoninRecord<string>
             ?
                 | string
@@ -168,41 +225,46 @@ export namespace RONIN {
               ? { [K in keyof T]: T[K] | Partial<FilterObject<T[K]>> }
               : never;
 
-  export type WithObject<TSchema, R, P = undefined, O = undefined> = {
-    [K in keyof TSchema]: P extends undefined
-      ? FilterFunction<TSchema[K], R, O>
-      : TSchema[K] | Partial<FilterObject<TSchema[K]>>;
+  export type WithObject<TSchema> = {
+    [K in keyof TSchema]: TSchema[K] | Partial<FilterObject<TSchema[K]>>;
+  };
+
+  export type WithFilterFunctions<TSchema, R, O = undefined> = {
+    [K in keyof TSchema]: FilterFunction<TSchema[K], R, O>;
   };
 
   type WithFunction<TSchema, TReturn, TOptions> = Omit<ReducedFunction, keyof TSchema> & {
-    (filter: Partial<WithObject<TSchema, TReturn, true>>, options?: TOptions): Promise<TReturn>;
+    (filter: Partial<WithObject<TSchema>>, options?: TOptions): Promise<TReturn>;
   };
 
-  type With<TSchema, R, O> = WithFunction<TSchema, R, O> & WithObject<TSchema, R>;
+  type With<TSchema, R, O> = WithFunction<TSchema, R, O> & WithFilterFunctions<TSchema, R>;
 
   type AllFields<TSchema> = `ronin.${keyof RoninMetadata}` | Exclude<keyof TSchema, 'ronin'>;
 
-  type OrderedByObject<TSchema, R, P = undefined, O = undefined> = {
+  type OrderedByObject<TSchema> = {
     /**
      * Order the resulting records in descending order using a specific field.
      */
-    descending: P extends undefined
-      ? (order: Array<AllFields<TSchema>>, options?: O) => Promise<R>
-      : Array<AllFields<TSchema>>;
+    descending?: Array<AllFields<TSchema>>;
     /**
      * Order the resulting records in ascending order using a specific field.
      */
-    ascending: P extends undefined
-      ? (order: Array<AllFields<TSchema>>, options?: O) => Promise<R>
-      : Array<AllFields<TSchema>>;
+    ascending?: Array<AllFields<TSchema>>;
   };
 
   interface OrderedByFunction<TSchema, R, O> extends ReducedFunction {
-    (order: Partial<OrderedByObject<TSchema, R, true, O>>, options?: O): Promise<R>;
-  }
+    (order: OrderedByObject<TSchema>, options?: O): Promise<R>;
 
-  type OrderedBy<TSchema, R, O> = OrderedByObject<TSchema, R, undefined, O> &
-    OrderedByFunction<TSchema, R, O>;
+    /**
+     * Order the resulting records in descending order using a specific field.
+     */
+    descending: (order: Array<AllFields<TSchema>>, options?: O) => Promise<R>;
+
+    /**
+     * Order the resulting records in ascending order using a specific field.
+     */
+    ascending: (order: Array<AllFields<TSchema>>, options?: O) => Promise<R>;
+  }
 
   // TODO: Remove this once its all references are removed
   export type SchemaSlugKey =
@@ -236,7 +298,7 @@ export namespace RONIN {
   > extends ReducedFunction {
     <TIncluding extends Including<TSchema> = []>(
       filter?: {
-        with?: Partial<WithObject<TSchema, TSchema, true>>;
+        with?: Partial<WithObject<TSchema>>;
         in?: TVariant;
         including?: TIncluding;
       },
@@ -253,8 +315,8 @@ export namespace RONIN {
   > extends ReducedFunction {
     <TIncluding extends Including<TSchema> = []>(
       filter?: {
-        with?: Partial<WithObject<TSchema, TModifiedReturn, true>>;
-        orderedBy?: Partial<OrderedByObject<TSchema, TModifiedReturn, true>>;
+        with?: Partial<WithObject<TSchema>>;
+        orderedBy?: OrderedByObject<TSchema>;
         limitedTo?: number;
         in?: TVariant;
         including?: TIncluding;
@@ -264,7 +326,7 @@ export namespace RONIN {
       options?: TOptions,
     ): Promise<Records<ReturnBasedOnIncluding<TSchema, TIncluding>>>;
     with: With<TSchema, TModifiedReturn, TOptions>;
-    orderedBy: OrderedBy<TSchema, TModifiedReturn, TOptions>;
+    orderedBy: OrderedByFunction<TSchema, TModifiedReturn, TOptions>;
     limitedTo: (limit: number, options?: TOptions) => Promise<TModifiedReturn>;
     in: (variant: TVariant, options?: TOptions) => Promise<TModifiedReturn>;
     including: <TIncluding extends Including<TSchema> = []>(
@@ -283,7 +345,7 @@ export namespace RONIN {
   > extends ReducedFunction {
     (
       filter: {
-        with: Partial<WithObject<TSchema, TModifiedReturn, true>>;
+        with: Partial<WithObject<TSchema>>;
         to: Partial<ReplaceRecursively<TSchema, RONIN.Blob, StorableObjectValue>>;
         in?: TVariant;
       },
@@ -312,7 +374,7 @@ export namespace RONIN {
 
   export interface ICounter<TSchema, TVariant extends string = string, TOptions = undefined>
     extends ReducedFunction {
-    (filter?: { with?: Partial<WithObject<TSchema, number, true>>; in?: TVariant }): Promise<number>;
+    (filter?: { with?: Partial<WithObject<TSchema>>; in?: TVariant }): Promise<number>;
     with: With<TSchema, number, TOptions>;
     in: (variant: TVariant, options?: TOptions) => Promise<number>;
   }
@@ -324,7 +386,7 @@ export namespace RONIN {
     TModifiedReturn = Replace<TSchema, RONIN.RoninRecord, string>,
   > extends ReducedFunction {
     (
-      filter?: { with?: Partial<WithObject<TSchema, TModifiedReturn, true>>; in?: TVariant },
+      filter?: { with?: Partial<WithObject<TSchema>>; in?: TVariant },
       options?: TOptions,
     ): Promise<TModifiedReturn>;
     with: With<TSchema, TSchema, TOptions>;
