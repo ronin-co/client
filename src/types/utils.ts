@@ -111,7 +111,7 @@ export type Replace<TValue, TType, TReplacement> = {
 
 /**
  * Utility type that takes a given schema type and adjusts it to
- * be used when setting a record.
+ * be used when updating a record.
  */
 export type ReplaceForSetter<TValue> = {
   // Replace `RoninRecord` with `string`.
