@@ -1,6 +1,6 @@
 import type { Records } from '@/src/schema';
-import type { StorableObjectValue, StoredObject } from '@/src/types/storage';
-import type { ReducedFunction, Replace, ReplaceRecursively } from '@/src/types/utils';
+import type { StoredObject } from '@/src/types/storage';
+import type { ReducedFunction, Replace, ReplaceForSetter } from '@/src/types/utils';
 
 export namespace RONIN {
   export interface RoninRecord<TId extends string = string> {
@@ -346,7 +346,7 @@ export namespace RONIN {
     (
       filter: {
         with: Partial<WithObject<TSchema>>;
-        to: Partial<ReplaceRecursively<TSchema, RONIN.Blob, StorableObjectValue>>;
+        to: Partial<ReplaceForSetter<TSchema>>;
         in?: TVariant;
       },
       options?: TOptions,
@@ -361,15 +361,12 @@ export namespace RONIN {
   > extends ReducedFunction {
     (
       filter?: {
-        with: Partial<ReplaceRecursively<TSchema, RONIN.Blob, StorableObjectValue>>;
+        with: Partial<ReplaceForSetter<TSchema>>;
         in?: TVariant;
       },
       options?: TOptions,
     ): Promise<TModifiedReturn>;
-    with: (
-      values: Partial<ReplaceRecursively<TSchema, RONIN.Blob, StorableObjectValue>>,
-      options?: TOptions,
-    ) => Promise<TModifiedReturn>;
+    with: (values: Partial<ReplaceForSetter<TSchema>>, options?: TOptions) => Promise<TModifiedReturn>;
   }
 
   export interface ICounter<TSchema, TVariant extends string = string, TOptions = undefined>
