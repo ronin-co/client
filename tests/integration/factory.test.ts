@@ -87,6 +87,7 @@ describe('factory', () => {
           lessThan: new Date('2024-04-16T15:02:12.710Z'),
         },
       },
+      // @ts-expect-error `including` is `never[]` due not not having the schema types.
       including: ['members'],
       orderedBy: {
         ascending: ['createdAt'],
@@ -141,6 +142,7 @@ describe('factory', () => {
             lessThan: new Date('2024-04-16T15:02:12.710Z'),
           },
         },
+        // @ts-expect-error `including` is `never[]` due not not having the schema types.
         including: ['members'],
         orderedBy: {
           ascending: ['createdAt'],
@@ -237,6 +239,7 @@ describe('factory', () => {
           lessThan: new Date('2024-04-16T15:02:12.710Z'),
         },
       },
+      // @ts-expect-error `including` is `never[]` due not not having the schema types.
       including: ['members'],
       orderedBy: {
         ascending: ['createdAt'],
