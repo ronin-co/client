@@ -22,6 +22,7 @@ export const printHelp = () => {
 
       login                               Authenticate with RONIN (run by default for every command)
       init [space]                        Initialize the TypeScript types for a given space
+      sync [dir]                          Read local schema definitions (from a given directory) and sync them with RONIN
 
   {bold OPTIONS}
 

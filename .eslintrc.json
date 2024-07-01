@@ -30,7 +30,10 @@
           "cloudflare",
           "runtimes",
           "usr",
-          "entrypoint"
+          "entrypoint",
+          "esbuild",
+          "fs",
+          "cryptographically"
         ],
         "comments": true,
         "strings": false,

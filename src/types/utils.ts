@@ -97,6 +97,10 @@ export interface ReducedFunction extends Function {
    * @deprecated
    */
   arguments: never;
+  /**
+   * @deprecated
+   */
+  unify: never;
 }
 
 type ReplaceIfExtends<TValue, TType, TReplacement> = TValue extends TType ? TReplacement : TValue;

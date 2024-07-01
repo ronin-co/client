@@ -4,6 +4,7 @@ import { parseArgs } from 'util';
 
 import initializeProject from '@/src/bin/commands/init';
 import logIn from '@/src/bin/commands/login';
+import sync from '@/src/bin/commands/sync';
 import { printHelp, printVersion } from '@/src/bin/utils/info';
 import { getSession } from '@/src/bin/utils/session';
 
@@ -78,6 +79,10 @@ const run = async () => {
 
   // `init` sub command
   if (normalizedPositionals.includes('init')) return initializeProject(positionals);
+
+  const token = (appToken || session?.token) as string;
+  // `sync` sub command
+  if (normalizedPositionals.includes('sync')) return sync(positionals, token);
 
   // If no matching flags or commands were found, render the help, since we
   // don't want to use the main `ronin` command for anything yet.
