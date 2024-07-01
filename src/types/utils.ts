@@ -99,16 +99,12 @@ export interface ReducedFunction extends Function {
   arguments: never;
 }
 
-export type Replace<TValue, TType, TReplacement> = {
-  [K in keyof TValue]: TValue[K] extends TType ? TReplacement : TValue[K];
-};
+type ReplaceIfExtends<TValue, TType, TReplacement> = TValue extends TType ? TReplacement : TValue;
 
 export type ReplaceRecursively<TValue, TType, TReplacement> = {
   [K in keyof TValue]: TValue[K] extends TType
-    ? TReplacement
-    : TValue[K] extends Date
-      ? TValue[K]
-      : TValue[K] extends Record<string, any>
-        ? ReplaceRecursively<TValue[K], TType, TReplacement>
-        : TValue[K];
+    ? ReplaceIfExtends<TValue[K], TType, TReplacement>
+    : TValue[K] extends object
+      ? ReplaceRecursively<TValue[K], TType, TReplacement>
+      : TValue[K];
 };

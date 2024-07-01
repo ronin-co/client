@@ -30,8 +30,7 @@
           "cloudflare",
           "runtimes",
           "usr",
-          "entrypoint",
-          "programatically"
+          "entrypoint"
         ],
         "comments": true,
         "strings": false,
