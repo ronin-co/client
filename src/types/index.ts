@@ -63,3 +63,6 @@ export type {
 
 // Storage
 export type { StorableObjectValue, StoredObject } from '@/src/types/storage';
+
+// Other
+export type { PromiseTuple } from '@/src/types/utils';
