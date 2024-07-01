@@ -92,13 +92,13 @@ export const getSyntaxProxy = (
  * });
  * ```
  */
-export const getBatchProxy = async <T extends [Promise<any>, ...Promise<any>[]]>(
+export const getBatchProxy = <T extends [Promise<any> | any, ...(Promise<any> | any)[]]>(
   operations: () => T,
   queriesHandler: (queries: Query[], options?: Record<string, unknown>) => Promise<any> | any,
-): Promise<PromiseTuple<T>> => {
+): Promise<PromiseTuple<T>> | T => {
   inBatch = true;
   const queries = operations() as Query[];
   inBatch = false;
 
-  return queriesHandler(queries) as PromiseTuple<T>;
+  return queriesHandler(queries) as PromiseTuple<T> | T;
 };
