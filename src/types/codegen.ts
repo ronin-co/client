@@ -1,6 +1,6 @@
 import type { Schemas } from 'ronin';
 
-import type { RoninRecords } from '@/src/schema';
+import type { RoninRecords, SchemaRecords } from '@/src/schema';
 import type { StoredObject } from '@/src/types/storage';
 import type { ReducedFunction, Replace, ReplaceForSetter } from '@/src/types/utils';
 
@@ -79,13 +79,13 @@ export namespace RONIN {
     (value: T, options?: O): Promise<R>;
   }
 
-  interface RecordFilterFunction<R, O> extends ReducedFunction {
+  type RecordFilterFunction<T, R, O> = Omit<ReducedFunction, keyof T> & {
     (value: string | string[], options?: O): Promise<R>;
-  }
+  };
   type RecordFilterObject<T, R, O> = {
     [K in keyof T]: FilterFunction<T[K], R, O>;
   };
-  type RecordFilter<T, R, O> = RecordFilterFunction<R, O> & RecordFilterObject<T, R, O>;
+  type RecordFilter<T, R, O> = RecordFilterFunction<T, R, O> & RecordFilterObject<T, R, O>;
 
   type FilterFunction<T, R, O> = T extends string
     ? StringFilterFunction<T, R, O>
@@ -404,22 +404,24 @@ export namespace RONIN {
     extends Record<string, ICounter<Record<string, unknown>, string, TOptions>> {}
 
   export type Creator<TOptions = undefined> = {
-    [K in keyof Schemas]: Schemas[K]['creator'];
+    [K in keyof Schemas]: ICreator<Schemas[K]>;
   } & RONIN.ExtendedCreator<TOptions>;
 
   export type Getter<TOptions = undefined> = {
-    [K in keyof Schemas]: Schemas[K]['getter'];
+    [K in keyof Schemas]: Schemas[K] extends SchemaRecords<any>
+      ? IGetterPlural<Schemas[K][number]>
+      : IGetterSingular<Schemas[K]>;
   } & RONIN.ExtendedGetter<TOptions>;
 
   export type Setter<TOptions = undefined> = {
-    [K in keyof Schemas]: Schemas[K]['setter'];
+    [K in keyof Schemas]: ISetter<Schemas[K]>;
   } & RONIN.ExtendedSetter<TOptions>;
 
   export type Dropper<TOptions = undefined> = {
-    [K in keyof Schemas]: Schemas[K]['dropper'];
+    [K in keyof Schemas]: IDropper<Schemas[K]>;
   } & RONIN.ExtendedDropper<TOptions>;
 
   export type Counter<TOptions = undefined> = {
-    [K in keyof Schemas]: Schemas[K]['counter'];
+    [K in keyof Schemas]: ICounter<Schemas[K]>;
   } & RONIN.ExtendedCounter<TOptions>;
 }

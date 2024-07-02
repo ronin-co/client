@@ -16,20 +16,6 @@ export type RoninRecords<TSchema> = TSchema[] & {
   moreAfter?: string;
 };
 
-export interface SchemaRecord<T extends Record<string, any>, TSchema = RoninRecord<T>> {
-  getter: RONIN.IGetterSingular<TSchema>;
-  dropper: RONIN.IDropper<TSchema>;
-  counter: RONIN.ICounter<TSchema, never, undefined>;
-  setter: RONIN.ISetter<TSchema>;
-  creator: RONIN.ICreator<TSchema>;
-  base: T;
-  _record: true;
-}
+export type SchemaRecord<TSchema extends Record<string, any>> = Required<TSchema> & RONIN.RoninRecord;
 
-export interface SchemaRecords<T extends SchemaRecord<T>, TSchema = RoninRecord<T['base']>> {
-  getter: RONIN.IGetterPlural<TSchema>;
-  dropper: RONIN.IDropper<TSchema>;
-  counter: RONIN.ICounter<TSchema>;
-  setter: RONIN.ISetter<TSchema>;
-  creator: RONIN.ICreator<TSchema>;
-}
+export type SchemaRecords<TSchema extends SchemaRecord<TSchema>> = RoninRecords<TSchema>;
