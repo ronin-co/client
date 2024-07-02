@@ -1,6 +1,6 @@
 import type { Records } from '@/src/schema';
-import type { StorableObjectValue, StoredObject } from '@/src/types/storage';
-import type { ReducedFunction, Replace, ReplaceRecursively } from '@/src/types/utils';
+import type { StoredObject } from '@/src/types/storage';
+import type { ReducedFunction, Replace, ReplaceForSetter } from '@/src/types/utils';
 
 export namespace RONIN {
   export interface RoninRecord<TId extends string = string> {
@@ -22,55 +22,55 @@ export namespace RONIN {
   export interface Blob extends StoredObject {}
 
   interface StringFilterFunction<T, R, O> extends ReducedFunction {
-    (value: T, options?: O): Promise<R>;
+    (value: T | T[], options?: O): Promise<R>;
     /**
      * Returns records where the field is not equal to the provided value.
      */
-    notBeing: (value: T, options?: O) => Promise<R>;
+    notBeing: (value: T | T[], options?: O) => Promise<R>;
     /**
      * Returns records where the field starts with the provided value.
      */
-    startingWith: (value: T, options?: O) => Promise<R>;
+    startingWith: (value: T | T[], options?: O) => Promise<R>;
     /**
      * Returns records where the field ends with the provided value.
      */
-    endingWith: (value: T, options?: O) => Promise<R>;
+    endingWith: (value: T | T[], options?: O) => Promise<R>;
     /**
      * Returns records where the field contains the provided value.
      */
-    containing: (value: T, options?: O) => Promise<R>;
+    containing: (value: T | T[], options?: O) => Promise<R>;
   }
 
   interface NumberFilterFunction<T, R, O> extends ReducedFunction {
-    (value: T, options?: O): Promise<R>;
+    (value: T | T[], options?: O): Promise<R>;
     /**
      * Returns records where the field is not equal to the provided value.
      */
-    notBeing: (value: T, options?: O) => Promise<R>;
+    notBeing: (value: T | T[], options?: O) => Promise<R>;
     /**
      * Returns records where the field is greater than the provided value.
      */
-    greaterThan: (value: T, options?: O) => Promise<R>;
+    greaterThan: (value: T | T[], options?: O) => Promise<R>;
     /**
      * Returns records where the field is less than the provided value.
      */
-    lessThan: (value: T, options?: O) => Promise<R>;
+    lessThan: (value: T | T[], options?: O) => Promise<R>;
   }
 
   interface DateFilterFunction<T, R, O> extends ReducedFunction {
-    (value: T, options?: O): Promise<R>;
+    (value: T | T[], options?: O): Promise<R>;
     /**
      * Returns records where the field is not equal to the provided value.
      */
-    notBeing: (value: T, options?: O) => Promise<R>;
+    notBeing: (value: T | T[], options?: O) => Promise<R>;
     /**
      * Returns records where the field is greater than the provided value.
      */
-    greaterThan: (value: T, options?: O) => Promise<R>;
+    greaterThan: (value: T | T[], options?: O) => Promise<R>;
     /**
      * Returns records where the field is less than the provided value.
      */
-    lessThan: (value: T, options?: O) => Promise<R>;
+    lessThan: (value: T | T[], options?: O) => Promise<R>;
   }
 
   interface BooleanFilterFunction<T, R, O> extends ReducedFunction {
@@ -78,7 +78,7 @@ export namespace RONIN {
   }
 
   interface RecordFilterFunction<R, O> extends ReducedFunction {
-    (value: string, options?: O): Promise<R>;
+    (value: string | string[], options?: O): Promise<R>;
   }
   type RecordFilterObject<T, R, O> = {
     [K in keyof T]: FilterFunction<T[K], R, O>;
@@ -106,7 +106,7 @@ export namespace RONIN {
              * `being` instruction can't be used in combination with other
              * search instructions.
              */
-            being: string;
+            being: string | string[];
             notBeing: never;
             startingWith: never;
             endingWith: never;
@@ -117,7 +117,7 @@ export namespace RONIN {
              * `notBeing` instruction can't be used in combination with other
              * search instructions.
              */
-            notBeing: string;
+            notBeing: string | string[];
             being: never;
             startingWith: never;
             endingWith: never;
@@ -129,15 +129,15 @@ export namespace RONIN {
             /**
              * Matches records where the field starts with the provided value.
              */
-            startingWith?: string;
+            startingWith?: string | string[];
             /**
              * Matches records where the field ends with the provided value.
              */
-            endingWith?: string;
+            endingWith?: string | string[];
             /**
              * Matches records where the field contains the provided value.
              */
-            containing?: string;
+            containing?: string | string[];
           }
     : T extends number
       ?
@@ -146,7 +146,7 @@ export namespace RONIN {
                * `being` instruction can't be used in combination with other
                * search instructions.
                */
-              being: number;
+              being: number | number[];
               notBeing: never;
               greaterThan: never;
               lessThan: never;
@@ -156,7 +156,7 @@ export namespace RONIN {
                * `notBeing` instruction can't be used in combination with other
                * search instructions.
                */
-              notBeing: number;
+              notBeing: number | number[];
               being: never;
               greaterThan: never;
               lessThan: never;
@@ -180,7 +180,7 @@ export namespace RONIN {
                  * `being` instruction can't be used in combination with other
                  * search instructions.
                  */
-                being: Date;
+                being: Date | Date[];
                 notBeing: never;
                 greaterThan: never;
                 lessThan: never;
@@ -190,7 +190,7 @@ export namespace RONIN {
                  * `notBeing` instruction can't be used in combination with other
                  * search instructions.
                  */
-                notBeing: Date;
+                notBeing: Date | Date[];
                 being: never;
                 greaterThan: never;
                 lessThan: never;
@@ -218,6 +218,7 @@ export namespace RONIN {
           : T extends RONIN.RoninRecord<string>
             ?
                 | string
+                | string[]
                 | {
                     [K in keyof T]: T[K] | Partial<FilterObject<T[K]>>;
                   }
@@ -226,7 +227,7 @@ export namespace RONIN {
               : never;
 
   export type WithObject<TSchema> = {
-    [K in keyof TSchema]: TSchema[K] | Partial<FilterObject<TSchema[K]>>;
+    [K in keyof TSchema]: TSchema[K] | Array<TSchema[K]> | Partial<FilterObject<TSchema[K]>>;
   };
 
   export type WithFilterFunctions<TSchema, R, O = undefined> = {
@@ -345,7 +346,7 @@ export namespace RONIN {
     (
       filter: {
         with: Partial<WithObject<TSchema>>;
-        to: Partial<ReplaceRecursively<TSchema, RONIN.Blob, StorableObjectValue>>;
+        to: Partial<ReplaceForSetter<TSchema>>;
         in?: TVariant;
       },
       options?: TOptions,
@@ -360,15 +361,12 @@ export namespace RONIN {
   > extends ReducedFunction {
     (
       filter?: {
-        with: Partial<ReplaceRecursively<TSchema, RONIN.Blob, StorableObjectValue>>;
+        with: Partial<ReplaceForSetter<TSchema>>;
         in?: TVariant;
       },
       options?: TOptions,
     ): Promise<TModifiedReturn>;
-    with: (
-      values: Partial<ReplaceRecursively<TSchema, RONIN.Blob, StorableObjectValue>>,
-      options?: TOptions,
-    ) => Promise<TModifiedReturn>;
+    with: (values: Partial<ReplaceForSetter<TSchema>>, options?: TOptions) => Promise<TModifiedReturn>;
   }
 
   export interface ICounter<TSchema, TVariant extends string = string, TOptions = undefined>

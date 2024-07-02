@@ -1,6 +1,9 @@
 import type { AsyncLocalStorage } from 'node:async_hooks';
 
+import type { StorableObjectValue } from '@/src/types/storage';
 import type { HookContext, Hooks } from '@/src/utils/data-hooks';
+
+import type { RONIN } from './codegen';
 
 export interface QueryHandlerOptions {
   /**
@@ -99,16 +102,23 @@ export interface ReducedFunction extends Function {
   arguments: never;
 }
 
+/**
+ * Utility type to replace all instances of a type within a given object.
+ */
 export type Replace<TValue, TType, TReplacement> = {
   [K in keyof TValue]: TValue[K] extends TType ? TReplacement : TValue[K];
 };
 
-export type ReplaceRecursively<TValue, TType, TReplacement> = {
-  [K in keyof TValue]: TValue[K] extends TType
-    ? TReplacement
-    : TValue[K] extends Date
-      ? TValue[K]
-      : TValue[K] extends Record<string, any>
-        ? ReplaceRecursively<TValue[K], TType, TReplacement>
-        : TValue[K];
+/**
+ * Utility type that takes a given schema type and adjusts it to
+ * be used when updating a record.
+ */
+export type ReplaceForSetter<TValue> = {
+  // Replace `RoninRecord` with `string`.
+  [K in keyof TValue]: TValue[K] extends RONIN.RoninRecord
+    ? string
+    : // Replace `Blob` with `StorableObjectValue`.
+      TValue[K] extends RONIN.Blob
+      ? StorableObjectValue
+      : TValue[K];
 };
