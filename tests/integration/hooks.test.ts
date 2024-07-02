@@ -267,7 +267,7 @@ describe('hooks', () => {
       to: {
         email: 'test@ronin.co',
       },
-    })) as Array<Record<string, unknown>>;
+    })) as unknown as Array<Record<string, unknown>>;
 
     // Make sure all accounts were updated successfully.
     expect(accounts.every(({ email }) => email === 'test@ronin.co')).toBe(true);
@@ -320,14 +320,14 @@ describe('hooks', () => {
       asyncContext: new AsyncLocalStorage(),
     });
 
-    const result = (await batch(() => [
+    const result = await batch(() => [
       get.account.with({
         handle: 'juri',
         firstName: 'Juri',
         lastName: 'Adams',
       }),
       get.members(),
-    ])) as [Record<string, unknown>, Record<string, unknown>[]];
+    ]);
 
     // Make sure only one request is sent to the server and the request which
     // was handled by the "during" "get" hook is dropped out.

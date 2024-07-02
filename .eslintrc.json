@@ -33,7 +33,8 @@
           "entrypoint",
           "esbuild",
           "fs",
-          "cryptographically"
+          "cryptographically",
+          "programatically"
         ],
         "comments": true,
         "strings": false,

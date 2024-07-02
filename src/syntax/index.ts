@@ -1,7 +1,7 @@
 import { queriesHandler, queryHandler } from '@/src/syntax/handlers';
 import { getBatchProxy, getSyntaxProxy } from '@/src/syntax/utils';
 import type { RONIN } from '@/src/types/codegen';
-import type { QueryHandlerOptionsFactory } from '@/src/types/utils';
+import type { PromiseTuple, QueryHandlerOptionsFactory } from '@/src/types/utils';
 
 /**
  * Creates a syntax factory for generating and executing queries.
@@ -68,5 +68,5 @@ export const createSyntaxFactory = (options: QueryHandlerOptionsFactory) => ({
   ) =>
     getBatchProxy<T>(operations, (queries, queryOptions) =>
       queriesHandler(queries, queryOptions || batchQueryOptions || options),
-    ),
+    ) as Promise<PromiseTuple<T>>,
 });

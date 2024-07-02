@@ -9,49 +9,27 @@ export type Toggle = boolean;
 export type RichText = string;
 export type Time = Date;
 
-export type RoninRecord<T> = Required<T> & RONIN.RoninRecord;
+export type RoninRecord<TSchema> = Required<TSchema> & RONIN.RoninRecord;
 
-export type RoninRecords<T> = T[] & {
+export type RoninRecords<TSchema> = TSchema[] & {
   moreBefore?: string;
   moreAfter?: string;
 };
 
-type ExtractRecordKeys<T extends Record<string, any>> = {
-  [K in keyof T]: T[K]['_record'] extends true ? (K extends string ? K : never) : never;
-}[keyof T];
-
-export interface SchemaRecord<T extends Record<string, any>, TSchema = RoninRecord<T>, TReturn = T> {
-  getter: RONIN.IGetterSingular<
-    TSchema,
-    TReturn,
-    never,
-    never,
-    undefined,
-    RONIN.EnrichProvidedIncluding<ExtractRecordKeys<Required<T>>>
-  >;
-  dropper: RONIN.IDropper<TSchema, TReturn, never, undefined>;
+export interface SchemaRecord<T extends Record<string, any>, TSchema = RoninRecord<T>> {
+  getter: RONIN.IGetterSingular<TSchema>;
+  dropper: RONIN.IDropper<TSchema>;
   counter: RONIN.ICounter<TSchema, never, undefined>;
-  setter: RONIN.ISetter<TSchema, TReturn, never>;
-  creator: RONIN.ICreator<TSchema, TReturn, never>;
+  setter: RONIN.ISetter<TSchema>;
+  creator: RONIN.ICreator<TSchema>;
   base: T;
   _record: true;
 }
 
-export interface SchemaRecords<
-  T extends SchemaRecord<T>,
-  TSchema = RoninRecord<T['base']>,
-  TReturn = RoninRecords<T['base']>,
-> {
-  getter: RONIN.IGetterPlural<
-    TSchema,
-    TReturn,
-    never,
-    never,
-    undefined,
-    RONIN.EnrichProvidedIncluding<ExtractRecordKeys<Required<T['base']>>>
-  >;
-  dropper: RONIN.IDropper<TSchema, TReturn, never, undefined>;
-  counter: RONIN.ICounter<TSchema, never, undefined>;
-  setter: RONIN.ISetter<TSchema, TReturn, never>;
-  creator: RONIN.ICreator<TSchema, TReturn, never>;
+export interface SchemaRecords<T extends SchemaRecord<T>, TSchema = RoninRecord<T['base']>> {
+  getter: RONIN.IGetterPlural<TSchema>;
+  dropper: RONIN.IDropper<TSchema>;
+  counter: RONIN.ICounter<TSchema>;
+  setter: RONIN.ISetter<TSchema>;
+  creator: RONIN.ICreator<TSchema>;
 }
