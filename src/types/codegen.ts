@@ -1,8 +1,8 @@
 import type { Schemas } from 'ronin';
 
+import type { RoninRecords } from '@/src/schema';
 import type { StoredObject } from '@/src/types/storage';
 import type { ReducedFunction, Replace, ReplaceForSetter } from '@/src/types/utils';
-import type { RoninRecords } from '@/src/schema';
 
 export namespace RONIN {
   export interface RoninRecord<TId extends string = string> {
