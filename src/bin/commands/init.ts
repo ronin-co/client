@@ -5,21 +5,9 @@ import ora from 'ora';
 import path from 'path';
 import util from 'util';
 
+import { exists } from '@/src/bin/utils/file';
+
 const exec = util.promisify(childProcess.exec);
-
-const exists = async (file: string) => {
-  try {
-    await fs.access(path.join(process.cwd(), file));
-  } catch (err) {
-    if ((err as { code: string }).code === 'ENOENT') {
-      return false;
-    } else {
-      throw err;
-    }
-  }
-
-  return true;
-};
 
 export default async (positionals: string[]) => {
   const spinner = ora('Initializing project').start();
@@ -42,6 +30,20 @@ export default async (positionals: string[]) => {
   spinner.text = `Detected ${packageManagerName} — installing types package`;
 
   try {
+    // Add .ronin to .gitignore if .gitignore exists but doesn't contain .ronin
+    const gitignorePath = path.join(process.cwd(), '.gitignore');
+    const gitignoreExists = await exists('.gitignore');
+
+    console.log('gitignoreExists', gitignoreExists);
+
+    if (gitignoreExists) {
+      const gitignoreContents = await fs.readFile(gitignorePath, 'utf-8');
+
+      if (!gitignoreContents.includes('.ronin')) {
+        await fs.appendFile(gitignorePath, '\n.ronin');
+      }
+    }
+
     // Install the types package using the preferred package manager
     if (packageManager === 'bun') {
       await exec(`bun add @ronin/${spaceHandle} --dev`);
