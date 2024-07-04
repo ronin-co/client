@@ -9,8 +9,6 @@ export type Toggle = boolean;
 export type RichText = string;
 export type Time = Date;
 
-export type RoninRecord<TSchema> = Required<TSchema> & RONIN.RoninRecord;
-
 export type RoninRecords<TSchema> = TSchema[] & {
   moreBefore?: string;
   moreAfter?: string;
