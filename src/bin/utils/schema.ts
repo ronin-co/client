@@ -2,10 +2,21 @@ import fs from 'fs/promises';
 import path from 'path';
 import ts from 'typescript';
 
+import { exists } from '@/src/bin/utils/file';
+import type { Schema } from '@/src/types/schema';
 import { generateUniqueId } from '@/src/utils/id';
 
-export async function parseSchemaDefinitionFile(filePath: string = './schemas/index.d.ts') {
+export async function parseSchemaDefinitionFile(
+  filePath: string = './schemas/index.d.ts',
+): Promise<Schema[]> {
   const fullPath = path.resolve(process.cwd(), filePath);
+
+  const schemaFileExists = await exists(filePath);
+
+  if (!schemaFileExists) {
+    throw new Error(`The given path to the schema definition file does not exist: ${fullPath}`);
+  }
+
   const fileContent = await fs.readFile(fullPath, 'utf-8');
   const sourceFile = ts.createSourceFile('temp.d.ts', fileContent, ts.ScriptTarget.Latest, true);
 
