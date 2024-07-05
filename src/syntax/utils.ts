@@ -4,8 +4,7 @@ import type { Query } from '@/src/types/query';
 import type { PromiseTuple, QueryHandlerOptions } from '@/src/types/utils';
 import { objectFromAccessor } from '@/src/utils/helpers';
 
-let inBatch = false;
-
+let IN_BATCH_SYNC = false;
 let IN_BATCH_ASYNC: AsyncLocalStorage<boolean>;
 
 /**
@@ -55,7 +54,7 @@ export const getSyntaxProxy = (
 
               const query = { [queryType]: expanded };
 
-              if (IN_BATCH_ASYNC?.getStore() || inBatch) {
+              if (IN_BATCH_ASYNC?.getStore() || IN_BATCH_SYNC) {
                 return query;
               }
 
@@ -109,9 +108,9 @@ export const getBatchProxy = <
     IN_BATCH_ASYNC = options.asyncContext;
     IN_BATCH_ASYNC.run(true, () => operations() as Query[]);
   } else {
-    inBatch = true;
+    IN_BATCH_SYNC = true;
     queries = operations() as Query[];
-    inBatch = false;
+    IN_BATCH_SYNC = false;
   }
 
   return queriesHandler(queries) as PromiseTuple<T> | T;
