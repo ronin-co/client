@@ -1,8 +1,12 @@
+import type { AsyncLocalStorage } from 'node:async_hooks';
+
 import type { Query } from '@/src/types/query';
-import type { PromiseTuple } from '@/src/types/utils';
+import type { PromiseTuple, QueryHandlerOptions } from '@/src/types/utils';
 import { objectFromAccessor } from '@/src/utils/helpers';
 
 let inBatch = false;
+
+let IN_BATCH_ASYNC: AsyncLocalStorage<boolean> | undefined;
 
 /**
  * A utility function that creates a Proxy object to handle dynamic property
@@ -96,11 +100,19 @@ export const getBatchProxy = <
   T extends [Promise<any> | any, ...(Promise<any> | any)[]] | (Promise<any> | any)[],
 >(
   operations: () => T,
+  options: QueryHandlerOptions = {},
   queriesHandler: (queries: Query[], options?: Record<string, unknown>) => Promise<any> | any,
 ): Promise<PromiseTuple<T>> | T => {
-  inBatch = true;
-  const queries = operations() as Query[];
-  inBatch = false;
+  let queries: Query[] = [];
+
+  if (options.asyncContext) {
+    IN_BATCH_ASYNC = options.asyncContext;
+    IN_BATCH_ASYNC.run(true, () => operations() as Query[]);
+  } else {
+    inBatch = true;
+    queries = operations() as Query[];
+    inBatch = false;
+  }
 
   return queriesHandler(queries) as PromiseTuple<T> | T;
 };

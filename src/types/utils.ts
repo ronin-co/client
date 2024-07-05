@@ -1,7 +1,7 @@
 import type { AsyncLocalStorage } from 'node:async_hooks';
 
 import type { StorableObjectValue } from '@/src/types/storage';
-import type { HookContext, Hooks } from '@/src/utils/data-hooks';
+import type { Hooks } from '@/src/utils/data-hooks';
 
 import type { RONIN } from './codegen';
 
@@ -37,7 +37,7 @@ export interface QueryHandlerOptions {
    * provided with the `hooks` option. If the `hooks` option is provided, this
    * option is required.
    */
-  asyncContext?: AsyncLocalStorage<HookContext>;
+  asyncContext?: AsyncLocalStorage<any>;
 }
 
 export type QueryHandlerOptionsFactory = QueryHandlerOptions | (() => QueryHandlerOptions);
