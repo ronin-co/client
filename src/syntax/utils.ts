@@ -115,10 +115,10 @@ export const getBatchProxy = <
 
   if (options.asyncContext) {
     IN_BATCH_ASYNC = options.asyncContext;
-    IN_BATCH_ASYNC.run(true, () => operations() as Query[]);
+    queries = IN_BATCH_ASYNC.run(true, () => operations());
   } else {
     IN_BATCH_SYNC = true;
-    queries = operations() as Query[];
+    queries = operations();
     IN_BATCH_SYNC = false;
   }
 
