@@ -23,6 +23,7 @@ export async function parseSchemaDefinitionFile(
   const results: any[] = [];
   const typeMapping: Record<string, string> = {};
   const schemaProperties: Record<string, string> = {};
+  const missingSchemas: Set<string> = new Set();
 
   let schemaRecordAlias = 'SchemaRecord';
   let schemaRecordsAlias = 'SchemaRecords';
@@ -48,8 +49,14 @@ export async function parseSchemaDefinitionFile(
         return 'token';
       case 'JSON':
         return 'json';
-      default:
+      default: {
+        const { resolvedTypeName } = resolveTypeAlias(originalType);
+        if (resolvedTypeName === schemaRecordAlias) {
+          return 'record';
+        }
+
         return 'unknown';
+      }
     }
   }
 
@@ -156,9 +163,21 @@ export async function parseSchemaDefinitionFile(
       }
       ts.forEachChild(node, typeAliasVisitor);
     }
+
     ts.forEachChild(sourceFile, typeAliasVisitor);
 
     return { resolvedTypeName, typeArguments };
+  }
+
+  function checkSchemaInclusion(typeName: string): string | null {
+    const schemaProperty = Object.keys(schemaProperties).find((key) => schemaProperties[key] === typeName);
+
+    if (schemaProperty) {
+      return schemaProperty;
+    } else {
+      missingSchemas.add(typeName);
+      return null;
+    }
   }
 
   function parseTypeAlias(typeName: string, propertyName: string): any {
@@ -189,15 +208,17 @@ export async function parseSchemaDefinitionFile(
             typeLiteral.members.forEach((member) => {
               if (ts.isPropertySignature(member)) {
                 const fieldName = member.name.getText();
-                let fieldType = getFieldType(member.type!.getText());
+                const memberTypeText = member.type!.getText();
+                const fieldType = getFieldType(memberTypeText);
+
                 const { name, description, details } = parseJsDoc(member);
-                if (
-                  fieldType === 'unknown' &&
-                  resolveTypeAlias(member.type!.getText()).resolvedTypeName === schemaRecordAlias
-                ) {
-                  fieldType = 'record';
+
+                let schema: string | null = null;
+                if (fieldType === 'record') {
+                  schema = checkSchemaInclusion(member.type!.getText());
                 }
-                const field = {
+
+                const field: Record<string, unknown> = {
                   type: fieldType,
                   id: `${fieldType}-${generateUniqueId()}`,
                   slug: fieldName,
@@ -206,6 +227,11 @@ export async function parseSchemaDefinitionFile(
                   details: details,
                   unique: false,
                 };
+
+                if (schema) {
+                  field.schema = schema;
+                }
+
                 result.fields.push(field);
               }
             });
@@ -233,6 +259,12 @@ export async function parseSchemaDefinitionFile(
   }
 
   visit(sourceFile);
+
+  if (missingSchemas.size > 0) {
+    throw new Error(
+      `The following Schemas were used as a reference but weren't included in the Schemas interface: ${Array.from(missingSchemas).join(', ')}.\nPlease include them in the Schemas interface or remove their references.`,
+    );
+  }
 
   return results;
 }
