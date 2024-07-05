@@ -122,7 +122,7 @@ export type Replace<TValue, TType, TReplacement> = {
 export type ReplaceForSetter<TValue> = {
   // Replace `RoninRecord` with `string`.
   [K in keyof TValue]: TValue[K] extends RONIN.RoninRecord
-    ? string | TValue[K]
+    ? string | Partial<TValue[K]>
     : // Replace `Blob` with `StorableObjectValue`.
       TValue[K] extends RONIN.Blob
       ? StorableObjectValue
