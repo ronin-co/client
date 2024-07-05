@@ -12,7 +12,7 @@ describe('syntax proxy', () => {
       {
         asyncContext: new AsyncLocalStorage(),
       },
-      () => ({ result: true }),
+      (queries) => (queries.length === 1 ? { result: true } : null),
     );
 
     expect(details).toMatchObject({
