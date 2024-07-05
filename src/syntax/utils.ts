@@ -1,7 +1,7 @@
 import type { AsyncLocalStorage } from 'node:async_hooks';
 
 import type { Query } from '@/src/types/query';
-import type { PromiseTuple, QueryHandlerOptions } from '@/src/types/utils';
+import type { PromiseTuple, QueryHandlerOptions, QueryItem } from '@/src/types/utils';
 import { objectFromAccessor } from '@/src/utils/helpers';
 
 /**
@@ -64,7 +64,7 @@ export const getSyntaxProxy = (
               const query = { [queryType]: expanded };
 
               if (IN_BATCH_ASYNC?.getStore() || IN_BATCH_SYNC) {
-                return query;
+                return { query, options };
               }
 
               return queryHandler(query, options);
@@ -109,9 +109,9 @@ export const getBatchProxy = <
 >(
   operations: () => T,
   options: QueryHandlerOptions = {},
-  queriesHandler: (queries: Query[], options?: Record<string, unknown>) => Promise<any> | any,
+  queriesHandler: (queries: QueryItem[], options?: Record<string, unknown>) => Promise<any> | any,
 ): Promise<PromiseTuple<T>> | T => {
-  let queries: Query[] = [];
+  let queries: QueryItem[] = [];
 
   if (options.asyncContext) {
     IN_BATCH_ASYNC = options.asyncContext;

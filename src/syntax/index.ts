@@ -67,6 +67,9 @@ export const createSyntaxFactory = (options: QueryHandlerOptionsFactory) => ({
     batchQueryOptions?: Record<string, unknown>,
   ) =>
     getBatchProxy<T>(operations, batchQueryOptions, (queries, queryOptions) =>
-      queriesHandler(queries, queryOptions || batchQueryOptions || options),
+      queriesHandler(
+        queries.map(({ query }) => query),
+        queryOptions || batchQueryOptions || options,
+      ),
     ) as Promise<PromiseTuple<T>>,
 });

@@ -1,5 +1,6 @@
 import type { AsyncLocalStorage } from 'node:async_hooks';
 
+import type { Query } from '@/src/types/query';
 import type { StorableObjectValue } from '@/src/types/storage';
 import type { Hooks } from '@/src/utils/data-hooks';
 
@@ -128,3 +129,12 @@ export type ReplaceForSetter<TValue> = {
       ? StorableObjectValue
       : TValue[K];
 };
+
+/**
+ * Utility type that represents a particular query and any options that should
+ * be used when executing it.
+ */
+export interface QueryItem {
+  query: Query;
+  options: Record<string, unknown>;
+}
