@@ -23,6 +23,14 @@ export const saveConfig = (config: Config) => {
   fs.writeFileSync(configPath, JSON.stringify({ ...existingConfig, ...config }, null, 2));
 };
 
+export const resetConfig = () => {
+  const configPath = path.join(process.cwd(), '.ronin', 'config.json');
+
+  if (fs.existsSync(configPath)) {
+    fs.unlinkSync(configPath);
+  }
+};
+
 export const readConfig = (): Config => {
   const configPath = path.join(process.cwd(), '.ronin', 'config.json');
 

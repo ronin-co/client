@@ -1,9 +1,8 @@
 import { select } from '@inquirer/prompts';
-import fs from 'fs';
 import ora from 'ora';
 import path from 'path';
 
-import { readConfig, saveConfig } from '@/src/bin/utils/config';
+import { readConfig, resetConfig, saveConfig } from '@/src/bin/utils/config';
 import { exists } from '@/src/bin/utils/file';
 import { parseSchemaDefinitionFile } from '@/src/bin/utils/schema';
 
@@ -36,6 +35,10 @@ const getInfoFromSession = async (sessionToken: string) => {
 };
 
 export default async (positionals: string[], appToken?: string, sessionToken?: string) => {
+  if (positionals.includes('-r') || positionals.includes('--reset')) {
+    resetConfig();
+  }
+
   const spinner = ora('Reading schema definitions').start();
 
   if (!appToken && !sessionToken) {
