@@ -32,15 +32,15 @@ export namespace RONIN {
     /**
      * Returns records where the field starts with the provided value.
      */
-    startingWith: (value: null | T | T[], options?: O) => Promise<R>;
+    startingWith: (value: T | T[], options?: O) => Promise<R>;
     /**
      * Returns records where the field ends with the provided value.
      */
-    endingWith: (value: null | T | T[], options?: O) => Promise<R>;
+    endingWith: (value: T | T[], options?: O) => Promise<R>;
     /**
      * Returns records where the field contains the provided value.
      */
-    containing: (value: null | T | T[], options?: O) => Promise<R>;
+    containing: (value: T | T[], options?: O) => Promise<R>;
   }
 
   interface NumberFilterFunction<T, R, O> extends ReducedFunction {
@@ -52,11 +52,11 @@ export namespace RONIN {
     /**
      * Returns records where the field is greater than the provided value.
      */
-    greaterThan: (value: null | T | T[], options?: O) => Promise<R>;
+    greaterThan: (value: T | T[], options?: O) => Promise<R>;
     /**
      * Returns records where the field is less than the provided value.
      */
-    lessThan: (value: null | T | T[], options?: O) => Promise<R>;
+    lessThan: (value: T | T[], options?: O) => Promise<R>;
   }
 
   interface DateFilterFunction<T, R, O> extends ReducedFunction {
@@ -68,11 +68,11 @@ export namespace RONIN {
     /**
      * Returns records where the field is greater than the provided value.
      */
-    greaterThan: (value: null | T | T[], options?: O) => Promise<R>;
+    greaterThan: (value: T | T[], options?: O) => Promise<R>;
     /**
      * Returns records where the field is less than the provided value.
      */
-    lessThan: (value: null | T | T[], options?: O) => Promise<R>;
+    lessThan: (value: T | T[], options?: O) => Promise<R>;
   }
 
   interface BooleanFilterFunction<T, R, O> extends ReducedFunction {
@@ -131,15 +131,15 @@ export namespace RONIN {
             /**
              * Matches records where the field starts with the provided value.
              */
-            startingWith?: null | string | string[];
+            startingWith?: string | string[];
             /**
              * Matches records where the field ends with the provided value.
              */
-            endingWith?: null | string | string[];
+            endingWith?: string | string[];
             /**
              * Matches records where the field contains the provided value.
              */
-            containing?: null | string | string[];
+            containing?: string | string[];
           }
     : T extends number
       ?
@@ -169,11 +169,11 @@ export namespace RONIN {
               /**
                * Matches records where the field is greater than the provided value.
                */
-              greaterThan?: null | number;
+              greaterThan?: number;
               /**
                * Matches records where the field is less than the provided value.
                */
-              lessThan?: null | number;
+              lessThan?: number;
             }
       : T extends Date
         ?
@@ -204,11 +204,11 @@ export namespace RONIN {
                 /**
                  * Matches records where the field is greater than the provided value.
                  */
-                greaterThan?: null | Date;
+                greaterThan?: Date;
                 /**
                  * Matches records where the field is less than the provided value.
                  */
-                lessThan?: null | Date;
+                lessThan?: Date;
               }
         : T extends boolean
           ? {
