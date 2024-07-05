@@ -92,7 +92,9 @@ export const getSyntaxProxy = (
  * });
  * ```
  */
-export const getBatchProxy = <T extends [Promise<any> | any, ...(Promise<any> | any)[]]>(
+export const getBatchProxy = <
+  T extends [Promise<any> | any, ...(Promise<any> | any)[]] | (Promise<any> | any)[],
+>(
   operations: () => T,
   queriesHandler: (queries: Query[], options?: Record<string, unknown>) => Promise<any> | any,
 ): Promise<PromiseTuple<T>> | T => {

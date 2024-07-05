@@ -56,7 +56,9 @@ export type RecursivePartial<T> = {
 /**
  * Utility type to convert a tuple of promises into a tuple of their resolved types.
  */
-export type PromiseTuple<T extends [Promise<any>, ...Promise<any>[]]> = { [P in keyof T]: Awaited<T[P]> };
+export type PromiseTuple<T extends [Promise<any>, ...Promise<any>[]] | Promise<any>[]> = {
+  [P in keyof T]: Awaited<T[P]>;
+};
 
 /**
  * Utility type to mark all Function.prototype methods as "deprecated" which
@@ -120,7 +122,7 @@ export type Replace<TValue, TType, TReplacement> = {
 export type ReplaceForSetter<TValue> = {
   // Replace `RoninRecord` with `string`.
   [K in keyof TValue]: TValue[K] extends RONIN.RoninRecord
-    ? string
+    ? string | TValue[K]
     : // Replace `Blob` with `StorableObjectValue`.
       TValue[K] extends RONIN.Blob
       ? StorableObjectValue
