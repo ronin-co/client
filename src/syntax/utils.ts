@@ -6,7 +6,7 @@ import { objectFromAccessor } from '@/src/utils/helpers';
 
 let inBatch = false;
 
-let IN_BATCH_ASYNC: AsyncLocalStorage<boolean> | undefined;
+let IN_BATCH_ASYNC: AsyncLocalStorage<boolean>;
 
 /**
  * A utility function that creates a Proxy object to handle dynamic property
