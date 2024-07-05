@@ -55,7 +55,7 @@ export const getSyntaxProxy = (
 
               const query = { [queryType]: expanded };
 
-              if (inBatch) {
+              if (IN_BATCH_ASYNC?.getStore() || inBatch) {
                 return query;
               }
 
