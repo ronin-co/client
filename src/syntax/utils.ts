@@ -33,7 +33,7 @@ let IN_BATCH_ASYNC: AsyncLocalStorage<boolean> | undefined;
  */
 export const getSyntaxProxy = (
   queryType: string,
-  queryHandler: (query: Query, options?: Record<string, unknown>) => Promise<any> | any,
+  queryHandler: (query: Query, options?: QueryHandlerOptions) => Promise<any> | any,
 ) => {
   return new Proxy(
     {},
@@ -101,7 +101,7 @@ export const getBatchProxy = <
 >(
   operations: () => T,
   options: QueryHandlerOptions = {},
-  queriesHandler: (queries: Query[], options?: Record<string, unknown>) => Promise<any> | any,
+  queriesHandler: (queries: Query[], options?: QueryHandlerOptions) => Promise<any> | any,
 ): Promise<PromiseTuple<T>> | T => {
   let queries: Query[] = [];
 
