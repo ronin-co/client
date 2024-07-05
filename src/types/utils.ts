@@ -114,7 +114,8 @@ export interface ReducedFunction extends Function {
  */
 export type Replace<TValue, TType, TReplacement> = {
   [K in keyof TValue]: TValue[K] extends TType ? TReplacement : TValue[K];
-};
+  // `NonNullable<unknown>` is needed here in order to "flatten" the output type.
+} & NonNullable<unknown>;
 
 /**
  * Utility type that takes a given schema type and adjusts it to
@@ -128,7 +129,8 @@ export type ReplaceForSetter<TValue> = {
       TValue[K] extends RONIN.Blob
       ? StorableObjectValue
       : TValue[K];
-};
+  // `NonNullable<unknown>` is needed here in order to "flatten" the output type.
+} & NonNullable<unknown>;
 
 /**
  * Utility type that represents a particular query and any options that should
