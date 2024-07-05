@@ -4,8 +4,17 @@ import type { Query } from '@/src/types/query';
 import type { PromiseTuple, QueryHandlerOptions } from '@/src/types/utils';
 import { objectFromAccessor } from '@/src/utils/helpers';
 
-let IN_BATCH_SYNC = false;
+/**
+ * Used to track whether queries run in batches if `AsyncLocalStorage` is
+ * available for use.
+ */
 let IN_BATCH_ASYNC: AsyncLocalStorage<boolean>;
+
+/**
+ * Used to track whether queries run in batches if `AsyncLocalStorage` is not
+ * available for use.
+ */
+let IN_BATCH_SYNC = false;
 
 /**
  * A utility function that creates a Proxy object to handle dynamic property
