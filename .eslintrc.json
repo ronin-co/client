@@ -34,7 +34,8 @@
           "esbuild",
           "fs",
           "cryptographically",
-          "programatically"
+          "programatically",
+          "dbov"
         ],
         "comments": true,
         "strings": false,

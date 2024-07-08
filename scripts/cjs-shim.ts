@@ -3,4 +3,5 @@ import { createRequire } from 'node:module';
 import url from 'node:url';
 globalThis.require = createRequire(import.meta.url);
 globalThis.__filename = url.fileURLToPath(import.meta.url);
+// @ts-expect-error The `path` will anyway be imported by the injected script
 globalThis.__dirname = path.dirname(__filename);
