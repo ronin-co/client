@@ -1,8 +1,20 @@
+import type { AsyncLocalStorage } from 'node:async_hooks';
+
 import type { Query } from '@/src/types/query';
-import type { PromiseTuple } from '@/src/types/utils';
+import type { PromiseTuple, QueryHandlerOptions, QueryItem } from '@/src/types/utils';
 import { objectFromAccessor } from '@/src/utils/helpers';
 
-let inBatch = false;
+/**
+ * Used to track whether queries run in batches if `AsyncLocalStorage` is
+ * available for use.
+ */
+let IN_BATCH_ASYNC: AsyncLocalStorage<boolean>;
+
+/**
+ * Used to track whether queries run in batches if `AsyncLocalStorage` is not
+ * available for use.
+ */
+let IN_BATCH_SYNC = false;
 
 /**
  * A utility function that creates a Proxy object to handle dynamic property
@@ -51,8 +63,8 @@ export const getSyntaxProxy = (
 
               const query = { [queryType]: expanded };
 
-              if (inBatch) {
-                return query;
+              if (IN_BATCH_ASYNC?.getStore() || IN_BATCH_SYNC) {
+                return { query, options };
               }
 
               return queryHandler(query, options);
@@ -92,13 +104,23 @@ export const getSyntaxProxy = (
  * });
  * ```
  */
-export const getBatchProxy = <T extends [Promise<any> | any, ...(Promise<any> | any)[]]>(
+export const getBatchProxy = <
+  T extends [Promise<any> | any, ...(Promise<any> | any)[]] | (Promise<any> | any)[],
+>(
   operations: () => T,
-  queriesHandler: (queries: Query[], options?: Record<string, unknown>) => Promise<any> | any,
+  options: QueryHandlerOptions = {},
+  queriesHandler: (queries: QueryItem[], options?: Record<string, unknown>) => Promise<any> | any,
 ): Promise<PromiseTuple<T>> | T => {
-  inBatch = true;
-  const queries = operations() as Query[];
-  inBatch = false;
+  let queries: QueryItem[] = [];
+
+  if (options.asyncContext) {
+    IN_BATCH_ASYNC = options.asyncContext;
+    queries = IN_BATCH_ASYNC.run(true, () => operations());
+  } else {
+    IN_BATCH_SYNC = true;
+    queries = operations();
+    IN_BATCH_SYNC = false;
+  }
 
   return queriesHandler(queries) as PromiseTuple<T> | T;
 };

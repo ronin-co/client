@@ -62,11 +62,14 @@ export const createSyntaxFactory = (options: QueryHandlerOptionsFactory) => ({
   count: getSyntaxProxy('count', (query, queryOptions) =>
     queryHandler(query, queryOptions || options),
   ) as RONIN.Counter,
-  batch: <T extends [Promise<any>, ...Promise<any>[]]>(
+  batch: <T extends [Promise<any>, ...Promise<any>[]] | Promise<any>[]>(
     operations: () => T,
     batchQueryOptions?: Record<string, unknown>,
   ) =>
-    getBatchProxy<T>(operations, (queries, queryOptions) =>
-      queriesHandler(queries, queryOptions || batchQueryOptions || options),
+    getBatchProxy<T>(operations, batchQueryOptions, (queries, queryOptions) =>
+      queriesHandler(
+        queries.map(({ query }) => query),
+        queryOptions || batchQueryOptions || options,
+      ),
     ) as Promise<PromiseTuple<T>>,
 });

@@ -1,7 +1,8 @@
 import type { AsyncLocalStorage } from 'node:async_hooks';
 
+import type { Query } from '@/src/types/query';
 import type { StorableObjectValue } from '@/src/types/storage';
-import type { HookContext, Hooks } from '@/src/utils/data-hooks';
+import type { Hooks } from '@/src/utils/data-hooks';
 
 import type { RONIN } from './codegen';
 
@@ -37,7 +38,7 @@ export interface QueryHandlerOptions {
    * provided with the `hooks` option. If the `hooks` option is provided, this
    * option is required.
    */
-  asyncContext?: AsyncLocalStorage<HookContext>;
+  asyncContext?: AsyncLocalStorage<any>;
 }
 
 export type QueryHandlerOptionsFactory = QueryHandlerOptions | (() => QueryHandlerOptions);
@@ -56,7 +57,9 @@ export type RecursivePartial<T> = {
 /**
  * Utility type to convert a tuple of promises into a tuple of their resolved types.
  */
-export type PromiseTuple<T extends [Promise<any>, ...Promise<any>[]]> = { [P in keyof T]: Awaited<T[P]> };
+export type PromiseTuple<T extends [Promise<any>, ...Promise<any>[]] | Promise<any>[]> = {
+  [P in keyof T]: Awaited<T[P]>;
+};
 
 /**
  * Utility type to mark all Function.prototype methods as "deprecated" which
@@ -111,7 +114,8 @@ export interface ReducedFunction extends Function {
  */
 export type Replace<TValue, TType, TReplacement> = {
   [K in keyof TValue]: TValue[K] extends TType ? TReplacement : TValue[K];
-};
+  // `NonNullable<unknown>` is needed here in order to "flatten" the output type.
+} & NonNullable<unknown>;
 
 /**
  * Utility type that takes a given schema type and adjusts it to
@@ -120,9 +124,19 @@ export type Replace<TValue, TType, TReplacement> = {
 export type ReplaceForSetter<TValue> = {
   // Replace `RoninRecord` with `string`.
   [K in keyof TValue]: TValue[K] extends RONIN.RoninRecord
-    ? string
+    ? string | Partial<TValue[K]>
     : // Replace `Blob` with `StorableObjectValue`.
       TValue[K] extends RONIN.Blob
       ? StorableObjectValue
       : TValue[K];
-};
+  // `NonNullable<unknown>` is needed here in order to "flatten" the output type.
+} & NonNullable<unknown>;
+
+/**
+ * Utility type that represents a particular query and any options that should
+ * be used when executing it.
+ */
+export interface QueryItem {
+  query: Query;
+  options: Record<string, unknown>;
+}
