@@ -5,43 +5,21 @@ import path from 'path';
 import { readConfig, resetConfig, saveConfig } from '@/src/bin/utils/config';
 import { exists } from '@/src/bin/utils/file';
 import { parseSchemaDefinitionFile } from '@/src/bin/utils/schema';
+import { compareSchemas, getSchemas, getSpaces, replaceFieldIdsWithExisting } from '@/src/bin/utils/sync';
 
-const getInfoFromSession = async (sessionToken: string) => {
-  let res;
-  try {
-    res = await fetch('http://localhost:5100/-/ronin/spaces', {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${sessionToken}`,
-      },
-    });
-  } catch (err) {
-    throw new Error('Failed to fetch available spaces: ${err.message}');
-  }
-
-  const text = await res.text();
-
-  let json;
-  try {
-    json = JSON.parse(text);
-  } catch (err) {
-    throw new Error(`Failed to parse response from server: ${text}`);
-  }
-
-  const spaces = json.spaces as { id: string; handle: string; name: string }[];
-
-  return { spaces };
-};
+type Status = 'readingConfig' | 'readingSchemas' | 'comparing' | 'syncing';
 
 export default async (positionals: string[], appToken?: string, sessionToken?: string) => {
   if (positionals.includes('-r') || positionals.includes('--reset')) {
     resetConfig();
   }
 
-  const spinner = ora('Reading schema definitions').start();
+  const spinner = ora('Reading configuration').start();
+  let status: Status = 'readingConfig';
 
-  if (!appToken && !sessionToken) {
+  const token = appToken || sessionToken;
+
+  if (!token) {
     spinner.fail('Either an App Token or Session Token is required to sync schemas');
     process.exit(1);
   }
@@ -65,10 +43,9 @@ export default async (positionals: string[], appToken?: string, sessionToken?: s
 
   const config = readConfig();
 
-  let status: 'reading' | 'uploading' = 'reading';
   try {
     if (!config.spaceId && !appToken && sessionToken) {
-      const { spaces } = await getInfoFromSession(sessionToken);
+      const spaces = await getSpaces(sessionToken);
 
       if (spaces.length === 0) {
         spinner.fail(
@@ -95,12 +72,26 @@ export default async (positionals: string[], appToken?: string, sessionToken?: s
       saveConfig({ spaceId: answer });
     }
 
-    const schemasDir = config.schemasDir || 'schemas';
-    const schemaFile = path.join(schemasDir, 'index.d.ts');
-    const schemaJson = await parseSchemaDefinitionFile(schemaFile);
+    status = 'readingSchemas';
+    spinner.text = 'Reading schema definitions';
 
-    spinner.start('Uploading schema definitions');
-    status = 'uploading';
+    const schemaFile = path.join(config.schemasDir || 'schemas', 'index.d.ts');
+    let schemaDefinitions = await parseSchemaDefinitionFile(schemaFile);
+
+    status = 'comparing';
+    spinner.start('Retrieving existing schemas');
+
+    const remoteSchemas = await getSchemas(token, config.spaceId as string);
+
+    schemaDefinitions = await replaceFieldIdsWithExisting(schemaDefinitions, remoteSchemas);
+
+    status = 'comparing';
+    spinner.text = 'Comparing local and remote schema definitions';
+
+    await compareSchemas(schemaDefinitions, remoteSchemas, spinner);
+
+    status = 'syncing';
+    spinner.text = 'Syncing schema definitions';
 
     const res = await fetch('http://localhost:5100/-/ronin/sync', {
       method: 'POST',
@@ -108,18 +99,17 @@ export default async (positionals: string[], appToken?: string, sessionToken?: s
         'Content-Type': 'application/json',
         Authorization: `Bearer ${appToken || sessionToken}`,
       },
-      body: JSON.stringify({ schemas: schemaJson, space: config.spaceId }),
+      body: JSON.stringify({ schemas: schemaDefinitions, space: config.spaceId }),
     });
 
     const text = await res.text();
-    console.log(text);
 
     if (!res.ok) {
       throw new Error(text);
     }
   } catch (err) {
     spinner.fail(
-      `Failed to ${status === 'reading' ? 'read schema definitions' : 'apply new schema changes'}:\n`,
+      `Failed to ${status === 'readingSchemas' ? 'read schema definitions' : 'apply new schema changes'}:\n`,
     );
     console.error(err);
     process.exit(1);

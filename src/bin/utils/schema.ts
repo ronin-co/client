@@ -6,6 +6,24 @@ import { exists } from '@/src/bin/utils/file';
 import type { Schema } from '@/src/types/schema';
 import { generateUniqueId } from '@/src/utils/id';
 
+const DEFAULT_SCHEMA_SUMMARY = 'This is a schema summary';
+
+/**
+ * Generates a unique field ID.
+ *
+ * @param type The type of the field.
+ */
+export const generateFieldId = (type: string): string => {
+  return `${type}-${generateUniqueId()}`;
+};
+
+/**
+ * Parses the schema definition file and returns an array of Schema objects.
+ *
+ * @param filePath The path to the schema definition file.
+ *
+ * @returns A promise that resolves to an array of Schema objects.
+ */
 export async function parseSchemaDefinitionFile(
   filePath: string = './schemas/index.d.ts',
 ): Promise<Schema[]> {
@@ -184,6 +202,7 @@ export async function parseSchemaDefinitionFile(
     const result: any = {
       name: typeName,
       slug: propertyName,
+      summary: DEFAULT_SCHEMA_SUMMARY,
       pluralName: '',
       pluralSlug: '',
       fields: [],
@@ -220,7 +239,7 @@ export async function parseSchemaDefinitionFile(
 
                 const field: Record<string, unknown> = {
                   type: fieldType,
-                  id: `${fieldType}-${generateUniqueId()}`,
+                  id: generateFieldId(fieldType),
                   slug: fieldName,
                   name: name || fieldName.charAt(0).toUpperCase() + fieldName.slice(1),
                   description: description || undefined,
