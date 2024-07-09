@@ -1,7 +1,8 @@
 import { queriesHandler, queryHandler } from '@/src/syntax/handlers';
 import { getBatchProxy, getSyntaxProxy } from '@/src/syntax/utils';
 import type { RONIN } from '@/src/types/codegen';
-import type { PromiseTuple, QueryHandlerOptionsFactory } from '@/src/types/utils';
+import type { PromiseTuple, QueryHandlerOptions } from '@/src/types/utils';
+import { mergeOptions } from '@/src/utils/helpers';
 
 /**
  * Creates a syntax factory for generating and executing queries.
@@ -46,21 +47,21 @@ import type { PromiseTuple, QueryHandlerOptionsFactory } from '@/src/types/utils
  * ]);
  * ```
  */
-export const createSyntaxFactory = (options: QueryHandlerOptionsFactory) => ({
+export const createSyntaxFactory = (options: QueryHandlerOptions | (() => QueryHandlerOptions)) => ({
   create: getSyntaxProxy('create', (query, queryOptions) =>
-    queryHandler(query, queryOptions || options),
+    queryHandler(query, mergeOptions(options, queryOptions)),
   ) as RONIN.Creator,
   get: getSyntaxProxy('get', (query, queryOptions) =>
-    queryHandler(query, queryOptions || options),
+    queryHandler(query, mergeOptions(options, queryOptions)),
   ) as RONIN.Getter,
   set: getSyntaxProxy('set', (query, queryOptions) =>
-    queryHandler(query, queryOptions || options),
+    queryHandler(query, mergeOptions(options, queryOptions)),
   ) as RONIN.Setter,
   drop: getSyntaxProxy('drop', (query, queryOptions) =>
-    queryHandler(query, queryOptions || options),
+    queryHandler(query, mergeOptions(options, queryOptions)),
   ) as RONIN.Dropper,
   count: getSyntaxProxy('count', (query, queryOptions) =>
-    queryHandler(query, queryOptions || options),
+    queryHandler(query, mergeOptions(options, queryOptions)),
   ) as RONIN.Counter,
   batch: <T extends [Promise<any>, ...Promise<any>[]] | Promise<any>[]>(
     operations: () => T,
@@ -69,7 +70,7 @@ export const createSyntaxFactory = (options: QueryHandlerOptionsFactory) => ({
     getBatchProxy<T>(operations, batchQueryOptions, (queries, queryOptions) =>
       queriesHandler(
         queries.map(({ query }) => query),
-        queryOptions || batchQueryOptions || options,
+        mergeOptions(options, batchQueryOptions, queryOptions),
       ),
     ) as Promise<PromiseTuple<T>>,
 });
