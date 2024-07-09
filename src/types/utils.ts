@@ -67,8 +67,6 @@ export interface QueryHandlerOptions {
   skipHooks?: boolean;
 }
 
-export type QueryHandlerOptionsFactory = QueryHandlerOptions | (() => QueryHandlerOptions);
-
 /**
  * Utility type to make all properties of an object optional.
  */
