@@ -288,7 +288,9 @@ export async function parseSchemaDefinitionFile(
 
   if (missingSchemas.size > 0) {
     throw new Error(
-      `The following schemas were used as a reference but weren't included in the `Schemas` interface: ${Array.from(missingSchemas).join(', ')}.\nPlease include them in the `Schemas` interface or remove their references.`,
+      "The following schemas were used as a reference but weren't included in " +
+        `the \`Schemas\` interface: ${Array.from(missingSchemas).join(', ')}.\n` +
+        `Please include them in the \`Schemas\` interface or remove their references.`,
     );
   }
 
