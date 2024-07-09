@@ -34,7 +34,6 @@ export default async (positionals: string[]) => {
     const gitignorePath = path.join(process.cwd(), '.gitignore');
     const gitignoreExists = await exists('.gitignore');
 
-    console.log('gitignoreExists', gitignoreExists);
 
     if (gitignoreExists) {
       const gitignoreContents = await fs.readFile(gitignorePath, 'utf-8');
