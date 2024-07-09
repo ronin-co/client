@@ -30,13 +30,11 @@ export default async (positionals: string[]) => {
   spinner.text = `Detected ${packageManagerName} — installing types package`;
 
   try {
-    // Add .ronin to .gitignore if .gitignore exists but doesn't contain .ronin
-    const gitignorePath = path.join(process.cwd(), '.gitignore');
+    // Add .ronin to .gitignore if .gitignore exists but doesn't contain .ronin.
     const gitignoreExists = await exists('.gitignore');
 
-    console.log('gitignoreExists', gitignoreExists);
-
     if (gitignoreExists) {
+      const gitignorePath = path.join(process.cwd(), '.gitignore');
       const gitignoreContents = await fs.readFile(gitignorePath, 'utf-8');
 
       if (!gitignoreContents.includes('.ronin')) {

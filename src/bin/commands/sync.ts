@@ -14,8 +14,8 @@ export default async (positionals: string[], appToken?: string, sessionToken?: s
     resetConfig();
   }
 
-  const spinner = ora('Reading configuration').start();
   let status: Status = 'readingConfig';
+  const spinner = ora('Reading configuration').start();
 
   const token = appToken || sessionToken;
 
@@ -51,25 +51,27 @@ export default async (positionals: string[], appToken?: string, sessionToken?: s
         spinner.fail(
           "You don't have access to any spaces or your CLI session is invalid. Please login again or create a new space and try again.",
         );
+        process.exit(1);
       }
 
       if (spaces.length === 1) {
+        config.spaceId = spaces[0].id;
         saveConfig({ spaceId: spaces[0].id });
+      } else {
+        spinner.stop();
+
+        const answer = await select<string>({
+          message: 'Which space do you want to sync schemas to?',
+          choices: spaces.map((space) => ({
+            name: space.handle,
+            value: space.id,
+            description: space.name,
+          })),
+        });
+
+        config.spaceId = answer;
+        saveConfig({ spaceId: answer });
       }
-
-      spinner.stop();
-
-      const answer = await select<string>({
-        message: 'Which space do you want to sync schemas to?',
-        choices: spaces.map((space) => ({
-          name: space.handle,
-          value: space.id,
-          description: space.name,
-        })),
-      });
-
-      config.spaceId = answer;
-      saveConfig({ spaceId: answer });
     }
 
     status = 'readingSchemas';

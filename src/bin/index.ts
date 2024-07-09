@@ -81,8 +81,9 @@ const run = async () => {
   if (normalizedPositionals.includes('init')) return initializeProject(positionals);
 
   // `sync` sub command
-  if (normalizedPositionals.includes('sync'))
+  if (normalizedPositionals.includes('sync')) {
     return sync(positionals.slice(positionals.indexOf('sync') + 1), appToken, session?.token);
+  }
 
   // If no matching flags or commands were found, render the help, since we
   // don't want to use the main `ronin` command for anything yet.
