@@ -238,14 +238,21 @@ export async function parseSchemaDefinitionFile(
                 }
 
                 const field: Record<string, unknown> = {
-                  type: fieldType,
                   id: generateFieldId(fieldType),
+                  type: fieldType,
                   slug: fieldName,
                   name: name || fieldName.charAt(0).toUpperCase() + fieldName.slice(1),
-                  description: description || undefined,
-                  details: details,
                   unique: false,
+                  required: !member.questionToken,
                 };
+
+                if (description) {
+                  field.description = description;
+                }
+
+                if (Object.keys(details).length > 0) {
+                  field.details = details;
+                }
 
                 if (schema) {
                   field.schema = schema;
