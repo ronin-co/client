@@ -81,7 +81,7 @@ export const getSchemas = async (token: string, space: string): Promise<Schema[]
 };
 
 /**
- * Replace the ID's of fields in the local schema with the ID's
+ * Replace the IDs of fields in the local schema with the IDs
  * of the existing fields in the remote schema.
  *
  * @param local Local schema definitions.
