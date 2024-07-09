@@ -49,7 +49,7 @@ export default async (positionals: string[], appToken?: string, sessionToken?: s
 
       if (!spaces || spaces.length === 0) {
         spinner.fail(
-          "You don't have access to any spaces or your CLI session is invalid. Please login again or create a new space and try again.",
+          "You don't have access to any space or your CLI session is invalid. Please login again or create a new space and try again.",
         );
         process.exit(1);
       }

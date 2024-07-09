@@ -18,11 +18,11 @@ export const generateFieldId = (type: string): string => {
 };
 
 /**
- * Parses the schema definition file and returns an array of Schema objects.
+ * Parses the schema definition file and returns an array of `Schema` objects.
  *
  * @param filePath The path to the schema definition file.
  *
- * @returns A promise that resolves to an array of Schema objects.
+ * @returns A promise that resolves to an array of `Schema` objects.
  */
 export async function parseSchemaDefinitionFile(
   filePath: string = './schemas/index.d.ts',
@@ -288,7 +288,7 @@ export async function parseSchemaDefinitionFile(
 
   if (missingSchemas.size > 0) {
     throw new Error(
-      `The following Schemas were used as a reference but weren't included in the Schemas interface: ${Array.from(missingSchemas).join(', ')}.\nPlease include them in the Schemas interface or remove their references.`,
+      `The following schemas were used as a reference but weren't included in the `Schemas` interface: ${Array.from(missingSchemas).join(', ')}.\nPlease include them in the `Schemas` interface or remove their references.`,
     );
   }
 
