@@ -15,7 +15,7 @@ export const getSpaces = async (
 ): Promise<{ id: string; handle: string; name: string }[]> => {
   let res;
   try {
-    res = await fetch('http://localhost:5100/-/ronin/spaces', {
+    res = await fetch('https://ronin.supply/-/ronin/spaces', {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -49,7 +49,7 @@ export const getSpaces = async (
 export const getSchemas = async (token: string, space: string): Promise<Schema[]> => {
   let res;
   try {
-    res = await fetch(`http://localhost:5100/-/ronin/schemas?data-selector=${space}`, {
+    res = await fetch(`https://ronin.supply/-/ronin/schemas?data-selector=${space}`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',

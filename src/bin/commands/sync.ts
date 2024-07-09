@@ -93,7 +93,7 @@ export default async (positionals: string[], appToken?: string, sessionToken?: s
     status = 'syncing';
     spinner.text = 'Syncing schema definitions';
 
-    const res = await fetch('http://localhost:5100/-/ronin/sync', {
+    const res = await fetch('https://ronin.supply/-/ronin/sync', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
