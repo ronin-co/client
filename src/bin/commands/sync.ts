@@ -20,8 +20,7 @@ export default async (positionals: string[], appToken?: string, sessionToken?: s
   const token = appToken || sessionToken;
 
   if (!token) {
-    spinner.fail('Either an App Token or Session Token is required to sync schemas');
-    process.exit(1);
+    throw new Error('Either an App Token or Session Token is required to sync schemas');
   }
 
   const customDir = positionals[0] && !positionals[0].startsWith('-') ? positionals[0] : undefined;
@@ -49,7 +48,9 @@ export default async (positionals: string[], appToken?: string, sessionToken?: s
 
       if (!spaces || spaces.length === 0) {
         spinner.fail(
-          "You don't have access to any spaces or your CLI session is invalid. Please login again or create a new space and try again.",
+          "You don't have access to any spaces or your CLI session is invalid.\n\n" +
+            'Please login again (by running `npx ronin login`) or ' +
+            'create a new space in the dashboard (`https://ronin.co/new`) and try again.',
         );
         process.exit(1);
       }

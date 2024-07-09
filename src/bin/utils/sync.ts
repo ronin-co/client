@@ -13,20 +13,24 @@ import type { Schema } from '@/src/types/schema';
 export const getSpaces = async (
   sessionToken: string,
 ): Promise<{ id: string; handle: string; name: string }[]> => {
-  let res;
+  let text;
   try {
-    res = await fetch('https://ronin.supply/-/ronin/spaces', {
+    const res = await fetch('https://ronin.supply/-/ronin/spaces', {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${sessionToken}`,
       },
     });
+
+    text = await res.text();
+
+    if (!res.ok) {
+      throw new Error(text);
+    }
   } catch (err) {
     throw new Error('Failed to fetch available spaces: ${err.message}');
   }
-
-  const text = await res.text();
 
   let json;
   try {
@@ -47,20 +51,24 @@ export const getSpaces = async (
  * @returns The schemas of the provided space
  */
 export const getSchemas = async (token: string, space: string): Promise<Schema[]> => {
-  let res;
+  let text;
   try {
-    res = await fetch(`https://ronin.supply/-/ronin/schemas?data-selector=${space}`, {
+    const res = await fetch(`https://ronin.supply/-/ronin/schemas?data-selector=${space}`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${token}`,
       },
     });
-  } catch (err) {
-    throw new Error('Failed to fetch available spaces: ${err.message}');
-  }
 
-  const text = await res.text();
+    text = await res.text();
+
+    if (!res.ok) {
+      throw new Error(text);
+    }
+  } catch (err) {
+    throw new Error('Failed to fetch remote schemas: ${err.message}');
+  }
 
   let json;
   try {
