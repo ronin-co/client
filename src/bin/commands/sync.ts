@@ -47,7 +47,7 @@ export default async (positionals: string[], appToken?: string, sessionToken?: s
     if (!config.spaceId && !appToken && sessionToken) {
       const spaces = await getSpaces(sessionToken);
 
-      if (spaces.length === 0) {
+      if (!spaces || spaces.length === 0) {
         spinner.fail(
           "You don't have access to any spaces or your CLI session is invalid. Please login again or create a new space and try again.",
         );
