@@ -45,10 +45,10 @@ export const getSpaces = async (
 /**
  * Fetch the existing schemas for the configured space.
  *
- * @param token Either an App Token or a Session Token.
+ * @param token Either an app token or a session token.
  * @param space The ID of the space to fetch schemas for.
  *
- * @returns The schemas of the provided space
+ * @returns The schemas of the provided space.
  */
 export const getSchemas = async (token: string, space: string): Promise<Schema[]> => {
   let text;

@@ -30,7 +30,7 @@ export default async (positionals: string[]) => {
   spinner.text = `Detected ${packageManagerName} — installing types package`;
 
   try {
-    // Add .ronin to .gitignore if .gitignore exists but doesn't contain .ronin.
+    // Add `.ronin` to `.gitignore` if `.gitignore` exists but doesn't contain `.ronin`.
     const gitignoreExists = await exists('.gitignore');
 
     if (gitignoreExists) {

@@ -48,7 +48,7 @@ export default async (positionals: string[], appToken?: string, sessionToken?: s
 
       if (!spaces || spaces.length === 0) {
         spinner.fail(
-          "You don't have access to any spaces or your CLI session is invalid.\n\n" +
+          "You don't have access to any space or your CLI session is invalid.\n\n" +
             'Please login again (by running `npx ronin login`) or ' +
             'create a new space in the dashboard (`https://ronin.co/new`) and try again.',
         );
