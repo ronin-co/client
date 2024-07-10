@@ -40,6 +40,7 @@ export async function parseSchemaDefinitionFile(
 
   const results: any[] = [];
   const typeMapping: Record<string, string> = {};
+  const namespaceMapping: Record<string, string> = {};
   const schemaProperties: Record<string, string> = {};
   const missingSchemas: Set<string> = new Set();
 
@@ -69,6 +70,7 @@ export async function parseSchemaDefinitionFile(
         return 'json';
       default: {
         const { resolvedTypeName } = resolveTypeAlias(originalType);
+
         if (resolvedTypeName === schemaRecordAlias) {
           return 'record';
         }
@@ -129,6 +131,8 @@ export async function parseSchemaDefinitionFile(
             schemaRecordsAlias = importedName;
           }
         });
+      } else if (ts.isNamespaceImport(namedBindings)) {
+        namespaceMapping[namedBindings.name.text] = node.moduleSpecifier.getText().replace(/['"]/g, '');
       }
     }
   }
@@ -166,14 +170,29 @@ export async function parseSchemaDefinitionFile(
     });
   }
 
-  function resolveTypeAlias(typeName: string): { resolvedTypeName: string; typeArguments: ts.TypeNode[] } {
+  function resolveTypeAlias(typeName: string): {
+    resolvedTypeName: string;
+    typeArguments: ts.TypeNode[];
+    namespace: string | null;
+  } {
     let resolvedTypeName = typeName;
     let typeArguments: ts.TypeNode[] = [];
+    let namespace: string | null = null;
 
     function typeAliasVisitor(node: ts.Node) {
       if (ts.isTypeAliasDeclaration(node) && node.name.text === typeName) {
         if (ts.isTypeReferenceNode(node.type) && node.type.typeName) {
-          resolvedTypeName = node.type.typeName.getText();
+          const fullTypeName = node.type.typeName.getText();
+
+          const parts = fullTypeName.split('.');
+
+          if (parts.length > 1) {
+            namespace = parts.slice(0, -1).join('.');
+            resolvedTypeName = parts[parts.length - 1];
+          } else {
+            resolvedTypeName = fullTypeName;
+          }
+
           if (node.type.typeArguments) {
             typeArguments = Array.from(node.type.typeArguments);
           }
@@ -184,7 +203,7 @@ export async function parseSchemaDefinitionFile(
 
     ts.forEachChild(sourceFile, typeAliasVisitor);
 
-    return { resolvedTypeName, typeArguments };
+    return { resolvedTypeName, typeArguments, namespace };
   }
 
   function checkSchemaInclusion(typeName: string): string | null {
@@ -196,6 +215,14 @@ export async function parseSchemaDefinitionFile(
       missingSchemas.add(typeName);
       return null;
     }
+  }
+
+  function getTypeFromNamespace(typeName: string): string {
+    const [namespace, type] = typeName.split('.');
+    if (namespaceMapping[namespace]) {
+      return typeMapping[type] || type;
+    }
+    return typeName;
   }
 
   function parseTypeAlias(typeName: string, propertyName: string): any {
@@ -227,7 +254,7 @@ export async function parseSchemaDefinitionFile(
             typeLiteral.members.forEach((member) => {
               if (ts.isPropertySignature(member)) {
                 const fieldName = member.name.getText();
-                const memberTypeText = member.type!.getText();
+                const memberTypeText = getTypeFromNamespace(member.type!.getText());
                 const fieldType = getFieldType(memberTypeText);
 
                 const { name, description, details } = parseJsDoc(member);
