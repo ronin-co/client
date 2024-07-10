@@ -91,3 +91,13 @@ const run = async () => {
 };
 
 run();
+
+// Exit gracefully on SIGINT
+process.on('SIGINT', () => {
+  process.exit(0);
+});
+
+// Exit gracefully on SIGTERM
+process.on('SIGTERM', () => {
+  process.exit(0);
+});
