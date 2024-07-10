@@ -1,6 +1,6 @@
 {
   "name": "ronin",
-  "version": "4.0.26",
+  "version": "4.0.27",
   "type": "module",
   "license": "Apache-2.0",
   "main": "./dist/index.js",
@@ -84,17 +84,17 @@
     "json5": "2.2.3",
     "open": "10.1.0",
     "ora": "8.0.1",
-    "typescript": "5.5.2"
+    "typescript": "5.5.3"
   },
   "devDependencies": {
     "@types/bun": "1.1.6",
     "@types/ini": "4.1.1",
-    "@typescript-eslint/eslint-plugin": "7.15.0",
-    "@typescript-eslint/parser": "7.15.0",
+    "@typescript-eslint/eslint-plugin": "7.16.0",
+    "@typescript-eslint/parser": "7.16.0",
     "eslint": "8.57.0",
     "eslint-config-prettier": "9.1.0",
     "eslint-plugin-import": "2.29.1",
-    "eslint-plugin-simple-import-sort": "12.1.0",
+    "eslint-plugin-simple-import-sort": "12.1.1",
     "eslint-plugin-spellcheck": "0.0.20",
     "eslint-plugin-unused-imports": "4.0.0",
     "husky": "9.0.11",

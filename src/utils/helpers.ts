@@ -1,3 +1,5 @@
+import type { QueryHandlerOptions } from '@/src/types/utils';
+
 /**
  * Construct a new object from a "dot string" property accessor.
  *
@@ -155,4 +157,20 @@ export const formatTimeFields = (record: object, timeFields: string[]) => {
   timeFields.forEach((field) =>
     setProperty(record, field, (value: string | null) => (value !== null ? new Date(value) : null)),
   );
+};
+
+/**
+ * Merges a list of option objects and option factories into a single object.
+ *
+ * @param options - An array of option objects or option factories.
+ *
+ * @returns A single option object.
+ */
+export const mergeOptions = (
+  ...options: (undefined | QueryHandlerOptions | (() => QueryHandlerOptions))[]
+): QueryHandlerOptions => {
+  return options.reduce((acc: QueryHandlerOptions, opt) => {
+    const resolvedOpt = typeof opt === 'function' ? opt() : opt;
+    return { ...acc, ...resolvedOpt };
+  }, {});
 };
