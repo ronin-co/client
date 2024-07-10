@@ -3,9 +3,3 @@ dist
 
 # Dependencies
 node_modules
-
-# RONIN
-.ronin
-
-# Environment variables
-.env
