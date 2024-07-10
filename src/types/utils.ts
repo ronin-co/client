@@ -149,10 +149,12 @@ export type ReplaceForSetter<TValue> = {
   // Replace `RoninRecord` with `string`.
   [K in keyof TValue]: TValue[K] extends RONIN.RoninRecord
     ? string | Partial<TValue[K]>
-    : // Replace `Blob` with `StorableObjectValue`.
-      TValue[K] extends RONIN.Blob
-      ? StorableObjectValue
-      : TValue[K];
+    : K extends 'ronin'
+      ? Partial<TValue[K]>
+      : // Replace `Blob` with `StorableObjectValue`.
+        TValue[K] extends RONIN.Blob
+        ? StorableObjectValue
+        : TValue[K];
   // `NonNullable<unknown>` is needed here in order to "flatten" the output type.
 } & NonNullable<unknown>;
 

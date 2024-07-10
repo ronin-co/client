@@ -2,16 +2,47 @@ import fs from 'fs/promises';
 import path from 'path';
 import ts from 'typescript';
 
+import { exists } from '@/src/bin/utils/file';
+import type { Schema } from '@/src/types/schema';
 import { generateUniqueId } from '@/src/utils/id';
 
-export async function parseSchemaDefinitionFile(filePath: string = './schemas/index.d.ts') {
+const DEFAULT_SCHEMA_SUMMARY = 'This is a schema summary';
+
+/**
+ * Generates a unique field ID.
+ *
+ * @param type The type of the field.
+ */
+export const generateFieldId = (type: string): string => {
+  return `${type}-${generateUniqueId()}`;
+};
+
+/**
+ * Parses the schema definition file and returns an array of `Schema` objects.
+ *
+ * @param filePath The path to the schema definition file.
+ *
+ * @returns A promise that resolves to an array of `Schema` objects.
+ */
+export async function parseSchemaDefinitionFile(
+  filePath: string = './schemas/index.d.ts',
+): Promise<Schema[]> {
   const fullPath = path.resolve(process.cwd(), filePath);
+
+  const schemaFileExists = await exists(filePath);
+
+  if (!schemaFileExists) {
+    throw new Error(`The given path to the schema definition file does not exist: ${fullPath}`);
+  }
+
   const fileContent = await fs.readFile(fullPath, 'utf-8');
   const sourceFile = ts.createSourceFile('temp.d.ts', fileContent, ts.ScriptTarget.Latest, true);
 
   const results: any[] = [];
   const typeMapping: Record<string, string> = {};
+  const namespaceMapping: Record<string, string> = {};
   const schemaProperties: Record<string, string> = {};
+  const missingSchemas: Set<string> = new Set();
 
   let schemaRecordAlias = 'SchemaRecord';
   let schemaRecordsAlias = 'SchemaRecords';
@@ -37,8 +68,15 @@ export async function parseSchemaDefinitionFile(filePath: string = './schemas/in
         return 'token';
       case 'JSON':
         return 'json';
-      default:
+      default: {
+        const { resolvedTypeName } = resolveTypeAlias(originalType);
+
+        if (resolvedTypeName === schemaRecordAlias) {
+          return 'record';
+        }
+
         return 'unknown';
+      }
     }
   }
 
@@ -93,6 +131,8 @@ export async function parseSchemaDefinitionFile(filePath: string = './schemas/in
             schemaRecordsAlias = importedName;
           }
         });
+      } else if (ts.isNamespaceImport(namedBindings)) {
+        namespaceMapping[namedBindings.name.text] = node.moduleSpecifier.getText().replace(/['"]/g, '');
       }
     }
   }
@@ -130,14 +170,29 @@ export async function parseSchemaDefinitionFile(filePath: string = './schemas/in
     });
   }
 
-  function resolveTypeAlias(typeName: string): { resolvedTypeName: string; typeArguments: ts.TypeNode[] } {
+  function resolveTypeAlias(typeName: string): {
+    resolvedTypeName: string;
+    typeArguments: ts.TypeNode[];
+    namespace: string | null;
+  } {
     let resolvedTypeName = typeName;
     let typeArguments: ts.TypeNode[] = [];
+    let namespace: string | null = null;
 
     function typeAliasVisitor(node: ts.Node) {
       if (ts.isTypeAliasDeclaration(node) && node.name.text === typeName) {
         if (ts.isTypeReferenceNode(node.type) && node.type.typeName) {
-          resolvedTypeName = node.type.typeName.getText();
+          const fullTypeName = node.type.typeName.getText();
+
+          const parts = fullTypeName.split('.');
+
+          if (parts.length > 1) {
+            namespace = parts.slice(0, -1).join('.');
+            resolvedTypeName = parts[parts.length - 1];
+          } else {
+            resolvedTypeName = fullTypeName;
+          }
+
           if (node.type.typeArguments) {
             typeArguments = Array.from(node.type.typeArguments);
           }
@@ -145,15 +200,36 @@ export async function parseSchemaDefinitionFile(filePath: string = './schemas/in
       }
       ts.forEachChild(node, typeAliasVisitor);
     }
+
     ts.forEachChild(sourceFile, typeAliasVisitor);
 
-    return { resolvedTypeName, typeArguments };
+    return { resolvedTypeName, typeArguments, namespace };
+  }
+
+  function checkSchemaInclusion(typeName: string): string | null {
+    const schemaProperty = Object.keys(schemaProperties).find((key) => schemaProperties[key] === typeName);
+
+    if (schemaProperty) {
+      return schemaProperty;
+    } else {
+      missingSchemas.add(typeName);
+      return null;
+    }
+  }
+
+  function getTypeFromNamespace(typeName: string): string {
+    const [namespace, type] = typeName.split('.');
+    if (namespaceMapping[namespace]) {
+      return typeMapping[type] || type;
+    }
+    return typeName;
   }
 
   function parseTypeAlias(typeName: string, propertyName: string): any {
     const result: any = {
       name: typeName,
       slug: propertyName,
+      summary: DEFAULT_SCHEMA_SUMMARY,
       pluralName: '',
       pluralSlug: '',
       fields: [],
@@ -178,23 +254,37 @@ export async function parseSchemaDefinitionFile(filePath: string = './schemas/in
             typeLiteral.members.forEach((member) => {
               if (ts.isPropertySignature(member)) {
                 const fieldName = member.name.getText();
-                let fieldType = getFieldType(member.type!.getText());
+                const memberTypeText = getTypeFromNamespace(member.type!.getText());
+                const fieldType = getFieldType(memberTypeText);
+
                 const { name, description, details } = parseJsDoc(member);
-                if (
-                  fieldType === 'unknown' &&
-                  resolveTypeAlias(member.type!.getText()).resolvedTypeName === schemaRecordAlias
-                ) {
-                  fieldType = 'record';
+
+                let schema: string | null = null;
+                if (fieldType === 'record') {
+                  schema = checkSchemaInclusion(member.type!.getText());
                 }
-                const field = {
+
+                const field: Record<string, unknown> = {
+                  id: generateFieldId(fieldType),
                   type: fieldType,
-                  id: `${fieldType}-${generateUniqueId()}`,
                   slug: fieldName,
                   name: name || fieldName.charAt(0).toUpperCase() + fieldName.slice(1),
-                  description: description || undefined,
-                  details: details,
                   unique: false,
+                  required: !member.questionToken,
                 };
+
+                if (description) {
+                  field.description = description;
+                }
+
+                if (Object.keys(details).length > 0) {
+                  field.details = details;
+                }
+
+                if (schema) {
+                  field.schema = schema;
+                }
+
                 result.fields.push(field);
               }
             });
@@ -222,6 +312,14 @@ export async function parseSchemaDefinitionFile(filePath: string = './schemas/in
   }
 
   visit(sourceFile);
+
+  if (missingSchemas.size > 0) {
+    throw new Error(
+      "The following schemas were used as a reference but weren't included in " +
+        `the \`Schemas\` interface: ${Array.from(missingSchemas).join(', ')}.\n` +
+        `Please include them in the \`Schemas\` interface or remove their references.`,
+    );
+  }
 
   return results;
 }

@@ -80,9 +80,10 @@ const run = async () => {
   // `init` sub command
   if (normalizedPositionals.includes('init')) return initializeProject(positionals);
 
-  const token = (appToken || session?.token) as string;
   // `sync` sub command
-  if (normalizedPositionals.includes('sync')) return sync(positionals, token);
+  if (normalizedPositionals.includes('sync')) {
+    return sync(positionals.slice(positionals.indexOf('sync') + 1), appToken, session?.token);
+  }
 
   // If no matching flags or commands were found, render the help, since we
   // don't want to use the main `ronin` command for anything yet.
@@ -90,3 +91,13 @@ const run = async () => {
 };
 
 run();
+
+// Exit gracefully on SIGINT
+process.on('SIGINT', () => {
+  process.exit(0);
+});
+
+// Exit gracefully on SIGTERM
+process.on('SIGTERM', () => {
+  process.exit(0);
+});
