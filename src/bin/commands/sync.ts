@@ -20,7 +20,7 @@ export default async (positionals: string[], appToken?: string, sessionToken?: s
   const token = appToken || sessionToken;
 
   if (!token) {
-    throw new Error('Either an App Token or Session Token is required to sync schemas');
+    throw new Error('Either an app token or session token is required to sync schemas.');
   }
 
   const customDir = positionals[0] && !positionals[0].startsWith('-') ? positionals[0] : undefined;
@@ -32,7 +32,7 @@ export default async (positionals: string[], appToken?: string, sessionToken?: s
 
     if (!schemaFileExists) {
       spinner.fail(
-        'The provided schemas directory does not exist or does not contain a schema definitions file (`index.d.ts`).',
+        'The provided schema directory does not exist or does not contain a schema definitions file (`index.d.ts`).',
       );
       process.exit(1);
     }
@@ -50,7 +50,7 @@ export default async (positionals: string[], appToken?: string, sessionToken?: s
         spinner.fail(
           "You don't have access to any space or your CLI session is invalid.\n\n" +
             'Please login again (by running `npx ronin login`) or ' +
-            'create a new space in the dashboard (`https://ronin.co/new`) and try again.',
+            'create a new space on the dashboard (`https://ronin.co/new`) and try again.',
         );
         process.exit(1);
       }
