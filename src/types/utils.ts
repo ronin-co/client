@@ -64,7 +64,7 @@ export interface QueryHandlerOptions {
    *
    * @default true
    */
-  skipHooks?: boolean;
+  autoSkipHooks?: boolean;
 }
 
 /**
