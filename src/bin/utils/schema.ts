@@ -340,11 +340,11 @@ export async function parseSchemaDefinitionFile(
 
   if (unknownFields.size > 0) {
     const errorMessage =
-      "We couldn't determine the type of these fields:\n\n" +
+      'The type of the following fields could not be determined:\n\n' +
       Array.from(unknownFields)
         .map(({ parent, name, type }) => `  - \`${parent}.${name}\` is typed as \`${type}\``)
         .join('\n') +
-      '\n\nPlease make sure that the field typed as any of the available field ' +
+      '\n\nPlease make sure that the field is typed as any of the available field ' +
       'types exported from the `ronin/schema` module:\n\n' +
       FIELD_TYPES.map((type) => `  - ${type}`).join('\n') +
       '\n  - or a reference to another schema.';
