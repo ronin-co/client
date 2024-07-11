@@ -99,20 +99,20 @@ export default async (positionals: string[], appToken?: string, sessionToken?: s
     status = 'syncing';
     spinner.text = 'Syncing schema definitions';
 
-    // const res = await fetch('https://ronin.supply/-/ronin/sync', {
-    //   method: 'POST',
-    //   headers: {
-    //     'Content-Type': 'application/json',
-    //     Authorization: `Bearer ${appToken || sessionToken}`,
-    //   },
-    //   body: JSON.stringify({ schemas: schemaDefinitions, space: config.spaceId }),
-    // });
+    const res = await fetch('https://ronin.supply/-/ronin/sync', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${appToken || sessionToken}`,
+      },
+      body: JSON.stringify({ schemas: schemaDefinitions, space: config.spaceId }),
+    });
 
-    // const text = await res.text();
+    const text = await res.text();
 
-    // if (!res.ok) {
-    //   throw new Error(text);
-    // }
+    if (!res.ok) {
+      throw new Error(text);
+    }
   } catch (err) {
     spinner.fail(
       `Failed to ${status === 'readingSchemas' ? 'read schema definitions' : 'apply new schema changes'}:\n`,
