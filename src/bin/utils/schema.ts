@@ -64,7 +64,7 @@ function convertToReadableText(str: undefined | null | string): string | null {
  * @returns A promise that resolves to an array of `Schema` objects.
  */
 export async function parseSchemaDefinitionFile(
-  filePath: string = './schemas/index.d.ts',
+  filePath: string = './schemas/index.ts',
   onError: (error: string) => void,
 ): Promise<Schema[]> {
   const fullPath = path.resolve(process.cwd(), filePath);
@@ -76,7 +76,7 @@ export async function parseSchemaDefinitionFile(
   }
 
   const fileContent = await fs.readFile(fullPath, 'utf-8');
-  const sourceFile = ts.createSourceFile('temp.d.ts', fileContent, ts.ScriptTarget.Latest, true);
+  const sourceFile = ts.createSourceFile('temp.ts', fileContent, ts.ScriptTarget.Latest, true);
 
   const results: any[] = [];
   const typeMapping: Record<string, string> = {};
