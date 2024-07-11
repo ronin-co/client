@@ -1,5 +1,6 @@
 import fs from 'fs/promises';
 import path from 'path';
+import pluralize from 'pluralize';
 import ts from 'typescript';
 
 import { exists } from '@/src/bin/utils/file';
@@ -27,6 +28,33 @@ const FIELD_TYPES = [
 export const generateFieldId = (type: string): string => {
   return `${type}-${generateUniqueId()}`;
 };
+
+/**
+ * Converts a given string into a readable text format.
+ * Inserts spaces before each uppercase letter (except the first letter)
+ * and capitalizes the first letter of each word.
+ *
+ * @param str - The string to be converted.
+ * @returns - The formatted readable text or null if input is invalid.
+ */
+function convertToReadableText(str: null): null;
+function convertToReadableText(str: undefined): null;
+function convertToReadableText(str: string): string;
+function convertToReadableText(str: undefined | null | string): string | null {
+  if (!str || typeof str !== 'string') return null;
+
+  // Insert spaces before each uppercase letter (except the first letter).
+  const spacedStr = str.replace(/([a-z])([A-Z])/g, '$1 $2');
+
+  // Split the string into words.
+  const words = spacedStr.split(' ');
+
+  // Capitalize the first letter of each word.
+  const capitalizedWords = words.map((word) => word.charAt(0).toUpperCase() + word.slice(1));
+
+  // Join the words back into a single string with spaces.
+  return capitalizedWords.join(' ');
+}
 
 /**
  * Parses the schema definition file and returns an array of `Schema` objects.
@@ -239,8 +267,8 @@ export async function parseSchemaDefinitionFile(
   }
 
   function parseTypeAlias(typeName: string, propertyName: string): any {
-    const result: any = {
-      name: typeName,
+    const result: Partial<Omit<Schema, 'fields'>> & { fields: NonNullable<Schema['fields']> } = {
+      name: convertToReadableText(typeName),
       slug: propertyName,
       summary: DEFAULT_SCHEMA_SUMMARY,
       pluralName: '',
@@ -254,7 +282,7 @@ export async function parseSchemaDefinitionFile(
       const firstTypeArgument = typeArguments[0]?.getText();
 
       if (resolvedTypeName === schemaRecordsAlias && typeName === firstTypeArgument) {
-        result.pluralName = schemaPropertyType;
+        result.pluralName = convertToReadableText(schemaPropertyType);
         result.pluralSlug = schemaPropertyName;
       }
     });
@@ -301,7 +329,7 @@ export async function parseSchemaDefinitionFile(
                   field.schema = schema;
                 }
 
-                result.fields.push(field);
+                result.fields.push(field as (typeof result.fields)[0]);
               }
             });
           }
@@ -313,9 +341,14 @@ export async function parseSchemaDefinitionFile(
 
     ts.forEachChild(sourceFile, typeAliasVisitor);
 
-    if (!result.pluralName) {
-      result.pluralName = typeName + 's';
-      result.pluralSlug = propertyName + 's';
+    if (!result.pluralName && result.fields.length) {
+      const pluralTypeName = pluralize(typeName);
+      onError(
+        `The schema \`${typeName}\` does not have a plural slug and name defined.\n\n` +
+          `Please define them in your schema definition file and include them in the \`Schemas\` interface:\n\n` +
+          `type ${pluralTypeName} = ${schemaRecordsAlias}<${typeName}>;\n\n` +
+          `interface Schemas {\n  ${propertyName}: ${typeName};\n  ${pluralize(result.slug as string)}: ${pluralTypeName};\n}`,
+      );
     }
 
     return result.fields.length ? result : null;
