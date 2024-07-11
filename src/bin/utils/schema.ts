@@ -91,18 +91,22 @@ export async function parseSchemaDefinitionFile(
   function getFieldType(type: string): string {
     const originalType = typeMapping[type] || type;
     switch (originalType) {
+      case 'string':
       case 'ShortText':
         return 'short-text';
       case 'LongText':
         return 'long-text';
       case 'RichText':
         return 'rich-text';
+      case 'Date':
       case 'Time':
         return 'time';
       case 'Blob':
         return 'blob';
+      case 'boolean':
       case 'Toggle':
         return 'toggle';
+      case 'number':
       case 'Number':
         return 'number';
       case 'Token':
