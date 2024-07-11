@@ -82,7 +82,7 @@ export async function parseSchemaDefinitionFile(
   const typeMapping: Record<string, string> = {};
   const namespaceMapping: Record<string, string> = {};
   const schemaProperties: Record<string, string> = {};
-  const missingSchemas: Set<string> = new Set();
+  const missingSchemas: { name: string; parent: string; source: string }[] = [];
   const unknownFields: Set<{ parent: string; name: string; type: string }> = new Set();
 
   let schemaRecordAlias = 'SchemaRecord';
@@ -251,13 +251,32 @@ export async function parseSchemaDefinitionFile(
     return { resolvedTypeName, typeArguments, namespace };
   }
 
-  function checkSchemaInclusion(typeName: string): string | null {
+  function getLineAndColumnsNumber(node: ts.Node) {
+    const start = node.getStart();
+    const { line: startLine, character: startCharacter } = sourceFile.getLineAndCharacterOfPosition(start);
+
+    const end = node.getEnd();
+    const { line: endLine, character: endCharacter } = sourceFile.getLineAndCharacterOfPosition(end);
+
+    return {
+      start: { line: startLine + 1, character: startCharacter + 1 },
+      end: { line: endLine + 1, character: endCharacter + 1 },
+    };
+  }
+
+  function checkSchemaInclusion(node: ts.PropertySignature, parent: string): string | null {
+    const typeName = node.type!.getText();
     const schemaProperty = Object.keys(schemaProperties).find((key) => schemaProperties[key] === typeName);
 
     if (schemaProperty) {
       return schemaProperty;
     } else {
-      missingSchemas.add(typeName);
+      const source = getLineAndColumnsNumber(node);
+      missingSchemas.push({
+        name: typeName,
+        parent: parent,
+        source: `${fullPath}:${source.start.line}:${source.start.character}`,
+      });
       return null;
     }
   }
@@ -306,7 +325,7 @@ export async function parseSchemaDefinitionFile(
 
                 let schema: string | null = null;
                 if (fieldType === 'record') {
-                  schema = checkSchemaInclusion(member.type!.getText());
+                  schema = checkSchemaInclusion(member, typeName);
                 }
                 if (fieldType === 'unknown') {
                   unknownFields.add({ parent: typeName, name: fieldName, type: memberTypeText });
@@ -366,10 +385,13 @@ export async function parseSchemaDefinitionFile(
 
   visit(sourceFile);
 
-  if (missingSchemas.size > 0) {
+  if (missingSchemas.length > 0) {
     const errorMessage =
-      "The following schemas were used as a reference but weren't included in " +
-      `the \`Schemas\` interface: ${Array.from(missingSchemas).join(', ')}.\n` +
+      `The following schemas were used as a reference but weren't included in ` +
+      `the \`Schemas\` interface:\n\n` +
+      `${missingSchemas
+        .map(({ name, parent, source }) => `  - \`${name}\` in \`${parent}\` (${source})`)
+        .join('\n')}\n\n` +
       `Please include them in the \`Schemas\` interface or remove their references.`;
 
     onError(errorMessage);
@@ -379,7 +401,7 @@ export async function parseSchemaDefinitionFile(
     const errorMessage =
       'The type of the following fields could not be determined:\n\n' +
       Array.from(unknownFields)
-        .map(({ parent, name, type }) => `  - \`${parent}.${name}\` is typed as \`${type}\``)
+        .map(({ name, parent, type }) => `  - \`${parent}.${name}\` is typed as \`${type}\``)
         .join('\n') +
       '\n\nPlease make sure that the field is typed as any of the available field ' +
       'types exported from the `ronin/schema` module:\n\n' +
