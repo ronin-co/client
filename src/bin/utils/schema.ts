@@ -7,6 +7,17 @@ import type { Schema } from '@/src/types/schema';
 import { generateUniqueId } from '@/src/utils/id';
 
 const DEFAULT_SCHEMA_SUMMARY = 'This is a schema summary';
+const FIELD_TYPES = [
+  'ShortText',
+  'LongText',
+  'RichText',
+  'Time',
+  'Blob',
+  'Toggle',
+  'Number',
+  'Token',
+  'JSON',
+];
 
 /**
  * Generates a unique field ID.
@@ -26,6 +37,7 @@ export const generateFieldId = (type: string): string => {
  */
 export async function parseSchemaDefinitionFile(
   filePath: string = './schemas/index.d.ts',
+  onError: (error: string) => void,
 ): Promise<Schema[]> {
   const fullPath = path.resolve(process.cwd(), filePath);
 
@@ -43,6 +55,7 @@ export async function parseSchemaDefinitionFile(
   const namespaceMapping: Record<string, string> = {};
   const schemaProperties: Record<string, string> = {};
   const missingSchemas: Set<string> = new Set();
+  const unknownFields: Set<{ parent: string; name: string; type: string }> = new Set();
 
   let schemaRecordAlias = 'SchemaRecord';
   let schemaRecordsAlias = 'SchemaRecords';
@@ -263,6 +276,9 @@ export async function parseSchemaDefinitionFile(
                 if (fieldType === 'record') {
                   schema = checkSchemaInclusion(member.type!.getText());
                 }
+                if (fieldType === 'unknown') {
+                  unknownFields.add({ parent: typeName, name: fieldName, type: memberTypeText });
+                }
 
                 const field: Record<string, unknown> = {
                   id: generateFieldId(fieldType),
@@ -314,11 +330,26 @@ export async function parseSchemaDefinitionFile(
   visit(sourceFile);
 
   if (missingSchemas.size > 0) {
-    throw new Error(
+    const errorMessage =
       "The following schemas were used as a reference but weren't included in " +
-        `the \`Schemas\` interface: ${Array.from(missingSchemas).join(', ')}.\n` +
-        `Please include them in the \`Schemas\` interface or remove their references.`,
-    );
+      `the \`Schemas\` interface: ${Array.from(missingSchemas).join(', ')}.\n` +
+      `Please include them in the \`Schemas\` interface or remove their references.`;
+
+    onError(errorMessage);
+  }
+
+  if (unknownFields.size > 0) {
+    const errorMessage =
+      "We couldn't determine the type of these fields:\n\n" +
+      Array.from(unknownFields)
+        .map(({ parent, name, type }) => `  - \`${parent}.${name}\` is typed as \`${type}\``)
+        .join('\n') +
+      '\n\nPlease make sure that the field typed as any of the available field ' +
+      'types exported from the `ronin/schema` module:\n\n' +
+      FIELD_TYPES.map((type) => `  - ${type}`).join('\n') +
+      '\n  - or a reference to another schema.';
+
+    onError(errorMessage);
   }
 
   return results;

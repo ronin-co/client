@@ -29,7 +29,7 @@ export const getSpaces = async (
       throw new Error(text);
     }
   } catch (err) {
-    throw new Error('Failed to fetch available spaces: ${err.message}');
+    throw new Error(`Failed to fetch available spaces: ${(err as Error).message}`);
   }
 
   let json;
@@ -67,7 +67,7 @@ export const getSchemas = async (token: string, space: string): Promise<Schema[]
       throw new Error(text);
     }
   } catch (err) {
-    throw new Error('Failed to fetch remote schemas: ${err.message}');
+    throw new Error(`Failed to fetch remote schemas: ${(err as Error).message}`);
   }
 
   let json;
