@@ -1,5 +1,6 @@
 import fs from 'fs/promises';
 import path from 'path';
+import pluralize from 'pluralize';
 import ts from 'typescript';
 
 import { exists } from '@/src/bin/utils/file';
@@ -7,6 +8,17 @@ import type { Schema } from '@/src/types/schema';
 import { generateUniqueId } from '@/src/utils/id';
 
 const DEFAULT_SCHEMA_SUMMARY = 'This is a schema summary';
+const FIELD_TYPES = [
+  'ShortText',
+  'LongText',
+  'RichText',
+  'Time',
+  'Blob',
+  'Toggle',
+  'Number',
+  'Token',
+  'JSON',
+];
 
 /**
  * Generates a unique field ID.
@@ -18,6 +30,33 @@ export const generateFieldId = (type: string): string => {
 };
 
 /**
+ * Converts a given string into a readable text format.
+ * Inserts spaces before each uppercase letter (except the first letter)
+ * and capitalizes the first letter of each word.
+ *
+ * @param str - The string to be converted.
+ * @returns - The formatted readable text or null if input is invalid.
+ */
+function convertToReadableText(str: null): null;
+function convertToReadableText(str: undefined): null;
+function convertToReadableText(str: string): string;
+function convertToReadableText(str: undefined | null | string): string | null {
+  if (!str || typeof str !== 'string') return null;
+
+  // Insert spaces before each uppercase letter (except the first letter).
+  const spacedStr = str.replace(/([a-z])([A-Z])/g, '$1 $2');
+
+  // Split the string into words.
+  const words = spacedStr.split(' ');
+
+  // Capitalize the first letter of each word.
+  const capitalizedWords = words.map((word) => word.charAt(0).toUpperCase() + word.slice(1));
+
+  // Join the words back into a single string with spaces.
+  return capitalizedWords.join(' ');
+}
+
+/**
  * Parses the schema definition file and returns an array of `Schema` objects.
  *
  * @param filePath The path to the schema definition file.
@@ -25,8 +64,11 @@ export const generateFieldId = (type: string): string => {
  * @returns A promise that resolves to an array of `Schema` objects.
  */
 export async function parseSchemaDefinitionFile(
-  filePath: string = './schemas/index.d.ts',
+  filePath: string = './schemas/index.ts',
+  onError: (error: string) => void,
 ): Promise<Schema[]> {
+  // Used for displaying the source line in error messages.
+  const relativePath = path.relative(process.cwd(), filePath);
   const fullPath = path.resolve(process.cwd(), filePath);
 
   const schemaFileExists = await exists(filePath);
@@ -36,13 +78,14 @@ export async function parseSchemaDefinitionFile(
   }
 
   const fileContent = await fs.readFile(fullPath, 'utf-8');
-  const sourceFile = ts.createSourceFile('temp.d.ts', fileContent, ts.ScriptTarget.Latest, true);
+  const sourceFile = ts.createSourceFile('temp.ts', fileContent, ts.ScriptTarget.Latest, true);
 
   const results: any[] = [];
   const typeMapping: Record<string, string> = {};
   const namespaceMapping: Record<string, string> = {};
   const schemaProperties: Record<string, string> = {};
-  const missingSchemas: Set<string> = new Set();
+  const missingSchemas: { name: string; parent: string; source: string }[] = [];
+  const unknownFields: { parent: string; name: string; type: string; source: string }[] = [];
 
   let schemaRecordAlias = 'SchemaRecord';
   let schemaRecordsAlias = 'SchemaRecords';
@@ -50,18 +93,22 @@ export async function parseSchemaDefinitionFile(
   function getFieldType(type: string): string {
     const originalType = typeMapping[type] || type;
     switch (originalType) {
+      case 'string':
       case 'ShortText':
         return 'short-text';
       case 'LongText':
         return 'long-text';
       case 'RichText':
         return 'rich-text';
+      case 'Date':
       case 'Time':
         return 'time';
       case 'Blob':
         return 'blob';
+      case 'boolean':
       case 'Toggle':
         return 'toggle';
+      case 'number':
       case 'Number':
         return 'number';
       case 'Token':
@@ -206,13 +253,32 @@ export async function parseSchemaDefinitionFile(
     return { resolvedTypeName, typeArguments, namespace };
   }
 
-  function checkSchemaInclusion(typeName: string): string | null {
+  function getLineAndColumnsNumber(node: ts.Node) {
+    const start = node.getStart();
+    const { line: startLine, character: startCharacter } = sourceFile.getLineAndCharacterOfPosition(start);
+
+    const end = node.getEnd();
+    const { line: endLine, character: endCharacter } = sourceFile.getLineAndCharacterOfPosition(end);
+
+    return {
+      start: { line: startLine + 1, character: startCharacter + 1 },
+      end: { line: endLine + 1, character: endCharacter + 1 },
+    };
+  }
+
+  function checkSchemaInclusion(node: ts.PropertySignature, parent: string): string | null {
+    const typeName = node.type!.getText();
     const schemaProperty = Object.keys(schemaProperties).find((key) => schemaProperties[key] === typeName);
 
     if (schemaProperty) {
       return schemaProperty;
     } else {
-      missingSchemas.add(typeName);
+      const source = getLineAndColumnsNumber(node);
+      missingSchemas.push({
+        name: typeName,
+        parent: parent,
+        source: `${relativePath}:${source.start.line}:${source.start.character}`,
+      });
       return null;
     }
   }
@@ -226,8 +292,8 @@ export async function parseSchemaDefinitionFile(
   }
 
   function parseTypeAlias(typeName: string, propertyName: string): any {
-    const result: any = {
-      name: typeName,
+    const result: Partial<Omit<Schema, 'fields'>> & { fields: NonNullable<Schema['fields']> } = {
+      name: convertToReadableText(typeName),
       slug: propertyName,
       summary: DEFAULT_SCHEMA_SUMMARY,
       pluralName: '',
@@ -241,7 +307,7 @@ export async function parseSchemaDefinitionFile(
       const firstTypeArgument = typeArguments[0]?.getText();
 
       if (resolvedTypeName === schemaRecordsAlias && typeName === firstTypeArgument) {
-        result.pluralName = schemaPropertyType;
+        result.pluralName = convertToReadableText(schemaPropertyType);
         result.pluralSlug = schemaPropertyName;
       }
     });
@@ -261,7 +327,17 @@ export async function parseSchemaDefinitionFile(
 
                 let schema: string | null = null;
                 if (fieldType === 'record') {
-                  schema = checkSchemaInclusion(member.type!.getText());
+                  schema = checkSchemaInclusion(member, typeName);
+                }
+                if (fieldType === 'unknown') {
+                  const source = getLineAndColumnsNumber(member);
+
+                  unknownFields.push({
+                    parent: typeName,
+                    name: fieldName,
+                    type: memberTypeText,
+                    source: `${relativePath}:${source.start.line}:${source.start.character}`,
+                  });
                 }
 
                 const field: Record<string, unknown> = {
@@ -285,7 +361,7 @@ export async function parseSchemaDefinitionFile(
                   field.schema = schema;
                 }
 
-                result.fields.push(field);
+                result.fields.push(field as (typeof result.fields)[0]);
               }
             });
           }
@@ -297,9 +373,14 @@ export async function parseSchemaDefinitionFile(
 
     ts.forEachChild(sourceFile, typeAliasVisitor);
 
-    if (!result.pluralName) {
-      result.pluralName = typeName + 's';
-      result.pluralSlug = propertyName + 's';
+    if (!result.pluralName && result.fields.length) {
+      const pluralTypeName = pluralize(typeName);
+      onError(
+        `The schema \`${typeName}\` does not have a plural slug and name defined.\n\n` +
+          `Please define them in your schema definition file and include them in the \`Schemas\` interface:\n\n` +
+          `type ${pluralTypeName} = ${schemaRecordsAlias}<${typeName}>;\n\n` +
+          `interface Schemas {\n  ${propertyName}: ${typeName};\n  ${pluralize(result.slug as string)}: ${pluralTypeName};\n}`,
+      );
     }
 
     return result.fields.length ? result : null;
@@ -313,12 +394,32 @@ export async function parseSchemaDefinitionFile(
 
   visit(sourceFile);
 
-  if (missingSchemas.size > 0) {
-    throw new Error(
-      "The following schemas were used as a reference but weren't included in " +
-        `the \`Schemas\` interface: ${Array.from(missingSchemas).join(', ')}.\n` +
-        `Please include them in the \`Schemas\` interface or remove their references.`,
-    );
+  if (missingSchemas.length > 0) {
+    const errorMessage =
+      `The following schemas were used as a reference but weren't included in ` +
+      `the \`Schemas\` interface:\n\n` +
+      `${missingSchemas
+        .map(({ name, parent, source }) => `  - \`${name}\` in \`${parent}\` (${source})`)
+        .join('\n')}\n\n` +
+      `Please include them in the \`Schemas\` interface or remove their references.`;
+
+    onError(errorMessage);
+  }
+
+  if (unknownFields.length > 0) {
+    const errorMessage =
+      'The type of the following fields could not be determined:\n\n' +
+      Array.from(unknownFields)
+        .map(
+          ({ name, parent, type, source }) => `  - \`${parent}.${name}\` is typed as \`${type}\` (${source})`,
+        )
+        .join('\n') +
+      '\n\nPlease make sure that the field is typed as any of the available field ' +
+      'types exported from the `ronin/schema` module:\n\n' +
+      FIELD_TYPES.map((type) => `  - ${type}`).join('\n') +
+      '\n  - or a reference to another schema.';
+
+    onError(errorMessage);
   }
 
   return results;

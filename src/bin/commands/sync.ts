@@ -27,12 +27,12 @@ export default async (positionals: string[], appToken?: string, sessionToken?: s
 
   // Check if custom directory exists and save it to config
   if (customDir) {
-    const schemaFile = path.join(customDir, 'index.d.ts');
+    const schemaFile = path.join(customDir, 'index.ts');
     const schemaFileExists = await exists(schemaFile);
 
     if (!schemaFileExists) {
       spinner.fail(
-        'The provided schema directory does not exist or does not contain a schema definitions file (`index.d.ts`).',
+        'The provided schema directory does not exist or does not contain a schema definitions file (`index.ts`).',
       );
       process.exit(1);
     }
@@ -78,8 +78,11 @@ export default async (positionals: string[], appToken?: string, sessionToken?: s
     status = 'readingSchemas';
     spinner.text = 'Reading schema definitions';
 
-    const schemaFile = path.join(config.schemasDir || 'schemas', 'index.d.ts');
-    let schemaDefinitions = await parseSchemaDefinitionFile(schemaFile);
+    const schemaFile = path.join(config.schemasDir || 'schemas', 'index.ts');
+    let schemaDefinitions = await parseSchemaDefinitionFile(schemaFile, (error) => {
+      spinner.fail(error);
+      process.exit(1);
+    });
 
     status = 'comparing';
     spinner.start('Retrieving existing schemas');

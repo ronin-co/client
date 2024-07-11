@@ -84,11 +84,13 @@
     "json5": "2.2.3",
     "open": "10.1.0",
     "ora": "8.0.1",
+    "pluralize": "8.0.0",
     "typescript": "5.5.3"
   },
   "devDependencies": {
     "@types/bun": "1.1.6",
     "@types/ini": "4.1.1",
+    "@types/pluralize": "0.0.33",
     "@typescript-eslint/eslint-plugin": "7.16.0",
     "@typescript-eslint/parser": "7.16.0",
     "eslint": "8.57.0",
