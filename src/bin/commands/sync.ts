@@ -8,6 +8,7 @@ import { parseSchemaDefinitionFile } from '@/src/bin/utils/schema';
 import { compareSchemas, getSchemas, getSpaces, replaceFieldIdsWithExisting } from '@/src/bin/utils/sync';
 
 type Status = 'readingConfig' | 'readingSchemas' | 'comparing' | 'syncing';
+const DEFAULT_SCHEMA_SUMMARY = 'This is a newly created schema.';
 
 export default async (positionals: string[], appToken?: string, sessionToken?: string) => {
   if (positionals.includes('-r') || positionals.includes('--reset')) {
@@ -89,7 +90,15 @@ export default async (positionals: string[], appToken?: string, sessionToken?: s
 
     const remoteSchemas = await getSchemas(token, config.spaceId as string);
 
+    // Replace field IDs with existing field IDs.
     schemaDefinitions = await replaceFieldIdsWithExisting(schemaDefinitions, remoteSchemas);
+
+    // Add summary to schema definitions.
+    schemaDefinitions = schemaDefinitions.map((schema) => ({
+      ...schema,
+      summary:
+        schema.summary || remoteSchemas.find((s) => s.id === schema.id)?.summary || DEFAULT_SCHEMA_SUMMARY,
+    }));
 
     status = 'comparing';
     spinner.text = 'Comparing local and remote schema definitions';
