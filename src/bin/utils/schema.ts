@@ -7,7 +7,6 @@ import { exists } from '@/src/bin/utils/file';
 import type { Schema } from '@/src/types/schema';
 import { generateUniqueId } from '@/src/utils/id';
 
-const DEFAULT_SCHEMA_SUMMARY = 'This is a schema summary';
 const FIELD_TYPES = [
   'ShortText',
   'LongText',
@@ -295,7 +294,6 @@ export async function parseSchemaDefinitionFile(
     const result: Partial<Omit<Schema, 'fields'>> & { fields: NonNullable<Schema['fields']> } = {
       name: convertToReadableText(typeName),
       slug: propertyName,
-      summary: DEFAULT_SCHEMA_SUMMARY,
       pluralName: '',
       pluralSlug: '',
       fields: [],
