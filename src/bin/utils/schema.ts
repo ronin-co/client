@@ -67,6 +67,8 @@ export async function parseSchemaDefinitionFile(
   filePath: string = './schemas/index.ts',
   onError: (error: string) => void,
 ): Promise<Schema[]> {
+  // Used for displaying the source line in error messages.
+  const relativePath = path.relative(process.cwd(), filePath);
   const fullPath = path.resolve(process.cwd(), filePath);
 
   const schemaFileExists = await exists(filePath);
@@ -83,7 +85,7 @@ export async function parseSchemaDefinitionFile(
   const namespaceMapping: Record<string, string> = {};
   const schemaProperties: Record<string, string> = {};
   const missingSchemas: { name: string; parent: string; source: string }[] = [];
-  const unknownFields: Set<{ parent: string; name: string; type: string }> = new Set();
+  const unknownFields: { parent: string; name: string; type: string; source: string }[] = [];
 
   let schemaRecordAlias = 'SchemaRecord';
   let schemaRecordsAlias = 'SchemaRecords';
@@ -275,7 +277,7 @@ export async function parseSchemaDefinitionFile(
       missingSchemas.push({
         name: typeName,
         parent: parent,
-        source: `${fullPath}:${source.start.line}:${source.start.character}`,
+        source: `${relativePath}:${source.start.line}:${source.start.character}`,
       });
       return null;
     }
@@ -328,7 +330,14 @@ export async function parseSchemaDefinitionFile(
                   schema = checkSchemaInclusion(member, typeName);
                 }
                 if (fieldType === 'unknown') {
-                  unknownFields.add({ parent: typeName, name: fieldName, type: memberTypeText });
+                  const source = getLineAndColumnsNumber(member);
+
+                  unknownFields.push({
+                    parent: typeName,
+                    name: fieldName,
+                    type: memberTypeText,
+                    source: `${relativePath}:${source.start.line}:${source.start.character}`,
+                  });
                 }
 
                 const field: Record<string, unknown> = {
@@ -397,11 +406,13 @@ export async function parseSchemaDefinitionFile(
     onError(errorMessage);
   }
 
-  if (unknownFields.size > 0) {
+  if (unknownFields.length > 0) {
     const errorMessage =
       'The type of the following fields could not be determined:\n\n' +
       Array.from(unknownFields)
-        .map(({ name, parent, type }) => `  - \`${parent}.${name}\` is typed as \`${type}\``)
+        .map(
+          ({ name, parent, type, source }) => `  - \`${parent}.${name}\` is typed as \`${type}\` (${source})`,
+        )
         .join('\n') +
       '\n\nPlease make sure that the field is typed as any of the available field ' +
       'types exported from the `ronin/schema` module:\n\n' +
