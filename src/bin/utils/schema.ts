@@ -86,8 +86,8 @@ export async function parseSchemaDefinitionFile(
   const missingSchemas: { name: string; parent: string; source: string }[] = [];
   const unknownFields: { parent: string; name: string; type: string; source: string }[] = [];
 
-  let schemaRecordAlias = 'SchemaRecord';
-  let schemaRecordsAlias = 'SchemaRecords';
+  let schemaRecordAlias = 'Record';
+  let schemaRecordsAlias = 'Records';
 
   function getFieldType(type: string): string {
     const originalType = typeMapping[type] || type;
@@ -376,7 +376,8 @@ export async function parseSchemaDefinitionFile(
       onError(
         `The schema \`${typeName}\` does not have a plural slug and name defined.\n\n` +
           `Please define them in your schema definition file and include them in the \`Schemas\` interface:\n\n` +
-          `type ${pluralTypeName} = ${schemaRecordsAlias}<${typeName}>;\n\n` +
+          `import type * as Schema from 'ronin/schema';\n\n` +
+          `type ${pluralTypeName} = Schema.${schemaRecordsAlias}<${typeName}>;\n\n` +
           `interface Schemas {\n  ${propertyName}: ${typeName};\n  ${pluralize(result.slug as string)}: ${pluralTypeName};\n}`,
       );
     }
