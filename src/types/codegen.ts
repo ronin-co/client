@@ -1,14 +1,19 @@
 import type { Schemas } from 'ronin';
 
-import type { RoninRecords, SchemaRecords } from '@/src/schema';
+import type * as Schema from '@/src/schema';
 import type { StoredObject } from '@/src/types/storage';
 import type { ReducedFunction, Replace, ReplaceForSetter } from '@/src/types/utils';
 
 export namespace RONIN {
-  export interface RoninRecord<TId extends string = string> {
-    id: TId;
+  export interface RoninRecord {
+    id: string;
     ronin: RoninMetadata;
   }
+
+  export type RoninRecords<TSchema> = TSchema[] & {
+    moreBefore?: string;
+    moreAfter?: string;
+  };
 
   export interface RoninMetadata {
     createdAt: Date;
@@ -95,7 +100,7 @@ export namespace RONIN {
         ? BooleanFilterFunction<T, R, O>
         : T extends Date
           ? DateFilterFunction<T, R, O>
-          : T extends RONIN.RoninRecord<string>
+          : T extends RONIN.RoninRecord
             ? RecordFilter<T, R, O>
             : T extends Record<string, any>
               ? RecordFilterObject<T, R, O>
@@ -217,7 +222,7 @@ export namespace RONIN {
                */
               being: boolean;
             }
-          : T extends RONIN.RoninRecord<string>
+          : T extends RONIN.RoninRecord
             ?
                 | null
                 | string
@@ -271,7 +276,7 @@ export namespace RONIN {
   }
 
   type RelatedFieldKeys<T> = {
-    [K in keyof T]: T[K] extends RONIN.RoninRecord<string> ? (K extends string ? K : never) : never;
+    [K in keyof T]: T[K] extends RONIN.RoninRecord ? (K extends string ? K : never) : never;
   }[keyof T];
 
   export type Including<T> = RelatedFieldKeys<T>[] | 'all';
@@ -406,7 +411,7 @@ export namespace RONIN {
   } & RONIN.ExtendedCreator<TOptions>;
 
   export type Getter<TOptions = undefined> = {
-    [K in keyof Schemas]: Schemas[K] extends SchemaRecords<any>
+    [K in keyof Schemas]: Schemas[K] extends Schema.Records<any>
       ? IGetterPlural<Schemas[K][number]>
       : IGetterSingular<Schemas[K]>;
   } & RONIN.ExtendedGetter<TOptions>;
