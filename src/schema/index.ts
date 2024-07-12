@@ -1,19 +1,13 @@
 import type { RONIN } from '@/src/types/codegen';
 
-export type ShortText = string;
-export type LongText = string;
-export type Number = number;
-export type Blob = RONIN.Blob;
-export type Token = string;
-export type Toggle = boolean;
-export type RichText = string;
-export type Time = Date;
+type LongText = string;
+type Blob = RONIN.Blob;
+type Token = string;
+type Toggle = boolean;
+type RichText = string;
 
-export type RoninRecords<TSchema> = TSchema[] & {
-  moreBefore?: string;
-  moreAfter?: string;
-};
+type SchemaRecord<TSchema extends Record<string, any>> = Required<TSchema> & RONIN.RoninRecord;
 
-export type SchemaRecord<TSchema extends Record<string, any>> = Required<TSchema> & RONIN.RoninRecord;
+type SchemaRecords<TSchema extends SchemaRecord<TSchema>> = RONIN.RoninRecords<TSchema>;
 
-export type SchemaRecords<TSchema extends SchemaRecord<TSchema>> = RoninRecords<TSchema>;
+export type { SchemaRecord as Record, SchemaRecords as Records, LongText, Blob, Token, Toggle, RichText };
