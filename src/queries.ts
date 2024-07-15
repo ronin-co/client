@@ -2,7 +2,7 @@ import { processStorableObjects, uploadStorableObjects } from '@/src/storage';
 import type { Query, Results } from '@/src/types/query';
 import type { QueryHandlerOptions } from '@/src/types/utils';
 import { runQueriesWithHooks } from '@/src/utils/data-hooks';
-import { getDotNotatedPath, InvalidQueryError } from '@/src/utils/errors';
+import { getDotNotatedPath, getResponseBody, InvalidQueryError } from '@/src/utils/errors';
 import { formatTimeFields, getProperty } from '@/src/utils/helpers';
 
 type QueryResponse<T> = {
@@ -85,14 +85,8 @@ export const runQueries = async <T>(
 
   const fetcher = typeof options?.fetch === 'function' ? options.fetch : fetch;
   const response = await fetcher(request);
-  const { results, error } = (await response.json()) as QueryResponse<T>;
 
-  // Throw errors that happened during the execution of the queries.
-  if (error) {
-    const exposedError: Error & { code?: string } = new Error(error.message);
-    if (error.code) exposedError.code = error.code;
-    throw exposedError;
-  }
+  const { results } = await getResponseBody<QueryResponse<T>>(response);
 
   const startFormatting = performance.now();
 
