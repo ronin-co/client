@@ -52,24 +52,30 @@ export const getResponseBody = async <T>(
   response: Response,
   options?: { errorPrefix?: string },
 ): Promise<T> => {
+  // If the response is okay, we want to parse the JSON asynchronously.
   if (response.ok) return response.json() as T;
 
   const text = await response.text();
 
-  let error: InvalidResponseErrorDetails = {
-    message: text,
-    code: 'UNKNOWN_ERROR',
+  let json: T & {
+    error?: InvalidResponseErrorDetails;
   };
 
   try {
-    ({ error } = JSON.parse(text));
+    json = JSON.parse(text);
   } catch (err) {
-    // Ignore parsing errors
+    throw new InvalidResponseError({
+      message: `${options?.errorPrefix ? `${options.errorPrefix} ` : ``}${text}`,
+      code: 'JSON_PARSE_ERROR',
+    });
   }
 
-  if (options?.errorPrefix) error.message = `${options.errorPrefix} ${error.message}`;
+  if (json.error) {
+    json.error.message = `${options?.errorPrefix ? `${options.errorPrefix} ` : ``}${json.error.message}`;
+    throw new InvalidResponseError(json.error);
+  }
 
-  throw new InvalidResponseError(error);
+  return json;
 };
 
 /**
