@@ -92,13 +92,18 @@ describe('queries handler', () => {
       fetch: async (request) => {
         mockRequestResolvedValue = request as Request;
 
-        return Response.json({
-          results: [],
-          error: {
-            message: 'Invalid query provided.',
-            code: 'BAD_REQUEST',
+        return new Response(
+          JSON.stringify({
+            results: [],
+            error: {
+              message: 'Invalid query provided.',
+              code: 'BAD_REQUEST',
+            },
+          }),
+          {
+            status: 400,
           },
-        });
+        );
       },
     });
 

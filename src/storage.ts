@@ -99,7 +99,10 @@ export const uploadStorableObjects = async (
     });
 
     const response = await fetcher(request);
-    return getResponseBody<StoredObject>(response);
+    return getResponseBody<StoredObject>(response, {
+      errorPrefix:
+        'An error occurred while uploading the binary objects included in the provided queries. Error:',
+    });
   });
 
   return Promise.all(requests);

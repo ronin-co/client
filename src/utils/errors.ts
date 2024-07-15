@@ -45,9 +45,13 @@ export class InvalidResponseError extends Error {
  * potential error details that might have been included in the response.
  *
  * @param response The response of a fetch request.
+ *
  * @returns The response body as a JSON object.
  */
-export const getResponseBody = async <T>(response: Response): Promise<T> => {
+export const getResponseBody = async <T>(
+  response: Response,
+  options?: { errorPrefix?: string },
+): Promise<T> => {
   if (response.ok) return response.json() as T;
 
   const text = await response.text();
@@ -62,6 +66,8 @@ export const getResponseBody = async <T>(response: Response): Promise<T> => {
   } catch (err) {
     // Ignore parsing errors
   }
+
+  if (options?.errorPrefix) error.message = `${options.errorPrefix} ${error.message}`;
 
   throw new InvalidResponseError(error);
 };
