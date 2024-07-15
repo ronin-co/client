@@ -34,7 +34,7 @@ export class InvalidResponseError extends Error {
   constructor(details: InvalidResponseErrorDetails) {
     super(details.message);
 
-    this.name = 'InvalidQueryRequest';
+    this.name = 'InvalidResponseError';
     this.message = details.message;
     this.code = details.code;
   }
