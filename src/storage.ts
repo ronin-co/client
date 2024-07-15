@@ -1,6 +1,7 @@
 import type { CombinedInstructions, Query } from '@/src/types/query';
 import type { StorableObject, StoredObject } from '@/src/types/storage';
 import type { QueryHandlerOptions } from '@/src/types/utils';
+import { getResponseBody } from '@/src/utils/errors';
 
 /**
  * Extract `StorableObject`s from queries. These will be uploaded separately
@@ -98,14 +99,13 @@ export const uploadStorableObjects = async (
     });
 
     const response = await fetcher(request);
-    if (!response.ok) throw new Error(await response.text());
-    return response.json() as Promise<StoredObject>;
+    return getResponseBody<StoredObject>(response, {
+      errorPrefix:
+        'An error occurred while uploading the binary objects included in the provided queries. Error:',
+    });
   });
 
-  return Promise.all(requests).catch((err) => {
-    const message = `An error occurred while uploading the binary objects included in the provided queries. ${err}`;
-    throw new Error(message);
-  });
+  return Promise.all(requests);
 };
 
 /**
