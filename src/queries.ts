@@ -118,7 +118,7 @@ export const runQueries = async <T>(
           query && path ? `${path.replace(/queries\[\d+\]\./, '')} = ${JSON.stringify(instruction)}` : null,
         path: path,
         details,
-        code: result.error.code,
+        code: result.error.code || null,
       });
     }
 
