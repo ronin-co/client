@@ -9,8 +9,7 @@ export type Schema = {
             name: string;
             type:
               | 'group'
-              | 'short-text'
-              | 'long-text'
+              | 'text'
               | 'rich-text'
               | 'time'
               | 'blob'
@@ -41,8 +40,7 @@ export type Schema = {
                   name: string;
                   type:
                     | 'group'
-                    | 'short-text'
-                    | 'long-text'
+                    | 'text'
                     | 'rich-text'
                     | 'time'
                     | 'blob'

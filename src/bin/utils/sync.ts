@@ -149,13 +149,7 @@ export const compareSchemas = async (local: Schema[], remote: Schema[], spinner:
         return;
       }
 
-      // We can skip asking the user if the field type changed
-      // between short-text and long-text.
-      const canChangeType =
-        ['short-text', 'long-text'].includes(existingField.type) &&
-        ['short-text', 'long-text'].includes(field.type);
-
-      if (!canChangeType && existingField.type !== field.type) {
+      if (existingField.type !== field.type) {
         // It's important to change the field ID when the type changes
         // because it's essentially a new field.
         field.id = generateFieldId(field.type);

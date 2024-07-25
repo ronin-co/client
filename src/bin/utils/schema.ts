@@ -7,17 +7,7 @@ import { exists } from '@/src/bin/utils/file';
 import type { Schema } from '@/src/types/schema';
 import { generateUniqueId } from '@/src/utils/id';
 
-const FIELD_TYPES = [
-  'ShortText',
-  'LongText',
-  'RichText',
-  'Time',
-  'Blob',
-  'Toggle',
-  'Number',
-  'Token',
-  'JSON',
-];
+const FIELD_TYPES = ['Text', 'RichText', 'Time', 'Blob', 'Toggle', 'Number', 'Token', 'JSON'];
 
 /**
  * Generates a unique field ID.
@@ -93,10 +83,8 @@ export async function parseSchemaDefinitionFile(
     const originalType = typeMapping[type] || type;
     switch (originalType) {
       case 'string':
-      case 'ShortText':
-        return 'short-text';
-      case 'LongText':
-        return 'long-text';
+      case 'Text':
+        return 'text';
       case 'RichText':
         return 'rich-text';
       case 'Date':
