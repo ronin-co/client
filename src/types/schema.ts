@@ -9,8 +9,7 @@ export type Schema = {
             name: string;
             type:
               | 'group'
-              | 'short-text'
-              | 'long-text'
+              | 'text'
               | 'rich-text'
               | 'time'
               | 'blob'
@@ -26,6 +25,7 @@ export type Schema = {
               | 'color';
             required?: boolean | undefined;
             unique?: boolean | undefined;
+            displayAs?: 'single-line' | 'multi-line' | undefined;
           }
         | {
             id: string;
@@ -41,8 +41,7 @@ export type Schema = {
                   name: string;
                   type:
                     | 'group'
-                    | 'short-text'
-                    | 'long-text'
+                    | 'text'
                     | 'rich-text'
                     | 'time'
                     | 'blob'
