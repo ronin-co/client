@@ -339,6 +339,10 @@ export async function parseSchemaDefinitionFile(
                   field.description = description;
                 }
 
+                if (fieldType === 'text') {
+                  field.displayAs = 'single-line';
+                }
+
                 if (Object.keys(details).length > 0) {
                   field.details = details;
                 }
