@@ -7,7 +7,8 @@ import { exists } from '@/src/bin/utils/file';
 import type { Schema } from '@/src/types/schema';
 import { generateUniqueId } from '@/src/utils/id';
 
-const FIELD_TYPES = ['Text', 'RichText', 'Time', 'Blob', 'Toggle', 'Number', 'Token', 'JSON'];
+const FIELD_TYPES = ['RichText', 'Blob', 'Token', 'JSON'];
+const PRIMITIVE_FIELD_TYPES = ['string', 'number', 'boolean', 'Date'];
 
 /**
  * Generates a unique field ID.
@@ -83,21 +84,17 @@ export async function parseSchemaDefinitionFile(
     const originalType = typeMapping[type] || type;
     switch (originalType) {
       case 'string':
-      case 'Text':
         return 'text';
+      case 'number':
+        return 'number';
+      case 'boolean':
+        return 'toggle';
+      case 'Date':
+        return 'time';
       case 'RichText':
         return 'rich-text';
-      case 'Date':
-      case 'Time':
-        return 'time';
       case 'Blob':
         return 'blob';
-      case 'boolean':
-      case 'Toggle':
-        return 'toggle';
-      case 'number':
-      case 'Number':
-        return 'number';
       case 'Token':
         return 'token';
       case 'JSON':
@@ -405,9 +402,10 @@ export async function parseSchemaDefinitionFile(
           ({ name, parent, type, source }) => `  - \`${parent}.${name}\` is typed as \`${type}\` (${source})`,
         )
         .join('\n') +
-      '\n\nPlease make sure that the field is typed as any of the available field ' +
-      'types exported from the `ronin/schema` module:\n\n' +
-      FIELD_TYPES.map((type) => `  - ${type}`).join('\n') +
+      '\n\nPlease make sure that the field is typed as any of the available field types:\n\n' +
+      PRIMITIVE_FIELD_TYPES.map((type) => `  - \`${type}\``).join('\n') +
+      '\n' +
+      FIELD_TYPES.map((type) => `  - \`Schema.${type}\``).join('\n') +
       '\n  - or a reference to another schema.';
 
     onError(errorMessage);

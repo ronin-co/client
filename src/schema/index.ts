@@ -2,7 +2,6 @@ import type { RONIN } from '@/src/types/codegen';
 
 type Blob = RONIN.Blob;
 type Token = string;
-type Toggle = boolean;
 type RichText = string;
 type JSONField = JSON;
 
@@ -10,12 +9,4 @@ type SchemaRecord<TSchema extends Record<string, any>> = Required<TSchema> & RON
 
 type SchemaRecords<TSchema extends SchemaRecord<TSchema>> = RONIN.RoninRecords<TSchema>;
 
-export type {
-  SchemaRecord as Record,
-  SchemaRecords as Records,
-  Blob,
-  Token,
-  Toggle,
-  RichText,
-  JSONField as JSON,
-};
+export type { SchemaRecord as Record, SchemaRecords as Records, Blob, Token, RichText, JSONField as JSON };
