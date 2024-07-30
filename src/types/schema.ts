@@ -25,7 +25,7 @@ export type Schema = {
               | 'color';
             required?: boolean | undefined;
             unique?: boolean | undefined;
-            displayAs?: 'input' | 'textarea' | undefined;
+            displayAs?: 'single-line' | 'multi-line' | undefined;
           }
         | {
             id: string;
