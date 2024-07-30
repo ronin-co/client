@@ -404,7 +404,54 @@ describe('factory', () => {
     );
   });
 
-  test('upload a video', async () => {
+  test('upload image with non-latin file name', async () => {
+    const bunFile = Bun.file('tests/assets/example.jpeg');
+
+    const file = new File([Buffer.from(await bunFile.arrayBuffer())], 'тестування.jpeg', {
+      type: 'image/jpeg',
+    });
+
+    let mockResolvedStorageRequest: Request | undefined = undefined;
+
+    const factory = createSyntaxFactory({
+      fetch: async (request) => {
+        if ((request as Request).url === 'https://storage.ronin.co/') {
+          mockResolvedStorageRequest = request as Request;
+
+          const responseBody: StoredObject = {
+            key: 'test-key',
+            name: file.name,
+            src: 'https://storage.ronin.co/test-key',
+            meta: {
+              height: 100,
+              width: 100,
+              size: 100,
+              type: 'image/jpeg',
+            },
+            placeholder: {
+              base64: '',
+            },
+          };
+
+          return Response.json(responseBody);
+        }
+
+        return mockFetch(request);
+      },
+    });
+
+    await factory.create.account({
+      with: {
+        avatar: file,
+      },
+    });
+
+    expect((mockResolvedStorageRequest as Request | undefined)?.headers.get('Content-Disposition')).toBe(
+      'form-data; filename="%D1%82%D0%B5%D1%81%D1%82%D1%83%D0%B2%D0%B0%D0%BD%D0%BD%D1%8F.jpeg"',
+    );
+  });
+
+  test('upload video', async () => {
     const bunFile = Bun.file('tests/assets/example.mp4');
     const file = new File([Buffer.from(await bunFile.arrayBuffer())], 'example.mp4', { type: 'video/mp4' });
 
