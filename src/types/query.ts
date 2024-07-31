@@ -3288,7 +3288,6 @@ type QueryInstructionType = {
         descending?: string[] | undefined;
       }
     | undefined;
-  in: string;
   before: string | null;
   after: string | null;
   limitedTo: number;
@@ -7518,7 +7517,6 @@ type Instruction =
   | 'including'
   | 'excluding'
   | 'orderedBy'
-  | 'in'
   | 'before'
   | 'after'
   | 'limitedTo'
@@ -8084,7 +8082,6 @@ type CombinedInstructions = {
         descending?: string[] | undefined;
       }
     | undefined;
-  in: string;
   before: string | null;
   after: string | null;
   limitedTo: number;
