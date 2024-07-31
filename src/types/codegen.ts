@@ -21,7 +21,6 @@ export namespace RONIN {
     deletedAt: null | Date;
     deletedBy: null | string | Record<string, any>;
     locked: boolean;
-    status: 'draft' | 'published' | 'archived';
     updatedAt: Date;
     updatedBy: string | Record<string, any>;
   }
