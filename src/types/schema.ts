@@ -7,22 +7,7 @@ export type Schema = {
             id: string;
             slug: string;
             name: string;
-            type:
-              | 'group'
-              | 'text'
-              | 'rich-text'
-              | 'time'
-              | 'blob'
-              | 'toggle'
-              | 'number'
-              | 'json'
-              | 'token'
-              | 'record-filter'
-              | 'markdown'
-              | 'file'
-              | 'checklist'
-              | 'location'
-              | 'color';
+            type: 'group' | 'text' | 'rich-text' | 'time' | 'blob' | 'toggle' | 'number' | 'json' | 'token';
             required?: boolean | undefined;
             unique?: boolean | undefined;
             displayAs?: 'single-line' | 'multi-line' | undefined;
@@ -48,13 +33,7 @@ export type Schema = {
                     | 'toggle'
                     | 'number'
                     | 'json'
-                    | 'token'
-                    | 'record-filter'
-                    | 'markdown'
-                    | 'file'
-                    | 'checklist'
-                    | 'location'
-                    | 'color';
+                    | 'token';
                   required?: boolean | undefined;
                   unique?: boolean | undefined;
                 }
