@@ -17,17 +17,11 @@ type SchemaFieldType =
   | 'text'
   | 'rich-text'
   | 'time'
-  | 'media'
+  | 'blob'
   | 'toggle'
   | 'number'
   | 'json'
-  | 'token'
-  | 'record-filter'
-  | 'markdown'
-  | 'file'
-  | 'checklist'
-  | 'location'
-  | 'color';
+  | 'token';
 
 type Result<T> =
   | {
