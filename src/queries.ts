@@ -13,12 +13,11 @@ type QueryResponse<T> = {
 type SchemaFieldType =
   | 'list'
   | 'group'
-  | 'record'
-  | 'text'
-  | 'rich-text'
-  | 'time'
+  | 'reference'
+  | 'string'
+  | 'date'
   | 'blob'
-  | 'toggle'
+  | 'boolean'
   | 'number'
   | 'json'
   | 'token';
@@ -124,7 +123,7 @@ export const runQueries = async <T>(
     const timeFields =
       'schema' in result
         ? Object.entries(result.schema)
-            .filter(([, type]) => type === 'time')
+            .filter(([, type]) => type === 'date')
             .map(([name]) => name)
         : [];
 

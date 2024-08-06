@@ -84,15 +84,11 @@ export async function parseSchemaDefinitionFile(
     const originalType = typeMapping[type] || type;
     switch (originalType) {
       case 'string':
-        return 'text';
       case 'number':
-        return 'number';
       case 'boolean':
-        return 'toggle';
+        return originalType;
       case 'Date':
-        return 'time';
-      case 'RichText':
-        return 'rich-text';
+        return 'date';
       case 'Blob':
         return 'blob';
       case 'Token':
@@ -103,7 +99,7 @@ export async function parseSchemaDefinitionFile(
         const { resolvedTypeName } = resolveTypeAlias(originalType);
 
         if (resolvedTypeName === schemaRecordAlias) {
-          return 'record';
+          return 'reference';
         }
 
         return 'unknown';
@@ -309,7 +305,7 @@ export async function parseSchemaDefinitionFile(
                 const { name, description, details } = parseJsDoc(member);
 
                 let schema: string | null = null;
-                if (fieldType === 'record') {
+                if (fieldType === 'reference') {
                   schema = checkSchemaInclusion(member, typeName);
                 }
                 if (fieldType === 'unknown') {
@@ -336,7 +332,7 @@ export async function parseSchemaDefinitionFile(
                   field.description = description;
                 }
 
-                if (fieldType === 'text') {
+                if (fieldType === 'string') {
                   field.displayAs = 'single-line';
                 }
 
