@@ -91,8 +91,6 @@ export async function parseSchemaDefinitionFile(
         return 'date';
       case 'Blob':
         return 'blob';
-      case 'Token':
-        return 'token';
       case 'JSON':
         return 'json';
       default: {

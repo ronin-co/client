@@ -19,8 +19,7 @@ type SchemaFieldType =
   | 'blob'
   | 'boolean'
   | 'number'
-  | 'json'
-  | 'token';
+  | 'json';
 
 type Result<T> =
   | {
