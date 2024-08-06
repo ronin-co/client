@@ -378,13 +378,13 @@ export namespace RONIN {
     extends Record<string, ICreator<Record<string, unknown>, TOptions>> {}
 
   export interface ExtendedGetter<TOptions = undefined>
-    extends Record<string, IGetterPlural<Record<string, unknown>, string, TOptions>> {}
+    extends Record<string, IGetterPlural<Record<string, unknown>, TOptions>> {}
 
   export interface ExtendedSetter<TOptions = undefined>
     extends Record<string, ISetter<Record<string, unknown>, TOptions>> {}
 
   export interface ExtendedDropper<TOptions = undefined>
-    extends Record<string, IDropper<Record<string, unknown>, string, TOptions>> {}
+    extends Record<string, IDropper<Record<string, unknown>, TOptions>> {}
 
   export interface ExtendedCounter<TOptions = undefined>
     extends Record<string, ICounter<Record<string, unknown>, TOptions>> {}
