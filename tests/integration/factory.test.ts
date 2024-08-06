@@ -540,8 +540,8 @@ describe('factory', () => {
             },
             schema: {
               name: 'string',
-              createdAt: 'time',
-              'ronin.updatedAt': 'time',
+              createdAt: 'date',
+              'ronin.updatedAt': 'date',
             },
           },
           {
@@ -562,8 +562,8 @@ describe('factory', () => {
               },
             ],
             schema: {
-              createdAt: 'time',
-              'ronin.updatedAt': 'time',
+              createdAt: 'date',
+              'ronin.updatedAt': 'date',
               name: 'string',
             },
           },
