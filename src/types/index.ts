@@ -65,4 +65,4 @@ export type {
 export type { StorableObjectValue, StoredObject } from '@/src/types/storage';
 
 // Other
-export type { PromiseTuple } from '@/src/types/utils';
+export type { PromiseTuple, QueryHandlerOptions } from '@/src/types/utils';
