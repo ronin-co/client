@@ -8,7 +8,7 @@ export type Schema = {
             slug: string;
             name: string;
             description?: string | undefined;
-            type: 'group' | 'time' | 'blob' | 'boolean' | 'number';
+            type: 'group' | 'date' | 'blob' | 'boolean' | 'number';
             required?: boolean | undefined;
             unique?: boolean | undefined;
           }
@@ -36,7 +36,7 @@ export type Schema = {
                   slug: string;
                   name: string;
                   description?: string | undefined;
-                  type: 'group' | 'time' | 'blob' | 'boolean' | 'number';
+                  type: 'group' | 'date' | 'blob' | 'boolean' | 'number';
                   required?: boolean | undefined;
                   unique?: boolean | undefined;
                 }
