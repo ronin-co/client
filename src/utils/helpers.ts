@@ -148,13 +148,13 @@ export const toDashCase = (string?: string | null): string => {
 };
 
 /**
- * Convert Time fields in a record to JavaScript `Date` objects.
+ * Convert Date fields in a record to JavaScript `Date` objects.
  *
- * @param record - A record to format the Time fields of.
- * @param timeFields - An array of property keys for the time fields.
+ * @param record - A record to format the Date fields of.
+ * @param dateFields - An array of property keys for the date fields.
  */
-export const formatTimeFields = (record: object, timeFields: string[]) => {
-  timeFields.forEach((field) =>
+export const formatDateFields = (record: object, dateFields: string[]) => {
+  dateFields.forEach((field) =>
     setProperty(record, field, (value: string | null) => (value !== null ? new Date(value) : null)),
   );
 };

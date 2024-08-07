@@ -3,7 +3,7 @@ import type { Query, Results } from '@/src/types/query';
 import type { QueryHandlerOptions } from '@/src/types/utils';
 import { runQueriesWithHooks } from '@/src/utils/data-hooks';
 import { getDotNotatedPath, getResponseBody, InvalidQueryError } from '@/src/utils/errors';
-import { formatTimeFields, getProperty } from '@/src/utils/helpers';
+import { formatDateFields, getProperty } from '@/src/utils/helpers';
 
 type QueryResponse<T> = {
   results: Result<T>[];
@@ -119,7 +119,7 @@ export const runQueries = async <T>(
       continue;
     }
 
-    const timeFields =
+    const dateFields =
       'schema' in result
         ? Object.entries(result.schema)
             .filter(([, type]) => type === 'date')
@@ -135,7 +135,7 @@ export const runQueries = async <T>(
         continue;
       }
 
-      formatTimeFields(result.record, timeFields);
+      formatDateFields(result.record, dateFields);
 
       results[i] = result.record;
       continue;
@@ -144,7 +144,7 @@ export const runQueries = async <T>(
     // Handle result with multiple records.
     if ('records' in result) {
       for (const record of result.records) {
-        formatTimeFields(record, timeFields);
+        formatDateFields(record, dateFields);
       }
 
       // Expose the pagination cursors in order to allow for retrieving the

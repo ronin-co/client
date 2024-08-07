@@ -524,7 +524,7 @@ describe('factory', () => {
     );
   });
 
-  test('format time fields', async () => {
+  test('format date fields', async () => {
     const mockFetchNew = mock(async (request) => {
       mockRequestResolvedValue = request;
 
