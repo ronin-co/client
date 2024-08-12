@@ -85,6 +85,7 @@ export const runQueries = async <T>(
     const result = results[i];
 
     if ('error' in result && result.error) {
+      console.log(result.error);
       const message = result.error.code === 'BAD_REQUEST' ? 'Invalid query provided.' : result.error.message;
 
       // Get a dot-notated path to the field that caused the error.
@@ -110,6 +111,7 @@ export const runQueries = async <T>(
         path: path,
         details,
         code: result.error.code || null,
+        field: result.error.field || null,
       });
     }
 

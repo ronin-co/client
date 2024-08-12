@@ -4,6 +4,7 @@ interface InvalidQueryErrorDetails {
   path: string | null;
   details: string;
   code: string;
+  field: string;
 }
 
 export class InvalidQueryError extends Error {
@@ -12,6 +13,7 @@ export class InvalidQueryError extends Error {
   path: InvalidQueryErrorDetails['path'];
   details: InvalidQueryErrorDetails['details'];
   code: InvalidQueryErrorDetails['code'];
+  field: InvalidQueryErrorDetails['field'];
 
   constructor(details: InvalidQueryErrorDetails) {
     super(details.message);
@@ -22,6 +24,7 @@ export class InvalidQueryError extends Error {
     this.path = details.path;
     this.details = details.details;
     this.code = details.code;
+    this.field = details.field;
   }
 }
 
