@@ -111,7 +111,7 @@ export const runQueries = async <T>(
         path: path,
         details,
         code: result.error.code || null,
-        field: result.error.field || null,
+        fields: result.error.fields || null,
       });
     }
 
