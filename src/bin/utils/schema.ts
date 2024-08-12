@@ -7,17 +7,8 @@ import { exists } from '@/src/bin/utils/file';
 import type { Schema } from '@/src/types/schema';
 import { generateUniqueId } from '@/src/utils/id';
 
-const FIELD_TYPES = [
-  'ShortText',
-  'LongText',
-  'RichText',
-  'Time',
-  'Blob',
-  'Toggle',
-  'Number',
-  'Token',
-  'JSON',
-];
+const FIELD_TYPES = ['RichText', 'Blob', 'Token', 'JSON'];
+const PRIMITIVE_FIELD_TYPES = ['string', 'number', 'boolean', 'Date'];
 
 /**
  * Generates a unique field ID.
@@ -93,32 +84,20 @@ export async function parseSchemaDefinitionFile(
     const originalType = typeMapping[type] || type;
     switch (originalType) {
       case 'string':
-      case 'ShortText':
-        return 'short-text';
-      case 'LongText':
-        return 'long-text';
-      case 'RichText':
-        return 'rich-text';
+      case 'number':
+      case 'boolean':
+        return originalType;
       case 'Date':
-      case 'Time':
-        return 'time';
+        return 'date';
       case 'Blob':
         return 'blob';
-      case 'boolean':
-      case 'Toggle':
-        return 'toggle';
-      case 'number':
-      case 'Number':
-        return 'number';
-      case 'Token':
-        return 'token';
       case 'JSON':
         return 'json';
       default: {
         const { resolvedTypeName } = resolveTypeAlias(originalType);
 
         if (resolvedTypeName === schemaRecordAlias) {
-          return 'record';
+          return 'reference';
         }
 
         return 'unknown';
@@ -324,7 +303,7 @@ export async function parseSchemaDefinitionFile(
                 const { name, description, details } = parseJsDoc(member);
 
                 let schema: string | null = null;
-                if (fieldType === 'record') {
+                if (fieldType === 'reference') {
                   schema = checkSchemaInclusion(member, typeName);
                 }
                 if (fieldType === 'unknown') {
@@ -349,6 +328,10 @@ export async function parseSchemaDefinitionFile(
 
                 if (description) {
                   field.description = description;
+                }
+
+                if (fieldType === 'string') {
+                  field.displayAs = 'single-line';
                 }
 
                 if (Object.keys(details).length > 0) {
@@ -413,9 +396,10 @@ export async function parseSchemaDefinitionFile(
           ({ name, parent, type, source }) => `  - \`${parent}.${name}\` is typed as \`${type}\` (${source})`,
         )
         .join('\n') +
-      '\n\nPlease make sure that the field is typed as any of the available field ' +
-      'types exported from the `ronin/schema` module:\n\n' +
-      FIELD_TYPES.map((type) => `  - ${type}`).join('\n') +
+      '\n\nPlease make sure that the field is typed as any of the available field types:\n\n' +
+      PRIMITIVE_FIELD_TYPES.map((type) => `  - \`${type}\``).join('\n') +
+      '\n' +
+      FIELD_TYPES.map((type) => `  - \`Schema.${type}\``).join('\n') +
       '\n  - or a reference to another schema.';
 
     onError(errorMessage);

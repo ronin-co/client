@@ -3,7 +3,7 @@ import type { Query, Results } from '@/src/types/query';
 import type { QueryHandlerOptions } from '@/src/types/utils';
 import { runQueriesWithHooks } from '@/src/utils/data-hooks';
 import { getDotNotatedPath, getResponseBody, InvalidQueryError } from '@/src/utils/errors';
-import { formatTimeFields, getProperty } from '@/src/utils/helpers';
+import { formatDateFields, getProperty } from '@/src/utils/helpers';
 
 type QueryResponse<T> = {
   results: Result<T>[];
@@ -13,22 +13,13 @@ type QueryResponse<T> = {
 type SchemaFieldType =
   | 'list'
   | 'group'
-  | 'record'
-  | 'short-text'
-  | 'long-text'
-  | 'rich-text'
-  | 'time'
-  | 'media'
-  | 'toggle'
+  | 'reference'
+  | 'string'
+  | 'date'
+  | 'blob'
+  | 'boolean'
   | 'number'
-  | 'json'
-  | 'token'
-  | 'record-filter'
-  | 'markdown'
-  | 'file'
-  | 'checklist'
-  | 'location'
-  | 'color';
+  | 'json';
 
 type Result<T> =
   | {
@@ -118,7 +109,7 @@ export const runQueries = async <T>(
           query && path ? `${path.replace(/queries\[\d+\]\./, '')} = ${JSON.stringify(instruction)}` : null,
         path: path,
         details,
-        code: result.error.code,
+        code: result.error.code || null,
       });
     }
 
@@ -128,10 +119,10 @@ export const runQueries = async <T>(
       continue;
     }
 
-    const timeFields =
+    const dateFields =
       'schema' in result
         ? Object.entries(result.schema)
-            .filter(([, type]) => type === 'time')
+            .filter(([, type]) => type === 'date')
             .map(([name]) => name)
         : [];
 
@@ -144,7 +135,7 @@ export const runQueries = async <T>(
         continue;
       }
 
-      formatTimeFields(result.record, timeFields);
+      formatDateFields(result.record, dateFields);
 
       results[i] = result.record;
       continue;
@@ -153,7 +144,7 @@ export const runQueries = async <T>(
     // Handle result with multiple records.
     if ('records' in result) {
       for (const record of result.records) {
-        formatTimeFields(record, timeFields);
+        formatDateFields(record, dateFields);
       }
 
       // Expose the pagination cursors in order to allow for retrieving the
