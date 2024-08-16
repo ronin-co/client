@@ -18,11 +18,11 @@ export namespace RONIN {
   export interface RoninMetadata {
     createdAt: Date;
     createdBy: string | Record<string, any>;
-    deletedAt: null | Date;
-    deletedBy: null | string | Record<string, any>;
-    locked: boolean;
+
     updatedAt: Date;
     updatedBy: string | Record<string, any>;
+
+    locked: boolean;
   }
 
   export interface Blob extends StoredObject {}
