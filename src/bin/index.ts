@@ -72,7 +72,7 @@ const run = async () => {
     process.exit(1);
   }
 
-  if (!session && !normalizedPositionals.includes('login')) await logIn(appToken);
+  if (!session && !normalizedPositionals.includes('login')) await logIn(appToken, false);
 
   // `login` sub command
   if (normalizedPositionals.includes('login')) return logIn(appToken);
