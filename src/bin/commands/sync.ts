@@ -4,6 +4,7 @@ import path from 'path';
 
 import { readConfig, resetConfig, saveConfig } from '@/src/bin/utils/config';
 import { exists } from '@/src/bin/utils/file';
+import { safeParseJson } from '@/src/bin/utils/json';
 import { parseSchemaDefinitionFile } from '@/src/bin/utils/schema';
 import { compareSchemas, getSchemas, getSpaces, replaceFieldIdsWithExisting } from '@/src/bin/utils/sync';
 
@@ -126,7 +127,19 @@ export default async (positionals: string[], appToken?: string, sessionToken?: s
     spinner.fail(
       `Failed to ${status === 'readingSchemas' ? 'read schema definitions' : 'apply new schema changes'}:\n`,
     );
-    console.error(err);
+
+    if (err instanceof Error) {
+      const errorObject = safeParseJson(err.message);
+
+      if (typeof errorObject === 'object' && 'error' in errorObject) {
+        console.error(errorObject.error);
+      } else {
+        console.error(errorObject);
+      }
+    } else {
+      console.error(err);
+    }
+
     process.exit(1);
   }
 
