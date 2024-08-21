@@ -1,6 +1,6 @@
 import { confirm } from '@inquirer/prompts';
 
-import { generateFieldId } from '@/src/bin/utils/schema';
+import { generateFieldId } from '@/src/bin/parser/utils';
 import type { Schema } from '@/src/types/schema';
 
 /**

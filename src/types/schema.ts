@@ -8,82 +8,17 @@ export type BasicSchemaField = {
   unique?: boolean | undefined;
 };
 
-export type StringSchemaField = {
-  id: string;
-  slug: string;
-  name: string;
-  description?: string | undefined;
-  required?: boolean | undefined;
-  unique?: boolean | undefined;
+export type StringSchemaField = Omit<BasicSchemaField, 'type'> & {
   type: 'string';
   displayAs?: 'single-line' | 'multi-line' | 'secret';
 };
 
-export type ListSchemaField = {
-  id: string;
-  slug: string;
-  name: string;
-  description?: string | undefined;
-  required?: boolean | undefined;
-  unique?: boolean | undefined;
+export type ListSchemaField = Omit<BasicSchemaField, 'type'> & {
   type: 'list';
-  shape: (
-    | {
-        id: string;
-        slug: string;
-        name: string;
-        description?: string | undefined;
-        type: 'group' | 'date' | 'blob' | 'boolean' | 'number';
-        required?: boolean | undefined;
-        unique?: boolean | undefined;
-      }
-    | {
-        id: string;
-        slug: string;
-        name: string;
-        description?: string | undefined;
-        required?: boolean | undefined;
-        unique?: boolean | undefined;
-        type: 'string';
-        displayAs?: 'single-line' | 'multi-line' | 'secret';
-      }
-    | {
-        id: string;
-        slug: string;
-        name: string;
-        description?: string | undefined;
-        required?: boolean | undefined;
-        unique?: boolean | undefined;
-        type: 'reference';
-        schema: string | null;
-        space?: string | undefined;
-        action?:
-          | {
-              onDelete: ('cascade' | 'clear' | 'restrict' | 'reset') | null;
-              onUpdate: ('cascade' | 'clear' | 'restrict' | 'reset') | null;
-            }
-          | undefined;
-      }
-    | {
-        id: string;
-        slug: string;
-        name: string;
-        description?: string | undefined;
-        required?: boolean | undefined;
-        unique?: boolean | undefined;
-        type: 'json';
-        displayAs?: 'rich-text' | undefined;
-      }
-  )[];
+  shape: (BasicSchemaField | StringSchemaField | ReferenceSchemaField | JSONSchemaField)[];
 };
 
-export type ReferenceSchemaField = {
-  id: string;
-  slug: string;
-  name: string;
-  description?: string | undefined;
-  required?: boolean | undefined;
-  unique?: boolean | undefined;
+export type ReferenceSchemaField = Omit<BasicSchemaField, 'type'> & {
   type: 'reference';
   schema: string | null;
   space?: string | undefined;
@@ -95,13 +30,7 @@ export type ReferenceSchemaField = {
     | undefined;
 };
 
-export type JSONSchemaField = {
-  id: string;
-  slug: string;
-  name: string;
-  description?: string | undefined;
-  required?: boolean | undefined;
-  unique?: boolean | undefined;
+export type JSONSchemaField = Omit<BasicSchemaField, 'type'> & {
   type: 'json';
   displayAs?: 'rich-text' | undefined;
 };

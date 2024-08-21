@@ -1,50 +1,24 @@
 import fs from 'fs/promises';
 import path from 'path';
-import pluralize from 'pluralize';
 import ts from 'typescript';
 
+import {
+  createMissingPluralError,
+  createMissingSchemaError,
+  createUnknownFieldError,
+} from '@/src/bin/parser/errors';
+import {
+  convertToReadableText,
+  generateFieldId,
+  getLineAndColumnsNumber,
+  parseJsDoc,
+} from '@/src/bin/parser/utils';
 import { exists } from '@/src/bin/utils/file';
-import type { Schema } from '@/src/types/schema';
-import { generateUniqueId } from '@/src/utils/id';
+import type { Schema, SchemaField } from '@/src/types/schema';
 
-const FIELD_TYPES = ['RichText', 'Blob', 'Token', 'JSON'];
-const PRIMITIVE_FIELD_TYPES = ['string', 'number', 'boolean', 'Date'];
-
-/**
- * Generates a unique field ID.
- *
- * @param type The type of the field.
- */
-export const generateFieldId = (type: string): string => {
-  return `${type}-${generateUniqueId()}`;
-};
-
-/**
- * Converts a given string into a readable text format.
- * Inserts spaces before each uppercase letter (except the first letter)
- * and capitalizes the first letter of each word.
- *
- * @param str - The string to be converted.
- * @returns - The formatted readable text or null if input is invalid.
- */
-function convertToReadableText(str: null): null;
-function convertToReadableText(str: undefined): null;
-function convertToReadableText(str: string): string;
-function convertToReadableText(str: undefined | null | string): string | null {
-  if (!str || typeof str !== 'string') return null;
-
-  // Insert spaces before each uppercase letter (except the first letter).
-  const spacedStr = str.replace(/([a-z])([A-Z])/g, '$1 $2');
-
-  // Split the string into words.
-  const words = spacedStr.split(' ');
-
-  // Capitalize the first letter of each word.
-  const capitalizedWords = words.map((word) => word.charAt(0).toUpperCase() + word.slice(1));
-
-  // Join the words back into a single string with spaces.
-  return capitalizedWords.join(' ');
-}
+// Experimental features.
+const REGISTER_TSDOC_TAGS = process.env.NODE_ENV === 'test';
+const REGISTER_JSON_FIELD_STRUCTURE = process.env.NODE_ENV === 'test';
 
 /**
  * Parses the schema definition file and returns an array of `Schema` objects.
@@ -68,20 +42,68 @@ export async function parseSchemaDefinitionFile(
   }
 
   const fileContent = await fs.readFile(fullPath, 'utf-8');
-  const sourceFile = ts.createSourceFile('temp.ts', fileContent, ts.ScriptTarget.Latest, true);
 
-  const results: any[] = [];
+  return parseSchemaDefinitions(fileContent, relativePath, onError);
+}
+
+/**
+ * Parses the schema definitions from the file content and returns an array
+ * of `Schema` objects.
+ *
+ * @param content The content of the schema definition file.
+ * @param relativePath The relative path to the schema definition file.
+ * @param onError A callback function that is called when an error occurs.
+ *
+ * @returns An array of `Schema` objects.
+ */
+export function parseSchemaDefinitions(
+  content: string,
+  relativePath: string,
+  onError?: (error: string) => void,
+) {
+  const sourceFile = ts.createSourceFile('temp.ts', content, ts.ScriptTarget.Latest, true);
+
+  const schemas: Schema[] = [];
+
+  /**
+   * Mapping of imported type aliases to their original names.
+   *
+   * ```typescript
+   * import { Record as SchemaRecord } from 'ronin/schema';
+   * ```
+   */
   const typeMapping: Record<string, string> = {};
-  const namespaceMapping: Record<string, string> = {};
-  const schemaProperties: Record<string, string> = {};
+
+  /**
+   * Mapping of imported namespace aliases to their module specifiers.
+   *
+   * ```typescript
+   * import * as Schema from 'ronin/schema';
+   * ```
+   */
+  const namespaces: Record<string, string> = {};
+
+  /**
+   * Mapping of the registered schema slugs to their type aliases (inside the
+   * `Schemas` interface).
+   *
+   * ```typescript
+   * interface Schemas {
+   *  account: Account;
+   * }
+   * ```
+   */
+  const registeredSchemas: Record<string, string> = {};
+
   const missingSchemas: { name: string; parent: string; source: string }[] = [];
   const unknownFields: { parent: string; name: string; type: string; source: string }[] = [];
 
   let schemaRecordAlias = 'Record';
   let schemaRecordsAlias = 'Records';
 
-  function getFieldType(type: string): string {
+  function getFieldType(type: string): SchemaField['type'] | 'unknown' {
     const originalType = typeMapping[type] || type;
+
     switch (originalType) {
       case 'string':
       case 'number':
@@ -94,9 +116,7 @@ export async function parseSchemaDefinitionFile(
       case 'JSON':
         return 'json';
       default: {
-        const { resolvedTypeName, namespace, typeArguments } = resolveTypeAlias(originalType);
-
-        console.log({ resolvedTypeName, namespace, typeArguments });
+        const { resolvedTypeName } = resolveTypeAlias(originalType);
 
         if (resolvedTypeName === schemaRecordAlias) {
           return 'reference';
@@ -107,45 +127,19 @@ export async function parseSchemaDefinitionFile(
     }
   }
 
-  function parseJsDoc(node: ts.Node): { name: string; description: string; details: Record<string, string> } {
-    let name = '';
-    let description = '';
-    const details: Record<string, string> = {};
-
-    const commentsAndTags = ts.getJSDocCommentsAndTags(node);
-
-    if (commentsAndTags.length > 0) {
-      const jsDoc = commentsAndTags[0];
-      const commentText = jsDoc.comment ? ts.getTextOfJSDocComment(jsDoc.comment) : undefined;
-
-      if (commentText) {
-        const lines = commentText
-          .split('\n')
-          .map((line) => line.trim())
-          .filter((line) => line);
-        if (lines.length > 0) {
-          name = lines[0];
-          description = lines.slice(1).join(' ');
-        }
-      }
-
-      if ('tags' in jsDoc && jsDoc.tags) {
-        jsDoc.tags.forEach((tag) => {
-          const tagName = tag.tagName.getText();
-          const tagComment = ts.getTextOfJSDocComment(tag.comment);
-          if (tagComment) {
-            details[tagName] = tagComment;
-          }
-        });
-      }
-    }
-
-    return { name, description, details };
-  }
-
+  /**
+   * Visits the import declarations in a TypeScript AST node and processes them.
+   *
+   * This function identifies named imports and namespace imports, mapping them
+   * to their original names or module specifiers. It also specifically tracks
+   * aliases for `SchemaRecord` and `SchemaRecords`.
+   *
+   * @param node - The TypeScript AST node to visit.
+   */
   function visitImports(node: ts.Node) {
     if (ts.isImportDeclaration(node) && node.importClause && node.importClause.namedBindings) {
       const namedBindings = node.importClause.namedBindings;
+
       if (ts.isNamedImports(namedBindings)) {
         namedBindings.elements.forEach((element) => {
           const importedName = element.name.text;
@@ -159,11 +153,21 @@ export async function parseSchemaDefinitionFile(
           }
         });
       } else if (ts.isNamespaceImport(namedBindings)) {
-        namespaceMapping[namedBindings.name.text] = node.moduleSpecifier.getText().replace(/['"]/g, '');
+        namespaces[namedBindings.name.text] = node.moduleSpecifier.getText().replace(/['"]/g, '');
       }
     }
   }
 
+  /**
+   * Visits a TypeScript module node and processes it if it matches specific criteria.
+   *
+   * This function checks if the provided node is a module declaration with the name 'ronin'.
+   * If the module contains a body that is a module block, it iterates over its statements.
+   * For each statement, if it is an interface declaration with the name 'Schemas', it calls
+   * the `visitInterface` function on that statement.
+   *
+   * @param node - The TypeScript node to visit.
+   */
   function visitModule(node: ts.Node) {
     if (ts.isModuleDeclaration(node) && node.name.text === 'ronin') {
       if (node.body && ts.isModuleBlock(node.body)) {
@@ -176,34 +180,46 @@ export async function parseSchemaDefinitionFile(
     }
   }
 
+  /**
+   * Visits an interface declaration node and processes its property signatures.
+   *
+   * @param node - The TypeScript interface declaration node to visit.
+   */
   function visitInterface(node: ts.InterfaceDeclaration) {
     node.members.forEach((member) => {
       if (ts.isPropertySignature(member)) {
         const propertyName = member.name.getText();
         const typeName =
           member.type && ts.isTypeReferenceNode(member.type) ? member.type.typeName.getText() : '';
+
         if (typeName) {
-          schemaProperties[propertyName] = typeName;
+          registeredSchemas[propertyName] = typeName;
         }
       }
     });
 
-    Object.keys(schemaProperties).forEach((propertyName) => {
-      const typeName = schemaProperties[propertyName];
+    Object.keys(registeredSchemas).forEach((propertyName) => {
+      const typeName = registeredSchemas[propertyName];
       const parsedType = parseTypeAlias(typeName, propertyName);
+
       if (parsedType) {
-        results.push(parsedType);
+        schemas.push(parsedType);
       }
     });
   }
 
+  /**
+   * Resolves a TypeScript type alias to its fully qualified name, type arguments, and namespace.
+   *
+   * @param typeName - The name of the type alias to resolve.
+   *
+   * @returns An object containing the resolved type name, type arguments, and namespace.
+   */
   function resolveTypeAlias(typeName: string): {
     resolvedTypeName: string;
     typeArguments: ts.TypeNode[];
     namespace: string | null;
   } {
-    console.log({ typeName });
-
     let resolvedTypeName = typeName;
     let typeArguments: ts.TypeNode[] = [];
     let namespace: string | null = null;
@@ -236,15 +252,46 @@ export async function parseSchemaDefinitionFile(
     return { resolvedTypeName, typeArguments, namespace };
   }
 
+  /**
+   * This function is used for parsing type arguments of a type alias.
+   *
+   * @param typeNode - The type arguments node to parse.
+   * @returns A structured representation of the type information.
+   *
+   * @example
+   *
+   * A sample type alias:
+   *
+   * ```typescript
+   * Schema.Record<{
+   *   metadata: Schema.JSON<{
+   *    name: string;
+   *    status?: "active" | "inactive";
+   *    metadata: {
+   *      device: string;
+   *      likes?: number;
+   *      active: boolean;
+   *      dates: {
+   *        createdAt: Date;
+   *      }
+   *    };
+   *    users: {
+   *      name: string;
+   *      count?: number;
+   *    }[];
+   * }>;
+   * ```
+   */
   function parseTypeNode(typeNode: ts.TypeNode): any {
     if (ts.isTypeLiteralNode(typeNode)) {
       return typeNode.members.map((member) => {
         if (ts.isPropertySignature(member)) {
           const fieldName = member.name.getText();
           const isRequired = !member.questionToken;
+
           let fieldType = getFieldType(member.type!.getText());
 
-          let parsedField: any = {
+          const parsedField: any = {
             name: fieldName,
             type: fieldType,
             required: isRequired,
@@ -298,6 +345,9 @@ export async function parseSchemaDefinitionFile(
         type: getFieldType(typeName),
         ...(typeNode.typeArguments ? { meta: parseTypeNode(typeNode.typeArguments[0]) } : {}),
       };
+
+      // TODO: This will be fixed soon.
+      // eslint-disable-next-line no-dupe-else-if
     } else if (ts.isTypeLiteralNode(typeNode)) {
       return {
         type: 'object',
@@ -313,46 +363,119 @@ export async function parseSchemaDefinitionFile(
     }
   }
 
-  function getLineAndColumnsNumber(node: ts.Node) {
-    const start = node.getStart();
-    const { line: startLine, character: startCharacter } = sourceFile.getLineAndCharacterOfPosition(start);
-
-    const end = node.getEnd();
-    const { line: endLine, character: endCharacter } = sourceFile.getLineAndCharacterOfPosition(end);
-
-    return {
-      start: { line: startLine + 1, character: startCharacter + 1 },
-      end: { line: endLine + 1, character: endCharacter + 1 },
-    };
-  }
-
+  /**
+   * Checks if a given type is included in the schema mappings.
+   * If the type is found, returns the corresponding schema slug.
+   * If not found, logs the missing schema information and returns null.
+   *
+   * @param node - The TypeScript node to check.
+   * @param parent - The name of the parent node.
+   * @returns The name of the schema property if found, otherwise null.
+   */
   function checkSchemaInclusion(node: ts.PropertySignature, parent: string): string | null {
     const typeName = node.type!.getText();
-    const schemaProperty = Object.keys(schemaProperties).find((key) => schemaProperties[key] === typeName);
+    const schemaSlug = Object.keys(registeredSchemas).find((key) => registeredSchemas[key] === typeName);
 
-    if (schemaProperty) {
-      return schemaProperty;
+    if (schemaSlug) {
+      return schemaSlug;
     } else {
-      const source = getLineAndColumnsNumber(node);
+      const source = getLineAndColumnsNumber(node, sourceFile);
+
       missingSchemas.push({
         name: typeName,
         parent: parent,
         source: `${relativePath}:${source.start.line}:${source.start.character}`,
       });
+
       return null;
     }
   }
 
   function getTypeFromNamespace(typeName: string): string {
     const [namespace, type] = typeName.split('.');
-    if (namespaceMapping[namespace]) {
+
+    if (namespaces[namespace]) {
       return typeMapping[type] || type;
     }
+
     return typeName;
   }
 
+  function parseFieldDefinition(node: ts.PropertySignature, parent: string): SchemaField | null {
+    const fieldName = node.name.getText();
+
+    const memberType = ts.isTypeReferenceNode(node.type!)
+      ? node.type!.typeName.getText()
+      : node.type!.getText();
+
+    const memberTypeText = getTypeFromNamespace(memberType);
+    const fieldType = getFieldType(memberTypeText);
+
+    const { name, description, details } = parseJsDoc(node);
+
+    if (fieldType === 'unknown') {
+      const source = getLineAndColumnsNumber(node, sourceFile);
+
+      unknownFields.push({
+        parent,
+        name: fieldName,
+        type: memberTypeText,
+        source: `${relativePath}:${source.start.line}:${source.start.character}`,
+      });
+
+      return null;
+    }
+
+    // @ts-expect-error TS is being too strict here.
+    const field: SchemaField = {
+      id: generateFieldId(fieldType),
+      type: fieldType,
+      slug: fieldName,
+      name: name || fieldName.charAt(0).toUpperCase() + fieldName.slice(1),
+      unique: false,
+      required: !node.questionToken,
+    };
+
+    if (description) {
+      field.description = description;
+    }
+
+    if (field.type === 'string') {
+      field.displayAs = 'single-line';
+    }
+
+    if (field.type === 'reference') {
+      let schema: string | null = null;
+      schema = checkSchemaInclusion(node, parent);
+
+      if (schema) {
+        field.schema = schema;
+      }
+    }
+
+    // This feature is not yet official.
+    if (REGISTER_TSDOC_TAGS && Object.keys(details).length > 0) {
+      // @ts-expect-error This property is not yet defined in the schema field, but it soon will be.
+      field.details = details;
+    }
+
+    // This feature is not yet official.
+    if (
+      REGISTER_JSON_FIELD_STRUCTURE &&
+      field.type === 'json' &&
+      node.type &&
+      ts.isTypeReferenceNode(node.type) &&
+      node.type.typeArguments
+    ) {
+      // @ts-expect-error This property is not yet defined in the schema field, but it soon will be.
+      field.meta = parseTypeNode(node.type.typeArguments[0]);
+    }
+
+    return field;
+  }
+
   function parseTypeAlias(typeName: string, propertyName: string): any {
-    const result: Partial<Omit<Schema, 'fields'>> & { fields: NonNullable<Schema['fields']> } = {
+    const result: Partial<Schema> & { fields: NonNullable<Schema['fields']> } = {
       name: convertToReadableText(typeName),
       slug: propertyName,
       pluralName: '',
@@ -360,16 +483,15 @@ export async function parseSchemaDefinitionFile(
       fields: [],
     };
 
-    Object.keys(schemaProperties).forEach((schemaPropertyName) => {
-      const schemaPropertyType = schemaProperties[schemaPropertyName];
-      console.log({ schemaPropertyName, schemaPropertyType });
+    Object.keys(registeredSchemas).forEach((schemaSlug) => {
+      const schemaType = registeredSchemas[schemaSlug];
 
-      const { resolvedTypeName, typeArguments } = resolveTypeAlias(schemaPropertyType);
+      const { resolvedTypeName, typeArguments } = resolveTypeAlias(schemaType);
       const firstTypeArgument = typeArguments[0]?.getText();
 
       if (resolvedTypeName === schemaRecordsAlias && typeName === firstTypeArgument) {
-        result.pluralName = convertToReadableText(schemaPropertyType);
-        result.pluralSlug = schemaPropertyName;
+        result.pluralName = convertToReadableText(schemaType);
+        result.pluralSlug = schemaSlug;
       }
     });
 
@@ -377,79 +499,15 @@ export async function parseSchemaDefinitionFile(
       if (ts.isTypeAliasDeclaration(node) && node.name.text === typeName) {
         if (ts.isTypeReferenceNode(node.type) && node.type.typeArguments) {
           const typeLiteral = node.type.typeArguments[0];
+
           if (ts.isTypeLiteralNode(typeLiteral)) {
             typeLiteral.members.forEach((member) => {
               if (ts.isPropertySignature(member)) {
-                const fieldName = member.name.getText();
+                const parsedField = parseFieldDefinition(member, typeName);
 
-                const memberType = ts.isTypeReferenceNode(member.type!)
-                  ? member.type!.typeName.getText()
-                  : member.type!.getText();
-
-                const typeArguments =
-                  ts.isTypeReferenceNode(member.type!) && member.type!.typeArguments
-                    ? member.type!.typeArguments.map((arg) => arg.getText())
-                    : [];
-                console.log('memberType', memberType);
-
-                const memberTypeText = getTypeFromNamespace(memberType);
-                console.log({ fieldName, memberTypeText });
-                const fieldType = getFieldType(memberTypeText);
-
-                const { name, description, details } = parseJsDoc(member);
-
-                let schema: string | null = null;
-                if (fieldType === 'reference') {
-                  schema = checkSchemaInclusion(member, typeName);
+                if (parsedField) {
+                  result.fields.push(parsedField);
                 }
-                if (fieldType === 'unknown') {
-                  const source = getLineAndColumnsNumber(member);
-
-                  unknownFields.push({
-                    parent: typeName,
-                    name: fieldName,
-                    type: memberTypeText,
-                    source: `${relativePath}:${source.start.line}:${source.start.character}`,
-                  });
-                }
-
-                const field: Record<string, unknown> = {
-                  id: generateFieldId(fieldType),
-                  type: fieldType,
-                  slug: fieldName,
-                  name: name || fieldName.charAt(0).toUpperCase() + fieldName.slice(1),
-                  unique: false,
-                  required: !member.questionToken,
-                };
-
-                if (description) {
-                  field.description = description;
-                }
-
-                if (fieldType === 'string') {
-                  field.displayAs = 'single-line';
-                }
-
-                if (Object.keys(details).length > 0) {
-                  field.details = details;
-                }
-
-                console.log({ fieldType, memberTypeText, member, field });
-
-                if (
-                  fieldType === 'json' &&
-                  member.type &&
-                  ts.isTypeReferenceNode(member.type) &&
-                  member.type.typeArguments
-                ) {
-                  field.meta = parseTypeNode(member.type.typeArguments[0]);
-                }
-
-                if (schema) {
-                  field.schema = schema;
-                }
-
-                result.fields.push(field as (typeof result.fields)[0]);
               }
             });
           }
@@ -462,14 +520,7 @@ export async function parseSchemaDefinitionFile(
     ts.forEachChild(sourceFile, typeAliasVisitor);
 
     if (!result.pluralName && result.fields.length) {
-      const pluralTypeName = pluralize(typeName);
-      onError(
-        `The schema \`${typeName}\` does not have a plural slug and name defined.\n\n` +
-          `Please define them in your schema definition file and include them in the \`Schemas\` interface:\n\n` +
-          `import type * as Schema from 'ronin/schema';\n\n` +
-          `type ${pluralTypeName} = Schema.${schemaRecordsAlias}<${typeName}>;\n\n` +
-          `interface Schemas {\n  ${propertyName}: ${typeName};\n  ${pluralize(result.slug as string)}: ${pluralTypeName};\n}`,
-      );
+      onError?.(createMissingPluralError(typeName, propertyName, result.slug as string, schemaRecordsAlias));
     }
 
     return result.fields.length ? result : null;
@@ -484,33 +535,12 @@ export async function parseSchemaDefinitionFile(
   visit(sourceFile);
 
   if (missingSchemas.length > 0) {
-    const errorMessage =
-      `The following schemas were used as a reference but weren't included in ` +
-      `the \`Schemas\` interface:\n\n` +
-      `${missingSchemas
-        .map(({ name, parent, source }) => `  - \`${name}\` in \`${parent}\` (${source})`)
-        .join('\n')}\n\n` +
-      `Please include them in the \`Schemas\` interface or remove their references.`;
-
-    onError(errorMessage);
+    onError?.(createMissingSchemaError(missingSchemas));
   }
 
   if (unknownFields.length > 0) {
-    const errorMessage =
-      'The type of the following fields could not be determined:\n\n' +
-      Array.from(unknownFields)
-        .map(
-          ({ name, parent, type, source }) => `  - \`${parent}.${name}\` is typed as \`${type}\` (${source})`,
-        )
-        .join('\n') +
-      '\n\nPlease make sure that the field is typed as any of the available field types:\n\n' +
-      PRIMITIVE_FIELD_TYPES.map((type) => `  - \`${type}\``).join('\n') +
-      '\n' +
-      FIELD_TYPES.map((type) => `  - \`Schema.${type}\``).join('\n') +
-      '\n  - or a reference to another schema.';
-
-    onError(errorMessage);
+    onError?.(createUnknownFieldError(unknownFields));
   }
 
-  return results;
+  return schemas;
 }

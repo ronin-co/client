@@ -2,10 +2,10 @@ import { select } from '@inquirer/prompts';
 import ora from 'ora';
 import path from 'path';
 
+import { parseSchemaDefinitionFile } from '@/src/bin/parser';
 import { readConfig, resetConfig, saveConfig } from '@/src/bin/utils/config';
 import { exists } from '@/src/bin/utils/file';
 import { safeParseJson } from '@/src/bin/utils/json';
-import { parseSchemaDefinitionFile } from '@/src/bin/utils/schema';
 import { compareSchemas, getSchemas, getSpaces, replaceFieldIdsWithExisting } from '@/src/bin/utils/sync';
 
 type Status = 'readingConfig' | 'readingSchemas' | 'comparing' | 'syncing';
