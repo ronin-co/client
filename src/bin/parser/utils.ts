@@ -8,7 +8,8 @@ import { generateUniqueId } from '@/src/utils/id';
  * @param type The type of the field.
  */
 export const generateFieldId = (type: string): string => {
-  return `${type}-${generateUniqueId()}`;
+  const id = process.env.NODE_ENV === 'test' ? '0' : generateUniqueId();
+  return `${type}-${id}`;
 };
 
 /**
