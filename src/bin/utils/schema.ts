@@ -94,7 +94,9 @@ export async function parseSchemaDefinitionFile(
       case 'JSON':
         return 'json';
       default: {
-        const { resolvedTypeName } = resolveTypeAlias(originalType);
+        const { resolvedTypeName, namespace, typeArguments } = resolveTypeAlias(originalType);
+
+        console.log({ resolvedTypeName, namespace, typeArguments });
 
         if (resolvedTypeName === schemaRecordAlias) {
           return 'reference';
@@ -200,6 +202,8 @@ export async function parseSchemaDefinitionFile(
     typeArguments: ts.TypeNode[];
     namespace: string | null;
   } {
+    console.log({ typeName });
+
     let resolvedTypeName = typeName;
     let typeArguments: ts.TypeNode[] = [];
     let namespace: string | null = null;
@@ -223,12 +227,90 @@ export async function parseSchemaDefinitionFile(
           }
         }
       }
+
       ts.forEachChild(node, typeAliasVisitor);
     }
 
     ts.forEachChild(sourceFile, typeAliasVisitor);
 
     return { resolvedTypeName, typeArguments, namespace };
+  }
+
+  function parseTypeNode(typeNode: ts.TypeNode): any {
+    if (ts.isTypeLiteralNode(typeNode)) {
+      return typeNode.members.map((member) => {
+        if (ts.isPropertySignature(member)) {
+          const fieldName = member.name.getText();
+          const isRequired = !member.questionToken;
+          let fieldType = getFieldType(member.type!.getText());
+
+          let parsedField: any = {
+            name: fieldName,
+            type: fieldType,
+            required: isRequired,
+          };
+
+          if (ts.isArrayTypeNode(member.type!)) {
+            parsedField.type = 'array';
+            parsedField.children = parseTypeNode(member.type!.elementType);
+          } else if (ts.isUnionTypeNode(member.type!)) {
+            parsedField.type = 'enum';
+            parsedField.value = member.type!.types.map((t) => t.getText().replace(/"/g, ''));
+          } else if (ts.isTypeReferenceNode(member.type!)) {
+            const typeName = member.type!.typeName.getText();
+            if (typeName === 'Array') {
+              parsedField.type = 'array';
+              parsedField.children = parseTypeNode(member.type!.typeArguments![0]);
+            } else {
+              fieldType = getFieldType(typeName);
+              parsedField.type = fieldType;
+              if (member.type!.typeArguments) {
+                parsedField.meta = parseTypeNode(member.type!.typeArguments[0]);
+              }
+            }
+          } else if (ts.isTypeLiteralNode(member.type!)) {
+            parsedField.type = 'object';
+            parsedField.children = parseTypeNode(member.type!);
+          } else if (ts.isLiteralTypeNode(member.type!)) {
+            parsedField.type = 'enum';
+            parsedField.value = [member.type!.literal.getText().replace(/"/g, '')];
+          } else {
+            parsedField.type = fieldType;
+          }
+
+          return parsedField;
+        }
+      });
+    } else if (ts.isUnionTypeNode(typeNode)) {
+      return {
+        type: 'enum',
+        value: typeNode.types.map((t) => t.getText().replace(/"/g, '')),
+      };
+    } else if (ts.isArrayTypeNode(typeNode)) {
+      return {
+        type: 'array',
+        children: parseTypeNode(typeNode.elementType),
+      };
+    } else if (ts.isTypeReferenceNode(typeNode)) {
+      const typeName = typeNode.typeName.getText();
+      return {
+        name: typeName,
+        type: getFieldType(typeName),
+        ...(typeNode.typeArguments ? { meta: parseTypeNode(typeNode.typeArguments[0]) } : {}),
+      };
+    } else if (ts.isTypeLiteralNode(typeNode)) {
+      return {
+        type: 'object',
+        children: parseTypeNode(typeNode),
+      };
+    } else if (ts.isLiteralTypeNode(typeNode)) {
+      return {
+        type: 'enum',
+        value: [typeNode.literal.getText().replace(/"/g, '')],
+      };
+    } else {
+      return { type: typeNode.getText() };
+    }
   }
 
   function getLineAndColumnsNumber(node: ts.Node) {
@@ -280,6 +362,8 @@ export async function parseSchemaDefinitionFile(
 
     Object.keys(schemaProperties).forEach((schemaPropertyName) => {
       const schemaPropertyType = schemaProperties[schemaPropertyName];
+      console.log({ schemaPropertyName, schemaPropertyType });
+
       const { resolvedTypeName, typeArguments } = resolveTypeAlias(schemaPropertyType);
       const firstTypeArgument = typeArguments[0]?.getText();
 
@@ -297,7 +381,19 @@ export async function parseSchemaDefinitionFile(
             typeLiteral.members.forEach((member) => {
               if (ts.isPropertySignature(member)) {
                 const fieldName = member.name.getText();
-                const memberTypeText = getTypeFromNamespace(member.type!.getText());
+
+                const memberType = ts.isTypeReferenceNode(member.type!)
+                  ? member.type!.typeName.getText()
+                  : member.type!.getText();
+
+                const typeArguments =
+                  ts.isTypeReferenceNode(member.type!) && member.type!.typeArguments
+                    ? member.type!.typeArguments.map((arg) => arg.getText())
+                    : [];
+                console.log('memberType', memberType);
+
+                const memberTypeText = getTypeFromNamespace(memberType);
+                console.log({ fieldName, memberTypeText });
                 const fieldType = getFieldType(memberTypeText);
 
                 const { name, description, details } = parseJsDoc(member);
@@ -336,6 +432,17 @@ export async function parseSchemaDefinitionFile(
 
                 if (Object.keys(details).length > 0) {
                   field.details = details;
+                }
+
+                console.log({ fieldType, memberTypeText, member, field });
+
+                if (
+                  fieldType === 'json' &&
+                  member.type &&
+                  ts.isTypeReferenceNode(member.type) &&
+                  member.type.typeArguments
+                ) {
+                  field.meta = parseTypeNode(member.type.typeArguments[0]);
                 }
 
                 if (schema) {
