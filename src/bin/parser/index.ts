@@ -13,7 +13,7 @@ import {
   getLineAndColumnsNumber,
   parseJsDoc,
 } from '@/src/bin/parser/utils';
-import { IS_TEST } from '@/src/bin/utils/env';
+import { isTest } from '@/src/bin/utils/env';
 import { exists } from '@/src/bin/utils/file';
 import type { Schema, SchemaField } from '@/src/types/schema';
 
@@ -26,8 +26,8 @@ export type ParsedSchema = Omit<
 
 // Experimental features.
 const EXPERIMENTAL = {
-  TSDOC_TAGS: IS_TEST,
-  JSON_FIELD_STRUCTURE: IS_TEST,
+  TSDOC_TAGS: isTest(),
+  JSON_FIELD_STRUCTURE: isTest(),
 };
 
 const RONIN_MODULE = 'ronin';
