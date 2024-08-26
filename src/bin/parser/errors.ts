@@ -1,7 +1,9 @@
 import pluralize from 'pluralize';
 
-const FIELD_TYPES = ['Blob', 'JSON'];
-const PRIMITIVE_FIELD_TYPES = ['string', 'number', 'boolean', 'Date'];
+// Advanced fields types exported from 'ronin/schema'.
+const ADVANCED_FIELD_TYPES = ['Blob', 'JSON'];
+// Basic field types supported in defining schemas.
+const BASIC_FIELD_TYPES = ['string', 'number', 'boolean', 'Date'];
 
 export function createMissingSchemaError(missingSchemas: { name: string; parent: string; source: string }[]) {
   const errorMessage =
@@ -37,15 +39,15 @@ export function createUnknownFieldError(
 ) {
   const errorMessage =
     `The type of the following fields could not be determined:\n\n` +
-    Array.from(unknownFields)
+    `${unknownFields
       .map(
         ({ name, parent, type, source }) => `  - \`${parent}.${name}\` is typed as \`${type}\` (${source})`,
       )
-      .join('\n') +
-    `\n\nPlease make sure that the field is typed as any of the available field types:\n\n` +
-    PRIMITIVE_FIELD_TYPES.map((type) => `  - \`${type}\``).join('\n') +
-    `\n` +
-    FIELD_TYPES.map((type) => `  - \`Schema.${type}\``).join('\n') +
-    `\n  - or a reference to another schema.`;
+      .join('\n')}\n\n` +
+    `Please make sure that the field is typed as any of the available field types:\n\n` +
+    `${BASIC_FIELD_TYPES.map((type) => `  - \`${type}\``).join('\n')}\n` +
+    `${ADVANCED_FIELD_TYPES.map((type) => `  - \`Schema.${type}\``).join('\n')}\n` +
+    `  - or a reference to another schema.`;
+
   return errorMessage;
 }
