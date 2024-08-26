@@ -8,7 +8,9 @@ import { generateUniqueId } from '@/src/utils/id';
  * @param type The type of the field.
  */
 export const generateFieldId = (type: string): string => {
+  // We use a fixed ID for tests to make it easier to use snapshots.
   const id = process.env.NODE_ENV === 'test' ? '0' : generateUniqueId();
+
   return `${type}-${id}`;
 };
 
