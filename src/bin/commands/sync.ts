@@ -81,10 +81,7 @@ export default async (positionals: string[], appToken?: string, sessionToken?: s
     spinner.text = 'Reading schema definitions';
 
     const schemaFile = path.join(config.schemasDir || 'schemas', 'index.ts');
-    let schemaDefinitions = await parseSchemaDefinitionFile(schemaFile, (error) => {
-      spinner.fail(error);
-      process.exit(1);
-    });
+    let schemaDefinitions = await parseSchemaDefinitionFile(schemaFile);
 
     status = 'comparing';
     spinner.start('Retrieving existing schemas');
@@ -97,8 +94,7 @@ export default async (positionals: string[], appToken?: string, sessionToken?: s
     // Add summary to schema definitions.
     schemaDefinitions = schemaDefinitions.map((schema) => ({
       ...schema,
-      summary:
-        schema.summary || remoteSchemas.find((s) => s.id === schema.id)?.summary || DEFAULT_SCHEMA_SUMMARY,
+      summary: remoteSchemas.find(({ slug }) => slug === schema.slug)?.summary || DEFAULT_SCHEMA_SUMMARY,
     }));
 
     status = 'comparing';

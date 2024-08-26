@@ -16,7 +16,7 @@ import {
 import { exists } from '@/src/bin/utils/file';
 import type { Schema, SchemaField } from '@/src/types/schema';
 
-type ParsedSchema = Omit<
+export type ParsedSchema = Omit<
   Schema,
   'id' | 'description' | 'summary' | 'identifiers' | 'idPrefix' | 'preview' | 'version' | 'fields'
 > & {
@@ -40,7 +40,6 @@ const SCHEMAS_INTERFACE = 'Schemas';
  */
 export async function parseSchemaDefinitionFile(
   filePath: string = './schemas/index.ts',
-  onError: (error: string) => void,
 ): Promise<ParsedSchema[]> {
   // Used for displaying the source line in error messages.
   const relativePath = path.relative(process.cwd(), filePath);
@@ -54,7 +53,7 @@ export async function parseSchemaDefinitionFile(
 
   const fileContent = await fs.readFile(fullPath, 'utf-8');
 
-  return parseSchemaDefinitions(fileContent, relativePath, onError);
+  return parseSchemaDefinitions(fileContent, relativePath);
 }
 
 /**
@@ -72,8 +71,7 @@ export function parseSchemaDefinitions(
   content: string,
   /** Used for creating a source link in error message */
   relativePath: string,
-  onError?: (error: string) => void,
-) {
+): ParsedSchema[] {
   const sourceFile = ts.createSourceFile('temp.ts', content, ts.ScriptTarget.Latest, true);
 
   const schemas: ParsedSchema[] = [];
@@ -555,7 +553,9 @@ export function parseSchemaDefinitions(
     ts.forEachChild(sourceFile, typeAliasVisitor);
 
     if (!result.pluralName && result.fields.length) {
-      onError?.(createMissingPluralError(typeAlias, propertyName, result.slug as string, schemaRecordsAlias));
+      throw new Error(
+        createMissingPluralError(typeAlias, propertyName, result.slug as string, schemaRecordsAlias),
+      );
     }
 
     return result.fields.length ? result : null;
@@ -570,11 +570,11 @@ export function parseSchemaDefinitions(
   visit(sourceFile);
 
   if (missingSchemas.length > 0) {
-    onError?.(createMissingSchemaError(missingSchemas));
+    throw new Error(createMissingSchemaError(missingSchemas));
   }
 
   if (unknownFields.length > 0) {
-    onError?.(createUnknownFieldError(unknownFields));
+    throw new Error(createUnknownFieldError(unknownFields));
   }
 
   return schemas;

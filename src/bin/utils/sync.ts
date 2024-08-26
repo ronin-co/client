@@ -1,5 +1,7 @@
 import { confirm } from '@inquirer/prompts';
+import type { Ora } from 'ora';
 
+import type { ParsedSchema } from '@/src/bin/parser';
 import { generateFieldId } from '@/src/bin/parser/utils';
 import type { Schema } from '@/src/types/schema';
 
@@ -89,7 +91,10 @@ export const getSchemas = async (token: string, space: string): Promise<Schema[]
  *
  * @returns Updated local schema definitions.
  */
-export const replaceFieldIdsWithExisting = async (local: Schema[], remote: Schema[]): Promise<Schema[]> => {
+export const replaceFieldIdsWithExisting = async (
+  local: ParsedSchema[],
+  remote: Schema[],
+): Promise<ParsedSchema[]> => {
   return local.map((schema) => {
     const existingSchema = remote.find((s) => s.slug === schema.slug);
     if (!existingSchema) {
@@ -129,7 +134,7 @@ export const replaceFieldIdsWithExisting = async (local: Schema[], remote: Schem
  * @param remote Existing remote schema definitions.
  * @param spinner The spinner instance to log messages.
  */
-export const compareSchemas = async (local: Schema[], remote: Schema[], spinner: any) => {
+export const compareSchemas = async (local: ParsedSchema[], remote: Schema[], spinner: Ora) => {
   const fieldsWithDifferentTypes: string[] = [];
 
   local.forEach(({ slug: schemaSlug, fields }) => {

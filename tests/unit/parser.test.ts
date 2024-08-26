@@ -18,11 +18,20 @@ describe('Schema parser', () => {
         }
         `;
 
-    let errorMessage;
+    const error = `The schema \`Account\` does not have a plural slug and name defined.
 
-    parseSchemaDefinitions(schema, 'schemas/index.ts', (error) => (errorMessage = error));
+Please define them in your schema definition file and include them in the \`Schemas\` interface:
 
-    expect(errorMessage).toMatchSnapshot();
+import type * as Schema from 'ronin/schema';
+
+type Accounts = Schema.Records<Account>;
+
+interface Schemas {
+  account: Account;
+  accounts: Accounts;
+}`;
+
+    expect(() => parseSchemaDefinitions(schema, 'schemas/index.ts')).toThrow(error);
   });
 
   test('throw error referenced schema is not registered', () => {
@@ -48,11 +57,13 @@ describe('Schema parser', () => {
         }
         `;
 
-    let errorMessage;
+    const error = `The following schemas were used as a reference but weren't included in the \`Schemas\` interface:
 
-    parseSchemaDefinitions(schema, 'schemas/index.ts', (error) => (errorMessage = error));
+  - \`Session\` in \`Account\` (schemas/index.ts:9:13)
 
-    expect(errorMessage).toMatchSnapshot();
+Please include them in the \`Schemas\` interface or remove their references.`;
+
+    expect(() => parseSchemaDefinitions(schema, 'schemas/index.ts')).toThrow(error);
   });
 
   test('throw error schema field type cannot be determined', () => {
@@ -73,11 +84,21 @@ describe('Schema parser', () => {
         }
         `;
 
-    let errorMessage;
+    const error = `The type of the following fields could not be determined:
 
-    parseSchemaDefinitions(schema, 'schemas/index.ts', (error) => (errorMessage = error));
+  - \`Account.session\` is typed as \`ThisIsNotAValidType\` (schemas/index.ts:5:13)
 
-    expect(errorMessage).toMatchSnapshot();
+Please make sure that the field is typed as any of the available field types:
+
+  - \`string\`
+  - \`number\`
+  - \`boolean\`
+  - \`Date\`
+  - \`Schema.Blob\`
+  - \`Schema.JSON\`
+  - or a reference to another schema.`;
+
+    expect(() => parseSchemaDefinitions(schema, 'schemas/index.ts')).toThrow(error);
   });
 
   test('schema with basic field types', () => {

@@ -1,44 +1,5 @@
 // Bun Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`Schema parser throw error when plural schema is missing 1`] = `
-"The schema \`Account\` does not have a plural slug and name defined.
-
-Please define them in your schema definition file and include them in the \`Schemas\` interface:
-
-import type * as Schema from 'ronin/schema';
-
-type Accounts = Schema.Records<Account>;
-
-interface Schemas {
-  account: Account;
-  accounts: Accounts;
-}"
-`;
-
-exports[`Schema parser throw error referenced schema is not registered 1`] = `
-"The following schemas were used as a reference but weren't included in the \`Schemas\` interface:
-
-  - \`Session\` in \`Account\` (schemas/index.ts:9:13)
-
-Please include them in the \`Schemas\` interface or remove their references."
-`;
-
-exports[`Schema parser throw error schema field type cannot be determined 1`] = `
-"The type of the following fields could not be determined:
-
-  - \`Account.session\` is typed as \`ThisIsNotAValidType\` (schemas/index.ts:5:13)
-
-Please make sure that the field is typed as any of the available field types:
-
-  - \`string\`
-  - \`number\`
-  - \`boolean\`
-  - \`Date\`
-  - \`Schema.Blob\`
-  - \`Schema.JSON\`
-  - or a reference to another schema."
-`;
-
 exports[`Schema parser schema with basic field types 1`] = `
 [
   {
