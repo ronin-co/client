@@ -353,4 +353,12 @@ Please make sure that the field is typed as any of the available field types:
 
     expect(result).toMatchSnapshot();
   });
+
+  test('throw error when definitions file does not exist', async () => {
+    const filePath = 'schemas/index.ts';
+
+    expect(parseSchemaDefinitionFile(filePath)).rejects.toThrow(
+      /The given path to the schema definition file does not exist: .*\/schemas\/index\.ts/,
+    );
+  });
 });
