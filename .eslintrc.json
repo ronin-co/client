@@ -38,7 +38,8 @@
           "Ds",
           "str",
           "namespace",
-          "namespaces"
+          "namespaces",
+          "deebov"
         ],
         "comments": true,
         "strings": false,
