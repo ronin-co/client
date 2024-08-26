@@ -360,14 +360,6 @@ export function parseSchemaDefinitions(
         type: getFieldType(typeName),
         ...(typeNode.typeArguments ? { meta: parseTypeNode(typeNode.typeArguments[0]) } : {}),
       };
-
-      // TODO: This will be fixed soon.
-      // eslint-disable-next-line no-dupe-else-if
-    } else if (ts.isTypeLiteralNode(typeNode)) {
-      return {
-        type: 'object',
-        children: parseTypeNode(typeNode),
-      };
     } else if (ts.isLiteralTypeNode(typeNode)) {
       return {
         type: 'enum',

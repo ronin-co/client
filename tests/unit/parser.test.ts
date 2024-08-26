@@ -187,11 +187,17 @@ Please make sure that the field is typed as any of the available field types:
         import * as Schema from 'ronin/schema';
 
         type Account = Schema.Record<{
-            metadata1: Schema.JSON<[{ name: string }]>;
-            metadata1: Schema.JSON<{ name: string }>;
-            metadata2: Schema.JSON<{ 
+            metadata1: Schema.JSON<Schema.Blob>;
+            metadata2: Schema.JSON<"option-1">;
+            metadata3: Schema.JSON<"option-1" | "option-2">;
+            metadata4: Schema.JSON<{ name: string }>;
+            metadata5: Schema.JSON<{ name: string }[]>;
+            metadata6: Schema.JSON<[{ name: string }]>;
+            metadata7: Schema.JSON<{ constant: "ronin" }>;
+            metadata8: Schema.JSON<{ 
                 name: string; 
                 status?: "active" | "inactive";
+                avatar: Schema.Blob<{ type: "images" }>;
                 users: { 
                     name: string; 
                     count?: number 
@@ -200,6 +206,7 @@ Please make sure that the field is typed as any of the available field types:
                     device: string;
                     likes?: number;
                     active: boolean;
+                    array: Array<string>;
                     dates: {
                         createdAt: Date;
                     }
