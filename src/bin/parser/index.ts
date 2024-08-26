@@ -13,6 +13,7 @@ import {
   getLineAndColumnsNumber,
   parseJsDoc,
 } from '@/src/bin/parser/utils';
+import { IS_TEST } from '@/src/bin/utils/env';
 import { exists } from '@/src/bin/utils/file';
 import type { Schema, SchemaField } from '@/src/types/schema';
 
@@ -24,8 +25,10 @@ export type ParsedSchema = Omit<
 };
 
 // Experimental features.
-const REGISTER_TSDOC_TAGS = process.env.NODE_ENV === 'test';
-const REGISTER_JSON_FIELD_STRUCTURE = process.env.NODE_ENV === 'test';
+const EXPERIMENTAL = {
+  TSDOC_TAGS: IS_TEST,
+  JSON_FIELD_STRUCTURE: IS_TEST,
+};
 
 const RONIN_MODULE = 'ronin';
 // The name of the interface to define the schemas in
@@ -34,7 +37,7 @@ const SCHEMAS_INTERFACE = 'Schemas';
 /**
  * Parses the schema definition file and returns an array of `Schema` objects.
  *
- * @param filePath The path to the schema definition file.
+ * @param filePath - The path to the schema definition file.
  *
  * @returns A promise that resolves to an array of `Schema` objects.
  */
@@ -60,9 +63,9 @@ export async function parseSchemaDefinitionFile(
  * Parses the schema definitions from the file content and returns an array
  * of `Schema` objects.
  *
- * @param content The content of the schema definition file.
- * @param relativePath The relative path to the schema definition file.
- * @param onError A callback function that is called when an error occurs.
+ * @param content - The content of the schema definition file.
+ * @param relativePath - The relative path to the schema definition file.
+ * @param onError - A callback function that is called when an error occurs.
  *
  * @returns An array of `Schema` objects.
  */
@@ -155,7 +158,7 @@ export function parseSchemaDefinitions(
       const namedBindings = node.importClause.namedBindings;
 
       if (ts.isNamedImports(namedBindings)) {
-        namedBindings.elements.forEach((element) => {
+        for (const element of namedBindings.elements) {
           const importedName = element.name.text;
           const originalName = element.propertyName ? element.propertyName.text : importedName;
           typeMapping[importedName] = originalName;
@@ -165,7 +168,7 @@ export function parseSchemaDefinitions(
           } else if (originalName === 'Records') {
             schemaRecordsAlias = importedName;
           }
-        });
+        }
       } else if (ts.isNamespaceImport(namedBindings)) {
         namespaces[namedBindings.name.text] = node.moduleSpecifier.getText().replace(/['"]/g, '');
       }
@@ -185,11 +188,11 @@ export function parseSchemaDefinitions(
   function visitRoninModuleDeclaration(node: ts.Node) {
     if (ts.isModuleDeclaration(node) && node.name.text === RONIN_MODULE) {
       if (node.body && ts.isModuleBlock(node.body)) {
-        node.body.statements.forEach((statement) => {
+        for (const statement of node.body.statements) {
           if (ts.isInterfaceDeclaration(statement) && statement.name.text === SCHEMAS_INTERFACE) {
             visitInterface(statement);
           }
-        });
+        }
       }
     }
   }
@@ -200,7 +203,7 @@ export function parseSchemaDefinitions(
    * @param node - The TypeScript interface declaration node to visit.
    */
   function visitInterface(node: ts.InterfaceDeclaration) {
-    node.members.forEach((member) => {
+    for (const member of node.members) {
       if (ts.isPropertySignature(member)) {
         const propertyName = member.name.getText();
         const typeName =
@@ -210,16 +213,16 @@ export function parseSchemaDefinitions(
           registeredSchemas[propertyName] = typeName;
         }
       }
-    });
+    }
 
-    Object.keys(registeredSchemas).forEach((propertyName) => {
+    for (const propertyName of Object.keys(registeredSchemas)) {
       const typeAlias = registeredSchemas[propertyName];
       const parsedType = parseSchemaProperty(propertyName, typeAlias);
 
       if (parsedType) {
         schemas.push(parsedType);
       }
-    });
+    }
   }
 
   /**
@@ -412,8 +415,8 @@ export function parseSchemaDefinitions(
   /**
    * Parses a schema field definitions
    *
-   * @param node The schema property node to parse.
-   * @param parent The name of the type that contains (schema) this property.
+   * @param node - The schema property node to parse.
+   * @param parent - The name of the type that contains (schema) this property.
    *
    * @returns The parsed schema field or `null` if the field type cannot be
    * determined.
@@ -471,14 +474,14 @@ export function parseSchemaDefinitions(
     }
 
     // This feature is not yet official.
-    if (REGISTER_TSDOC_TAGS && Object.keys(details).length > 0) {
+    if (EXPERIMENTAL.TSDOC_TAGS && Object.keys(details).length > 0) {
       // @ts-expect-error This property is not yet defined in the schema field, but it soon will be.
       field.details = details;
     }
 
     // This feature is not yet official.
     if (
-      REGISTER_JSON_FIELD_STRUCTURE &&
+      EXPERIMENTAL.JSON_FIELD_STRUCTURE &&
       field.type === 'json' &&
       node.type &&
       ts.isTypeReferenceNode(node.type) &&
@@ -494,8 +497,8 @@ export function parseSchemaDefinitions(
   /**
    * Used for parsing the properties of the `Schemas` interface.
    *
-   * @param typeAlias
-   * @param propertyName
+   * @param typeAlias - Schema type alias.
+   * @param propertyName - Schema property name (i.e. schema slug).
    *
    * @returns The parsed schema or `null` if no fields were found for the schema.
    */
@@ -508,7 +511,7 @@ export function parseSchemaDefinitions(
       fields: [],
     };
 
-    Object.keys(registeredSchemas).forEach((schemaSlug) => {
+    for (const schemaSlug of Object.keys(registeredSchemas)) {
       const schemaType = registeredSchemas[schemaSlug];
 
       const { resolvedTypeName, typeArguments } = resolveTypeAlias(schemaType);
@@ -518,7 +521,7 @@ export function parseSchemaDefinitions(
         result.pluralName = convertToReadableText(schemaType);
         result.pluralSlug = schemaSlug;
       }
-    });
+    }
 
     function typeAliasVisitor(node: ts.Node) {
       if (ts.isTypeAliasDeclaration(node) && node.name.text === typeAlias) {
@@ -526,7 +529,7 @@ export function parseSchemaDefinitions(
           const typeLiteral = node.type.typeArguments[0];
 
           if (ts.isTypeLiteralNode(typeLiteral)) {
-            typeLiteral.members.forEach((member) => {
+            for (const member of typeLiteral.members) {
               if (ts.isPropertySignature(member)) {
                 const parsedField = parseFieldDefinition(member, typeAlias);
 
@@ -534,7 +537,7 @@ export function parseSchemaDefinitions(
                   result.fields.push(parsedField);
                 }
               }
-            });
+            }
           }
         }
       }

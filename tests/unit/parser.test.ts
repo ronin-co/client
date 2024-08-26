@@ -20,20 +20,14 @@ describe('Schema parser', () => {
         }
         `;
 
-    const error = `The schema \`Account\` does not have a plural slug and name defined.
-
-Please define them in your schema definition file and include them in the \`Schemas\` interface:
-
-import type * as Schema from 'ronin/schema';
-
-type Accounts = Schema.Records<Account>;
-
-interface Schemas {
-  account: Account;
-  accounts: Accounts;
-}`;
-
-    expect(() => parseSchemaDefinitions(schema, 'schemas/index.ts')).toThrow(error);
+    expect(() => {
+      try {
+        parseSchemaDefinitions(schema, 'schemas/index.ts');
+      } catch (err) {
+        expect((err as Error).message).toMatchSnapshot();
+        throw err;
+      }
+    }).toThrow(Error);
   });
 
   test('throw error referenced schema is not registered', () => {
@@ -59,13 +53,14 @@ interface Schemas {
         }
         `;
 
-    const error = `The following schemas were used as a reference but weren't included in the \`Schemas\` interface:
-
-  - \`Session\` in \`Account\` (schemas/index.ts:9:13)
-
-Please include them in the \`Schemas\` interface or remove their references.`;
-
-    expect(() => parseSchemaDefinitions(schema, 'schemas/index.ts')).toThrow(error);
+    expect(() => {
+      try {
+        parseSchemaDefinitions(schema, 'schemas/index.ts');
+      } catch (err) {
+        expect((err as Error).message).toMatchSnapshot();
+        throw err;
+      }
+    }).toThrow(Error);
   });
 
   test('throw error schema field type cannot be determined', () => {
@@ -86,21 +81,14 @@ Please include them in the \`Schemas\` interface or remove their references.`;
         }
         `;
 
-    const error = `The type of the following fields could not be determined:
-
-  - \`Account.session\` is typed as \`ThisIsNotAValidType\` (schemas/index.ts:5:13)
-
-Please make sure that the field is typed as any of the available field types:
-
-  - \`string\`
-  - \`number\`
-  - \`boolean\`
-  - \`Date\`
-  - \`Schema.Blob\`
-  - \`Schema.JSON\`
-  - or a reference to another schema.`;
-
-    expect(() => parseSchemaDefinitions(schema, 'schemas/index.ts')).toThrow(error);
+    expect(() => {
+      try {
+        parseSchemaDefinitions(schema, 'schemas/index.ts');
+      } catch (err) {
+        expect((err as Error).message).toMatchSnapshot();
+        throw err;
+      }
+    }).toThrow(Error);
   });
 
   test('schema with auto-generated IDs', () => {

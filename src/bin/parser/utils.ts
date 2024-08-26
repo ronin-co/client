@@ -1,5 +1,6 @@
 import ts from 'typescript';
 
+import { IS_TEST } from '@/src/bin/utils/env';
 import { generateUniqueId } from '@/src/utils/id';
 
 /**
@@ -9,7 +10,7 @@ import { generateUniqueId } from '@/src/utils/id';
  */
 export const generateFieldId = (type: string): string => {
   // We use a fixed ID for tests to make it easier to use snapshots.
-  const id = process.env.NODE_ENV === 'test' ? '0' : generateUniqueId();
+  const id = IS_TEST ? '0' : generateUniqueId();
 
   return `${type}-${id}`;
 };
