@@ -16,9 +16,20 @@ import {
 import { exists } from '@/src/bin/utils/file';
 import type { Schema, SchemaField } from '@/src/types/schema';
 
+type ParsedSchema = Omit<
+  Schema,
+  'id' | 'description' | 'summary' | 'identifiers' | 'idPrefix' | 'preview' | 'version' | 'fields'
+> & {
+  fields: NonNullable<Schema['fields']>;
+};
+
 // Experimental features.
 const REGISTER_TSDOC_TAGS = process.env.NODE_ENV === 'test';
 const REGISTER_JSON_FIELD_STRUCTURE = process.env.NODE_ENV === 'test';
+
+const RONIN_MODULE = 'ronin';
+// The name of the interface to define the schemas in
+const SCHEMAS_INTERFACE = 'Schemas';
 
 /**
  * Parses the schema definition file and returns an array of `Schema` objects.
@@ -30,7 +41,7 @@ const REGISTER_JSON_FIELD_STRUCTURE = process.env.NODE_ENV === 'test';
 export async function parseSchemaDefinitionFile(
   filePath: string = './schemas/index.ts',
   onError: (error: string) => void,
-): Promise<Schema[]> {
+): Promise<ParsedSchema[]> {
   // Used for displaying the source line in error messages.
   const relativePath = path.relative(process.cwd(), filePath);
   const fullPath = path.resolve(process.cwd(), filePath);
@@ -57,13 +68,15 @@ export async function parseSchemaDefinitionFile(
  * @returns An array of `Schema` objects.
  */
 export function parseSchemaDefinitions(
+  /** The content of the schema definitions file */
   content: string,
+  /** Used for creating a source link in error message */
   relativePath: string,
   onError?: (error: string) => void,
 ) {
   const sourceFile = ts.createSourceFile('temp.ts', content, ts.ScriptTarget.Latest, true);
 
-  const schemas: Schema[] = [];
+  const schemas: ParsedSchema[] = [];
 
   /**
    * Mapping of imported type aliases to their original names.
@@ -98,6 +111,9 @@ export function parseSchemaDefinitions(
   const missingSchemas: { name: string; parent: string; source: string }[] = [];
   const unknownFields: { parent: string; name: string; type: string; source: string }[] = [];
 
+  // Used to keeping track of the aliases for `Schema.Record` and `Schema.Records.
+  // For example, if they're imported with a name alias as such:
+  // import { Record as SchemaRecord } from 'ronin/schema'
   let schemaRecordAlias = 'Record';
   let schemaRecordsAlias = 'Records';
 
@@ -146,9 +162,9 @@ export function parseSchemaDefinitions(
           const originalName = element.propertyName ? element.propertyName.text : importedName;
           typeMapping[importedName] = originalName;
 
-          if (originalName === 'SchemaRecord') {
+          if (originalName === 'Record') {
             schemaRecordAlias = importedName;
-          } else if (originalName === 'SchemaRecords') {
+          } else if (originalName === 'Records') {
             schemaRecordsAlias = importedName;
           }
         });
@@ -168,11 +184,11 @@ export function parseSchemaDefinitions(
    *
    * @param node - The TypeScript node to visit.
    */
-  function visitModule(node: ts.Node) {
-    if (ts.isModuleDeclaration(node) && node.name.text === 'ronin') {
+  function visitRoninModuleDeclaration(node: ts.Node) {
+    if (ts.isModuleDeclaration(node) && node.name.text === RONIN_MODULE) {
       if (node.body && ts.isModuleBlock(node.body)) {
         node.body.statements.forEach((statement) => {
-          if (ts.isInterfaceDeclaration(statement) && statement.name.text === 'Schemas') {
+          if (ts.isInterfaceDeclaration(statement) && statement.name.text === SCHEMAS_INTERFACE) {
             visitInterface(statement);
           }
         });
@@ -199,8 +215,8 @@ export function parseSchemaDefinitions(
     });
 
     Object.keys(registeredSchemas).forEach((propertyName) => {
-      const typeName = registeredSchemas[propertyName];
-      const parsedType = parseTypeAlias(typeName, propertyName);
+      const typeAlias = registeredSchemas[propertyName];
+      const parsedType = parseSchemaProperty(propertyName, typeAlias);
 
       if (parsedType) {
         schemas.push(parsedType);
@@ -253,9 +269,10 @@ export function parseSchemaDefinitions(
   }
 
   /**
-   * This function is used for parsing type arguments of a type alias.
+   * Parses type arguments of a type alias.
    *
    * @param typeNode - The type arguments node to parse.
+   *
    * @returns A structured representation of the type information.
    *
    * @example
@@ -370,6 +387,7 @@ export function parseSchemaDefinitions(
    *
    * @param node - The TypeScript node to check.
    * @param parent - The name of the parent node.
+   *
    * @returns The name of the schema property if found, otherwise null.
    */
   function checkSchemaInclusion(node: ts.PropertySignature, parent: string): string | null {
@@ -401,6 +419,15 @@ export function parseSchemaDefinitions(
     return typeName;
   }
 
+  /**
+   * Parses a schema field definitions
+   *
+   * @param node The schema property node to parse.
+   * @param parent The name of the type that contains (schema) this property.
+   *
+   * @returns The parsed schema field or `null` if the field type cannot be
+   * determined.
+   */
   function parseFieldDefinition(node: ts.PropertySignature, parent: string): SchemaField | null {
     const fieldName = node.name.getText();
 
@@ -474,9 +501,17 @@ export function parseSchemaDefinitions(
     return field;
   }
 
-  function parseTypeAlias(typeName: string, propertyName: string): any {
-    const result: Partial<Schema> & { fields: NonNullable<Schema['fields']> } = {
-      name: convertToReadableText(typeName),
+  /**
+   * Used for parsing the properties of the `Schemas` interface.
+   *
+   * @param typeAlias
+   * @param propertyName
+   *
+   * @returns The parsed schema or `null` if no fields were found for the schema.
+   */
+  function parseSchemaProperty(propertyName: string, typeAlias: string): ParsedSchema | null {
+    const result: ParsedSchema = {
+      name: convertToReadableText(typeAlias),
       slug: propertyName,
       pluralName: '',
       pluralSlug: '',
@@ -489,21 +524,21 @@ export function parseSchemaDefinitions(
       const { resolvedTypeName, typeArguments } = resolveTypeAlias(schemaType);
       const firstTypeArgument = typeArguments[0]?.getText();
 
-      if (resolvedTypeName === schemaRecordsAlias && typeName === firstTypeArgument) {
+      if (resolvedTypeName === schemaRecordsAlias && typeAlias === firstTypeArgument) {
         result.pluralName = convertToReadableText(schemaType);
         result.pluralSlug = schemaSlug;
       }
     });
 
     function typeAliasVisitor(node: ts.Node) {
-      if (ts.isTypeAliasDeclaration(node) && node.name.text === typeName) {
+      if (ts.isTypeAliasDeclaration(node) && node.name.text === typeAlias) {
         if (ts.isTypeReferenceNode(node.type) && node.type.typeArguments) {
           const typeLiteral = node.type.typeArguments[0];
 
           if (ts.isTypeLiteralNode(typeLiteral)) {
             typeLiteral.members.forEach((member) => {
               if (ts.isPropertySignature(member)) {
-                const parsedField = parseFieldDefinition(member, typeName);
+                const parsedField = parseFieldDefinition(member, typeAlias);
 
                 if (parsedField) {
                   result.fields.push(parsedField);
@@ -520,7 +555,7 @@ export function parseSchemaDefinitions(
     ts.forEachChild(sourceFile, typeAliasVisitor);
 
     if (!result.pluralName && result.fields.length) {
-      onError?.(createMissingPluralError(typeName, propertyName, result.slug as string, schemaRecordsAlias));
+      onError?.(createMissingPluralError(typeAlias, propertyName, result.slug as string, schemaRecordsAlias));
     }
 
     return result.fields.length ? result : null;
@@ -528,7 +563,7 @@ export function parseSchemaDefinitions(
 
   function visit(node: ts.Node) {
     visitImports(node);
-    visitModule(node);
+    visitRoninModuleDeclaration(node);
     ts.forEachChild(node, visit);
   }
 

@@ -236,4 +236,58 @@ describe('Schema parser', () => {
 
     expect(result).toMatchSnapshot();
   });
+
+  test('with named imports', () => {
+    const schema = `
+        import { Record, Records, Blob } from 'ronin/schema';
+
+        type Account = Record<{
+            name: string;
+            active: boolean;
+            likes: number;
+            activeAt: Date;
+            avatar: Blob;
+        }>
+
+        type MyAccounts = Records<Account>;
+
+        declare module 'ronin' {
+            interface Schemas {
+                account: Account;
+                myAccounts: MyAccounts;
+            }
+        }
+        `;
+
+    const result = parseSchemaDefinitions(schema, 'schemas/index.ts');
+
+    expect(result).toMatchSnapshot();
+  });
+
+  test('with aliased imports', () => {
+    const schema = `
+        import { Record as SchemaRecord, Records as SchemaRecords, Blob as RoninBlob } from 'ronin/schema';
+
+        type Account = SchemaRecord<{
+            name: string;
+            active: boolean;
+            likes: number;
+            activeAt: Date;
+            avatar: RoninBlob;
+        }>
+
+        type MyAccounts = SchemaRecords<Account>;
+
+        declare module 'ronin' {
+            interface Schemas {
+                account: Account;
+                myAccounts: MyAccounts;
+            }
+        }
+        `;
+
+    const result = parseSchemaDefinitions(schema, 'schemas/index.ts');
+
+    expect(result).toMatchSnapshot();
+  });
 });

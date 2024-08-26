@@ -303,3 +303,111 @@ exports[`Schema parser schema with TSDoc 1`] = `
   },
 ]
 `;
+
+exports[`Schema parser with named imports 1`] = `
+[
+  {
+    "fields": [
+      {
+        "displayAs": "single-line",
+        "id": "string-0",
+        "name": "Name",
+        "required": true,
+        "slug": "name",
+        "type": "string",
+        "unique": false,
+      },
+      {
+        "id": "boolean-0",
+        "name": "Active",
+        "required": true,
+        "slug": "active",
+        "type": "boolean",
+        "unique": false,
+      },
+      {
+        "id": "number-0",
+        "name": "Likes",
+        "required": true,
+        "slug": "likes",
+        "type": "number",
+        "unique": false,
+      },
+      {
+        "id": "date-0",
+        "name": "ActiveAt",
+        "required": true,
+        "slug": "activeAt",
+        "type": "date",
+        "unique": false,
+      },
+      {
+        "id": "blob-0",
+        "name": "Avatar",
+        "required": true,
+        "slug": "avatar",
+        "type": "blob",
+        "unique": false,
+      },
+    ],
+    "name": "Account",
+    "pluralName": "My Accounts",
+    "pluralSlug": "myAccounts",
+    "slug": "account",
+  },
+]
+`;
+
+exports[`Schema parser with aliased imports 1`] = `
+[
+  {
+    "fields": [
+      {
+        "displayAs": "single-line",
+        "id": "string-0",
+        "name": "Name",
+        "required": true,
+        "slug": "name",
+        "type": "string",
+        "unique": false,
+      },
+      {
+        "id": "boolean-0",
+        "name": "Active",
+        "required": true,
+        "slug": "active",
+        "type": "boolean",
+        "unique": false,
+      },
+      {
+        "id": "number-0",
+        "name": "Likes",
+        "required": true,
+        "slug": "likes",
+        "type": "number",
+        "unique": false,
+      },
+      {
+        "id": "date-0",
+        "name": "ActiveAt",
+        "required": true,
+        "slug": "activeAt",
+        "type": "date",
+        "unique": false,
+      },
+      {
+        "id": "blob-0",
+        "name": "Avatar",
+        "required": true,
+        "slug": "avatar",
+        "type": "blob",
+        "unique": false,
+      },
+    ],
+    "name": "Account",
+    "pluralName": "My Accounts",
+    "pluralSlug": "myAccounts",
+    "slug": "account",
+  },
+]
+`;

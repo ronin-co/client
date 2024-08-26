@@ -36,16 +36,16 @@ export function createUnknownFieldError(
   unknownFields: { parent: string; name: string; type: string; source: string }[],
 ) {
   const errorMessage =
-    'The type of the following fields could not be determined:\n\n' +
+    `The type of the following fields could not be determined:\n\n` +
     Array.from(unknownFields)
       .map(
         ({ name, parent, type, source }) => `  - \`${parent}.${name}\` is typed as \`${type}\` (${source})`,
       )
       .join('\n') +
-    '\n\nPlease make sure that the field is typed as any of the available field types:\n\n' +
+    `\n\nPlease make sure that the field is typed as any of the available field types:\n\n` +
     PRIMITIVE_FIELD_TYPES.map((type) => `  - \`${type}\``).join('\n') +
-    '\n' +
+    `\n` +
     FIELD_TYPES.map((type) => `  - \`Schema.${type}\``).join('\n') +
-    '\n  - or a reference to another schema.';
+    `\n  - or a reference to another schema.`;
   return errorMessage;
 }
