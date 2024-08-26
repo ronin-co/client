@@ -1,6 +1,9 @@
+import { unlink } from 'node:fs/promises';
+import path from 'node:path';
+
 import { describe, expect, test } from 'bun:test';
 
-import { parseSchemaDefinitions } from '@/src/bin/parser';
+import { parseSchemaDefinitionFile, parseSchemaDefinitions } from '@/src/bin/parser';
 
 describe('Schema parser', () => {
   test('throw error when plural schema is missing', () => {
@@ -315,6 +318,38 @@ Please make sure that the field is typed as any of the available field types:
         `;
 
     const result = parseSchemaDefinitions(schema, 'schemas/index.ts');
+
+    expect(result).toMatchSnapshot();
+  });
+
+  test('schema definitions file', async () => {
+    const schema = `
+        import * as Schema from 'ronin/schema';
+
+        type Account = Schema.Record<{
+            name: string;
+            active: boolean;
+            likes: number;
+            activeAt: Date;
+        }>
+
+        type Accounts = Schema.Records<Account>;
+
+        declare module 'ronin' {
+            interface Schemas {
+                account: Account;
+                accounts: Accounts;
+            }
+        }
+        `;
+
+    const filePath = 'schemas/index.ts';
+
+    await Bun.write(filePath, schema);
+
+    const result = parseSchemaDefinitionFile(filePath);
+
+    await unlink(filePath);
 
     expect(result).toMatchSnapshot();
   });

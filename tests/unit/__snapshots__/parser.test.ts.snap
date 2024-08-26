@@ -121,11 +121,41 @@ exports[`Schema parser schema with generic field types 1`] = `
       {
         "id": "json-0",
         "meta": {
-          "type": "[{ name: string }]",
+          "name": "Schema.Blob",
+          "type": "unknown",
         },
         "name": "Metadata1",
         "required": true,
         "slug": "metadata1",
+        "type": "json",
+        "unique": false,
+      },
+      {
+        "id": "json-0",
+        "meta": {
+          "type": "enum",
+          "value": [
+            "option-1",
+          ],
+        },
+        "name": "Metadata2",
+        "required": true,
+        "slug": "metadata2",
+        "type": "json",
+        "unique": false,
+      },
+      {
+        "id": "json-0",
+        "meta": {
+          "type": "enum",
+          "value": [
+            "option-1",
+            "option-2",
+          ],
+        },
+        "name": "Metadata3",
+        "required": true,
+        "slug": "metadata3",
         "type": "json",
         "unique": false,
       },
@@ -138,9 +168,56 @@ exports[`Schema parser schema with generic field types 1`] = `
             "type": "string",
           },
         ],
-        "name": "Metadata1",
+        "name": "Metadata4",
         "required": true,
-        "slug": "metadata1",
+        "slug": "metadata4",
+        "type": "json",
+        "unique": false,
+      },
+      {
+        "id": "json-0",
+        "meta": {
+          "children": [
+            {
+              "name": "name",
+              "required": true,
+              "type": "string",
+            },
+          ],
+          "type": "array",
+        },
+        "name": "Metadata5",
+        "required": true,
+        "slug": "metadata5",
+        "type": "json",
+        "unique": false,
+      },
+      {
+        "id": "json-0",
+        "meta": {
+          "type": "[{ name: string }]",
+        },
+        "name": "Metadata6",
+        "required": true,
+        "slug": "metadata6",
+        "type": "json",
+        "unique": false,
+      },
+      {
+        "id": "json-0",
+        "meta": [
+          {
+            "name": "constant",
+            "required": true,
+            "type": "enum",
+            "value": [
+              "ronin",
+            ],
+          },
+        ],
+        "name": "Metadata7",
+        "required": true,
+        "slug": "metadata7",
         "type": "json",
         "unique": false,
       },
@@ -160,6 +237,21 @@ exports[`Schema parser schema with generic field types 1`] = `
               "active",
               "inactive",
             ],
+          },
+          {
+            "meta": [
+              {
+                "name": "type",
+                "required": true,
+                "type": "enum",
+                "value": [
+                  "images",
+                ],
+              },
+            ],
+            "name": "avatar",
+            "required": true,
+            "type": "unknown",
           },
           {
             "children": [
@@ -196,6 +288,14 @@ exports[`Schema parser schema with generic field types 1`] = `
                 "type": "boolean",
               },
               {
+                "children": {
+                  "type": "string",
+                },
+                "name": "array",
+                "required": true,
+                "type": "array",
+              },
+              {
                 "children": [
                   {
                     "name": "createdAt",
@@ -213,9 +313,9 @@ exports[`Schema parser schema with generic field types 1`] = `
             "type": "object",
           },
         ],
-        "name": "Metadata2",
+        "name": "Metadata8",
         "required": true,
-        "slug": "metadata2",
+        "slug": "metadata8",
         "type": "json",
         "unique": false,
       },
@@ -372,3 +472,5 @@ exports[`Schema parser with aliased imports 1`] = `
   },
 ]
 `;
+
+exports[`Schema parser schema definitions file 1`] = `Promise {}`;
