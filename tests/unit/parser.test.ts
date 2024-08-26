@@ -103,6 +103,33 @@ Please make sure that the field is typed as any of the available field types:
     expect(() => parseSchemaDefinitions(schema, 'schemas/index.ts')).toThrow(error);
   });
 
+  test('schema with auto-generated IDs', () => {
+    const schema = `
+        import * as Schema from 'ronin/schema';
+
+        type Account = Schema.Record<{
+            name: string;
+        }>
+
+        type Accounts = Schema.Records<Account>;
+
+        declare module 'ronin' {
+            interface Schemas {
+                account: Account;
+                accounts: Accounts;
+            }
+        }
+        `;
+
+    process.env.NODE_ENV = 'development';
+    const result = parseSchemaDefinitions(schema, 'schemas/index.ts');
+    process.env.NODE_ENV = 'test';
+
+    const fieldId = result[0].fields[0].id;
+
+    expect(fieldId).toMatch(/^string-[a-zA-Z0-9]{24}$/);
+  });
+
   test('schema with basic field types', () => {
     const schema = `
         import * as Schema from 'ronin/schema';
