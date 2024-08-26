@@ -36,7 +36,9 @@
           "cryptographically",
           "programatically",
           "Ds",
-          "str"
+          "str",
+          "namespace",
+          "namespaces"
         ],
         "comments": true,
         "strings": false,
