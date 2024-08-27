@@ -345,6 +345,8 @@ export function parseSchemaDefinitions(
 
           return parsedField;
         }
+
+        throw new Error(`Unsupported property type \`${member.getText()}\` in ${typeNode.parent.getText()}`);
       });
     } else if (ts.isUnionTypeNode(typeNode)) {
       return {

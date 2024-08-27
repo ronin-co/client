@@ -246,6 +246,36 @@ describe('Schema parser', () => {
     expect(result).toMatchSnapshot();
   });
 
+  test('schema with unsupported property type in generic field types', () => {
+    const schema = `
+        import * as Schema from 'ronin/schema';
+
+        type Account = Schema.Record<{
+            metadata: Schema.JSON<{ 
+                name(): void; 
+            }>;
+        }>
+
+        type Accounts = Schema.Records<Account>;
+
+        declare module 'ronin' {
+            interface Schemas {
+                account: Account;
+                accounts: Accounts;
+            }
+        }
+        `;
+
+    expect(() => {
+      try {
+        parseSchemaDefinitions(schema, 'schemas/index.ts');
+      } catch (err) {
+        expect((err as Error).message).toMatchSnapshot();
+        throw err;
+      }
+    }).toThrow(Error);
+  });
+
   test('schema with TSDoc', () => {
     const schema = `
         import * as Schema from 'ronin/schema';
