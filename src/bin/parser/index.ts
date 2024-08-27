@@ -24,6 +24,22 @@ export type ParsedSchema = Omit<
   fields: NonNullable<Schema['fields']>;
 };
 
+type ParsedTypeArgument =
+  | {
+      name?: string;
+      type: string;
+      required?: boolean;
+      value?: string[];
+      // If a type is a type alias and has type arguments, this will contain
+      // the type arguments.
+      meta?: ParsedTypeArguments;
+      // In a type is an object, this will contains its properties.
+      children?: ParsedTypeArguments | ParsedTypeArguments[];
+    }
+  | ParsedTypeArguments[];
+
+type ParsedTypeArguments = ParsedTypeArgument | ParsedTypeArgument[];
+
 // Experimental features.
 const EXPERIMENTAL = {
   TSDOC_TAGS: isTest(),
@@ -300,7 +316,8 @@ export function parseSchemaDefinitions(
    * }>;
    * ```
    */
-  function parseTypeNode(typeNode: ts.TypeNode): any {
+
+  function parseTypeNode(typeNode: ts.TypeNode): ParsedTypeArguments {
     if (ts.isTypeLiteralNode(typeNode)) {
       return typeNode.members.map((member) => {
         if (ts.isPropertySignature(member)) {
