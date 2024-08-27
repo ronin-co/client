@@ -102,7 +102,7 @@ export function parseSchemaDefinitions(
    * import { Record as SchemaRecord } from 'ronin/schema';
    * ```
    */
-  const typeMapping: Record<string, string> = {};
+  const typeMapping: Map<string, string> = new Map();
 
   /**
    * Mapping of imported namespace aliases to their module specifiers.
@@ -111,7 +111,7 @@ export function parseSchemaDefinitions(
    * import * as Schema from 'ronin/schema';
    * ```
    */
-  const namespaces: Record<string, string> = {};
+  const namespaces: Map<string, string> = new Map();
 
   /**
    * Mapping of the registered schema slugs to their type aliases (inside the
@@ -123,7 +123,7 @@ export function parseSchemaDefinitions(
    * }
    * ```
    */
-  const registeredSchemas: Record<string, string> = {};
+  const registeredSchemas: Map<string, string> = new Map();
 
   const missingSchemas: { name: string; parent: string; source: string }[] = [];
   const unknownFields: { parent: string; name: string; type: string; source: string }[] = [];
@@ -135,7 +135,7 @@ export function parseSchemaDefinitions(
   let schemaRecordsAlias = 'Records';
 
   function getFieldType(type: string): SchemaField['type'] | 'unknown' {
-    const originalType = typeMapping[type] || type;
+    const originalType = typeMapping.get(type) || type;
 
     switch (originalType) {
       case 'string':
@@ -177,7 +177,7 @@ export function parseSchemaDefinitions(
         for (const element of namedBindings.elements) {
           const importedName = element.name.text;
           const originalName = element.propertyName ? element.propertyName.text : importedName;
-          typeMapping[importedName] = originalName;
+          typeMapping.set(importedName, originalName);
 
           if (originalName === 'Record') {
             schemaRecordAlias = importedName;
@@ -186,7 +186,7 @@ export function parseSchemaDefinitions(
           }
         }
       } else if (ts.isNamespaceImport(namedBindings)) {
-        namespaces[namedBindings.name.text] = node.moduleSpecifier.getText().replace(/['"]/g, '');
+        namespaces.set(namedBindings.name.text, node.moduleSpecifier.getText().replace(/['"]/g, ''));
       }
     }
   }
@@ -226,13 +226,12 @@ export function parseSchemaDefinitions(
           member.type && ts.isTypeReferenceNode(member.type) ? member.type.typeName.getText() : '';
 
         if (typeName) {
-          registeredSchemas[propertyName] = typeName;
+          registeredSchemas.set(propertyName, typeName);
         }
       }
     }
 
-    for (const propertyName of Object.keys(registeredSchemas)) {
-      const typeAlias = registeredSchemas[propertyName];
+    for (const [propertyName, typeAlias] of registeredSchemas) {
       const parsedType = parseSchemaProperty(propertyName, typeAlias);
 
       if (parsedType) {
@@ -414,7 +413,9 @@ export function parseSchemaDefinitions(
     const nodeType = node.type!;
     const typeName = nodeType.getText();
 
-    const schemaSlug = Object.keys(registeredSchemas).find((key) => registeredSchemas[key] === typeName);
+    const schemaSlug = Array.from(registeredSchemas.keys()).find(
+      (key) => registeredSchemas.get(key) === typeName,
+    );
 
     if (schemaSlug) {
       return schemaSlug;
@@ -434,8 +435,8 @@ export function parseSchemaDefinitions(
   function getTypeFromNamespace(typeName: string): string {
     const [namespace, type] = typeName.split('.');
 
-    if (namespaces[namespace]) {
-      return typeMapping[type] || type;
+    if (namespaces.get(namespace)) {
+      return typeMapping.get(type) || type;
     }
 
     return typeName;
@@ -542,9 +543,7 @@ export function parseSchemaDefinitions(
       fields: [],
     };
 
-    for (const schemaSlug of Object.keys(registeredSchemas)) {
-      const schemaType = registeredSchemas[schemaSlug];
-
+    for (const [schemaSlug, schemaType] of registeredSchemas) {
       const { resolvedTypeName, typeArguments } = resolveTypeAlias(schemaType);
       const firstTypeArgument = typeArguments[0]?.getText();
 
