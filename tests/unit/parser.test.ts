@@ -422,6 +422,14 @@ describe('Schema parser', () => {
     expect(result).toMatchSnapshot();
   });
 
+  test('throw error when definitions file does not exist', async () => {
+    const filePath = 'schemas/index.ts';
+
+    expect(parseSchemaDefinitionFile(filePath)).rejects.toThrow(
+      /The given path to the schema definition file does not exist: .*\/schemas\/index\.ts/,
+    );
+  });
+
   test('schema definitions file', async () => {
     const schema = `
         import * as Schema from 'ronin/schema';
@@ -452,13 +460,5 @@ describe('Schema parser', () => {
     await unlink(filePath);
 
     expect(result).toMatchSnapshot();
-  });
-
-  test('throw error when definitions file does not exist', async () => {
-    const filePath = 'schemas/index.ts';
-
-    expect(parseSchemaDefinitionFile(filePath)).rejects.toThrow(
-      /The given path to the schema definition file does not exist: .*\/schemas\/index\.ts/,
-    );
   });
 });
