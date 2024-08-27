@@ -326,7 +326,7 @@ export function parseSchemaDefinitions(
 
           let fieldType = getFieldType(member.type!.getText());
 
-          const parsedField: any = {
+          const parsedField: ParsedTypeArgument = {
             name: fieldName,
             type: fieldType,
             required: isRequired,
