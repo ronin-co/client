@@ -321,10 +321,16 @@ export function parseSchemaDefinitions(
     if (ts.isTypeLiteralNode(typeNode)) {
       return typeNode.members.map((member) => {
         if (ts.isPropertySignature(member)) {
+          if (!member.type) {
+            throw new Error(
+              `Property signature \`${member.getText()}\` in ${typeNode.parent.getText()} is missing a type`,
+            );
+          }
+
           const fieldName = member.name.getText();
           const isRequired = !member.questionToken;
 
-          let fieldType = getFieldType(member.type!.getText());
+          let fieldType = getFieldType(member.type.getText());
 
           const parsedField: ParsedTypeArgument = {
             name: fieldName,
@@ -332,30 +338,30 @@ export function parseSchemaDefinitions(
             required: isRequired,
           };
 
-          if (ts.isArrayTypeNode(member.type!)) {
+          if (ts.isArrayTypeNode(member.type)) {
             parsedField.type = 'array';
-            parsedField.children = parseTypeNode(member.type!.elementType);
-          } else if (ts.isUnionTypeNode(member.type!)) {
+            parsedField.children = parseTypeNode(member.type.elementType);
+          } else if (ts.isUnionTypeNode(member.type)) {
             parsedField.type = 'enum';
-            parsedField.value = member.type!.types.map((t) => t.getText().replace(/"/g, ''));
-          } else if (ts.isTypeReferenceNode(member.type!)) {
-            const typeName = member.type!.typeName.getText();
+            parsedField.value = member.type.types.map((t) => t.getText().replace(/"/g, ''));
+          } else if (ts.isTypeReferenceNode(member.type)) {
+            const typeName = member.type.typeName.getText();
             if (typeName === 'Array') {
               parsedField.type = 'array';
-              parsedField.children = parseTypeNode(member.type!.typeArguments![0]);
+              parsedField.children = parseTypeNode(member.type.typeArguments![0]);
             } else {
               fieldType = getFieldType(typeName);
               parsedField.type = fieldType;
-              if (member.type!.typeArguments) {
-                parsedField.meta = parseTypeNode(member.type!.typeArguments[0]);
+              if (member.type.typeArguments) {
+                parsedField.meta = parseTypeNode(member.type.typeArguments[0]);
               }
             }
-          } else if (ts.isTypeLiteralNode(member.type!)) {
+          } else if (ts.isTypeLiteralNode(member.type)) {
             parsedField.type = 'object';
-            parsedField.children = parseTypeNode(member.type!);
-          } else if (ts.isLiteralTypeNode(member.type!)) {
+            parsedField.children = parseTypeNode(member.type);
+          } else if (ts.isLiteralTypeNode(member.type)) {
             parsedField.type = 'enum';
-            parsedField.value = [member.type!.literal.getText().replace(/"/g, '')];
+            parsedField.value = [member.type.literal.getText().replace(/"/g, '')];
           } else {
             parsedField.type = fieldType;
           }
@@ -403,7 +409,11 @@ export function parseSchemaDefinitions(
    * @returns The name of the schema property if found, otherwise null.
    */
   function checkSchemaInclusion(node: ts.PropertySignature, parent: string): string | null {
-    const typeName = node.type!.getText();
+    // `node.type` cannot be `undefined` here because the function is only called
+    // when `node.type` is equal to a defined value.
+    const nodeType = node.type!;
+    const typeName = nodeType.getText();
+
     const schemaSlug = Object.keys(registeredSchemas).find((key) => registeredSchemas[key] === typeName);
 
     if (schemaSlug) {
@@ -441,11 +451,13 @@ export function parseSchemaDefinitions(
    * determined.
    */
   function parseFieldDefinition(node: ts.PropertySignature, parent: string): SchemaField | null {
+    if (!node.type) {
+      throw new Error(`Property signature \`${node.getText()}\` in ${parent} is missing a type`);
+    }
+
     const fieldName = node.name.getText();
 
-    const memberType = ts.isTypeReferenceNode(node.type!)
-      ? node.type!.typeName.getText()
-      : node.type!.getText();
+    const memberType = ts.isTypeReferenceNode(node.type) ? node.type.typeName.getText() : node.type.getText();
 
     const memberTypeText = getTypeFromNamespace(memberType);
     const fieldType = getFieldType(memberTypeText);

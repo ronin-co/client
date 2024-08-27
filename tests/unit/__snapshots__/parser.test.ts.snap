@@ -39,6 +39,8 @@ Please make sure that the field is typed as any of the available field types:
   - or a reference to another schema."
 `;
 
+exports[`Schema parser throw error schema field does not have a type 1`] = `"Property signature \`session\` in Account is missing a type"`;
+
 exports[`Schema parser schema with basic field types 1`] = `
 [
   {
@@ -367,6 +369,14 @@ exports[`Schema parser schema with generic field types 1`] = `
 ]
 `;
 
+exports[`Schema parser schema with unsupported property type in generic field types 1`] = `
+"Unsupported property type \`name(): void;\` in Schema.JSON<{ 
+                name(): void; 
+            }>"
+`;
+
+exports[`Schema parser schema with undefined property type in generic field types 1`] = `"Property signature \`name\` in Schema.JSON<{ name }> is missing a type"`;
+
 exports[`Schema parser schema with TSDoc 1`] = `
 [
   {
@@ -513,9 +523,3 @@ exports[`Schema parser with aliased imports 1`] = `
 `;
 
 exports[`Schema parser schema definitions file 1`] = `Promise {}`;
-
-exports[`Schema parser schema with unsupported property type in generic field types 1`] = `
-"Unsupported property type \`name(): void;\` in Schema.JSON<{ 
-                name(): void; 
-            }>"
-`;

@@ -91,6 +91,34 @@ describe('Schema parser', () => {
     }).toThrow(Error);
   });
 
+  test('throw error schema field does not have a type', () => {
+    const schema = `
+        import * as Schema from 'ronin/schema';
+
+        type Account = Schema.Record<{
+            session
+        }>
+
+        type Accounts = Schema.Records<Account>;
+
+        declare module 'ronin' {
+            interface Schemas {
+                account: Account;
+                accounts: Accounts;
+            }
+        }
+        `;
+
+    expect(() => {
+      try {
+        parseSchemaDefinitions(schema, 'schemas/index.ts');
+      } catch (err) {
+        expect((err as Error).message).toMatchSnapshot();
+        throw err;
+      }
+    }).toThrow(Error);
+  });
+
   test('schema with auto-generated IDs', () => {
     const schema = `
         import * as Schema from 'ronin/schema';
@@ -254,6 +282,34 @@ describe('Schema parser', () => {
             metadata: Schema.JSON<{ 
                 name(): void; 
             }>;
+        }>
+
+        type Accounts = Schema.Records<Account>;
+
+        declare module 'ronin' {
+            interface Schemas {
+                account: Account;
+                accounts: Accounts;
+            }
+        }
+        `;
+
+    expect(() => {
+      try {
+        parseSchemaDefinitions(schema, 'schemas/index.ts');
+      } catch (err) {
+        expect((err as Error).message).toMatchSnapshot();
+        throw err;
+      }
+    }).toThrow(Error);
+  });
+
+  test('schema with undefined property type in generic field types', () => {
+    const schema = `
+        import * as Schema from 'ronin/schema';
+
+        type Account = Schema.Record<{
+            metadata: Schema.JSON<{ name }>;
         }>
 
         type Accounts = Schema.Records<Account>;
