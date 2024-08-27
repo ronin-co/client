@@ -15,16 +15,23 @@ export const getSpaces = async (
 ): Promise<{ id: string; handle: string; name: string }[]> => {
   let text;
   try {
-    const res = await fetch('https://ronin.supply/-/ronin/spaces', {
-      method: 'GET',
+    const res = await fetch('http://localhost:3000/api', {
+      method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${sessionToken}`,
+        Cookie: `token=${sessionToken}`,
       },
+      body: JSON.stringify({
+        queries: [
+          {
+            get: { spaces: {} },
+          },
+        ],
+      }),
     });
 
     text = await res.text();
-
+    console.log(text);
     if (!res.ok) {
       throw new Error(text);
     }
@@ -32,14 +39,15 @@ export const getSpaces = async (
     throw new Error(`Failed to fetch available spaces: ${(err as Error).message}`);
   }
 
-  let json;
+  let results: { handle: string; id: string; name: string }[];
   try {
-    json = JSON.parse(text);
+    results = JSON.parse(text).results[0];
   } catch (err) {
     throw new Error(`Failed to parse response from server: ${text}`);
   }
 
-  return json.spaces;
+  // only return spaces from array
+  return results.map((result) => ({ handle: result.handle, id: result.id, name: result.name }));
 };
 
 /**
@@ -53,12 +61,19 @@ export const getSpaces = async (
 export const getSchemas = async (token: string, space: string): Promise<Schema[]> => {
   let text;
   try {
-    const res = await fetch(`https://ronin.supply/-/ronin/schemas?data-selector=${space}`, {
-      method: 'GET',
+    const res = await fetch(`http://localhost:3000/api`, {
+      method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
+        Cookie: `token=${token}`,
       },
+      body: JSON.stringify({
+        queries: [
+          {
+            get: { schemas: { with: { space: space } } },
+          },
+        ],
+      }),
     });
 
     text = await res.text();
@@ -70,14 +85,14 @@ export const getSchemas = async (token: string, space: string): Promise<Schema[]
     throw new Error(`Failed to fetch remote schemas: ${(err as Error).message}`);
   }
 
-  let json;
+  let results;
   try {
-    json = JSON.parse(text);
+    results = JSON.parse(text).results[0];
   } catch (err) {
     throw new Error(`Failed to parse response from server: ${text}`);
   }
 
-  return json.schemas;
+  return results;
 };
 
 /**
