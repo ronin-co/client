@@ -11,8 +11,13 @@ import { compareSchemas, getSchemas, getSpaces, replaceFieldIdsWithExisting } fr
 type Status = 'readingConfig' | 'readingSchemas' | 'comparing' | 'syncing';
 const DEFAULT_SCHEMA_SUMMARY = 'This is a newly created schema.';
 
-export default async (positionals: string[], appToken?: string, sessionToken?: string) => {
-  if (positionals.includes('-r') || positionals.includes('--reset')) {
+export default async (
+  positionals: string[],
+  appToken?: string,
+  sessionToken?: string,
+  reset: boolean = false,
+) => {
+  if (reset) {
     resetConfig();
   }
 
