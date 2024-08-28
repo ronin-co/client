@@ -30,6 +30,11 @@ try {
         short: 'd',
         default: false,
       },
+      reset: {
+        type: 'boolean',
+        short: 'r',
+        default: false,
+      },
     },
     strict: true,
     allowPositionals: true,
@@ -82,7 +87,9 @@ const run = async () => {
 
   // `sync` sub command
   if (normalizedPositionals.includes('sync')) {
-    return sync(positionals.slice(positionals.indexOf('sync') + 1), appToken, session?.token);
+    const reset = values.reset || false; // Get the reset flag value
+
+    return sync(positionals.slice(positionals.indexOf('sync') + 1), appToken, session?.token, reset);
   }
 
   // If no matching flags or commands were found, render the help, since we
