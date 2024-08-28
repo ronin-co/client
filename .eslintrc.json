@@ -36,7 +36,10 @@
           "cryptographically",
           "programatically",
           "Ds",
-          "str"
+          "str",
+          "namespace",
+          "namespaces",
+          "deebov"
         ],
         "comments": true,
         "strings": false,
