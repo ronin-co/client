@@ -6,7 +6,26 @@ import type { Hooks } from '@/src/utils/data-hooks';
 
 import type { RONIN } from './codegen';
 
-export interface HookOptions {
+export interface QueryHandlerOptions {
+  /**
+   * Object containing data hooks for defined schemas.
+   */
+  hooks?: Hooks;
+
+  /**
+   * Token used to authenticate against RONIN. By default,
+   * `process.env.RONIN_TOKEN` will be used.
+   */
+  token?: string;
+
+  /**
+   * Allows for specifying custom options that should be passed to the `fetch`
+   * function used to make network requests.
+   *
+   * Alternatively, an entire `fetch` replacement function may be passed.
+   */
+  fetch?: Parameters<typeof fetch>[1] | typeof fetch;
+
   /**
    * Allows for extending the lifetime of the edge worker invocation until the
    * provided promise has been resolved. If the `hooks` option is provided on
@@ -46,32 +65,6 @@ export interface HookOptions {
    * @default true
    */
   autoSkipHooks?: boolean;
-}
-
-export interface QueryHandlerOptions {
-  /**
-   * Object containing data hooks for defined schemas.
-   */
-  hooks?: Hooks;
-
-  /**
-   * Token used to authenticate against RONIN. By default,
-   * `process.env.RONIN_TOKEN` will be used.
-   */
-  token?: string;
-
-  /**
-   * Allows for specifying custom options that should be passed to the `fetch`
-   * function used to make network requests.
-   *
-   * Alternatively, an entire `fetch` replacement function may be passed.
-   */
-  fetch?: Parameters<typeof fetch>[1] | typeof fetch;
-
-  /**
-   * Options for changing the behavior of data hooks.
-   */
-  hookOptions?: HookOptions;
 }
 
 /**

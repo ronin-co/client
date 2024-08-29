@@ -51,9 +51,7 @@ describe('hooks', () => {
           get: mockHook as any,
         },
       },
-      hookOptions: {
-        asyncContext: new AsyncLocalStorage(),
-      },
+      asyncContext: new AsyncLocalStorage(),
     });
 
     expect(mockHook).toHaveBeenCalled();
@@ -81,9 +79,7 @@ describe('hooks', () => {
           },
         },
       },
-      hookOptions: {
-        asyncContext: new AsyncLocalStorage(),
-      },
+      asyncContext: new AsyncLocalStorage(),
     });
 
     // @ts-expect-error `handle` is undefined due not not having the schema types.
@@ -120,9 +116,7 @@ describe('hooks', () => {
           },
         },
       },
-      hookOptions: {
-        asyncContext: new AsyncLocalStorage(),
-      },
+      asyncContext: new AsyncLocalStorage(),
     }));
 
     // @ts-expect-error `handle` is undefined due not not having the schema types.
@@ -160,9 +154,7 @@ describe('hooks', () => {
           },
         },
       },
-      hookOptions: {
-        asyncContext: new AsyncLocalStorage(),
-      },
+      asyncContext: new AsyncLocalStorage(),
     });
 
     // @ts-expect-error `id` is undefined due not not having the schema types.
@@ -206,9 +198,7 @@ describe('hooks', () => {
           },
         },
       },
-      hookOptions: {
-        asyncContext: new AsyncLocalStorage(),
-      },
+      asyncContext: new AsyncLocalStorage(),
     });
 
     const account = await create.account({
@@ -265,9 +255,7 @@ describe('hooks', () => {
           },
         },
       },
-      hookOptions: {
-        asyncContext: new AsyncLocalStorage(),
-      },
+      asyncContext: new AsyncLocalStorage(),
     });
 
     const accounts = (await set.accounts({
@@ -329,9 +317,7 @@ describe('hooks', () => {
           },
         },
       },
-      hookOptions: {
-        asyncContext: new AsyncLocalStorage(),
-      },
+      asyncContext: new AsyncLocalStorage(),
     });
 
     const result = await batch(() => [
@@ -401,9 +387,7 @@ describe('hooks', () => {
           },
         },
       },
-      hookOptions: {
-        asyncContext: new AsyncLocalStorage(),
-      },
+      asyncContext: new AsyncLocalStorage(),
     });
 
     const result = await create.account.with({

@@ -1,6 +1,6 @@
 import { runQueries } from '@/src/queries';
 import type { CombinedInstructions, Query, QuerySchemaType, QueryType, Results } from '@/src/types/query';
-import type { HookOptions, QueryHandlerOptions, RecursivePartial } from '@/src/types/utils';
+import type { QueryHandlerOptions, RecursivePartial } from '@/src/types/utils';
 import { toDashCase } from '@/src/utils/helpers';
 
 const EMPTY = Symbol('empty');
@@ -140,10 +140,10 @@ const getMethodName = (hookType: HookType, queryType: QueryType): string => {
   return hookType === 'during' ? queryType : hookType + capitalizedQueryType;
 };
 
-interface HookCallerOptions {
+interface HookCallerOptions extends Omit<QueryHandlerOptions, 'hooks' | 'asyncContext' | 'autoSkipHooks'> {
   hooks: NonNullable<QueryHandlerOptions['hooks']>;
-  asyncContext: NonNullable<HookOptions['asyncContext']>;
-  autoSkipHooks: NonNullable<HookOptions['autoSkipHooks']>;
+  asyncContext: NonNullable<QueryHandlerOptions['asyncContext']>;
+  autoSkipHooks: NonNullable<QueryHandlerOptions['autoSkipHooks']>;
 }
 
 export interface HookContext {
@@ -358,8 +358,7 @@ export const runQueriesWithHooks = async <T>(
   let modifiableQueries = Array.from(queries);
   const modifiableResults = new Array<T>();
 
-  const { hooks, hookOptions } = options;
-  const { waitUntil, asyncContext, autoSkipHooks = true } = hookOptions || {};
+  const { hooks, waitUntil, asyncContext, autoSkipHooks = true } = options;
 
   // If no hooks were provided, we can just run the queries and return
   // the results.

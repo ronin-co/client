@@ -55,9 +55,7 @@ describe('edge runtime', () => {
           // @ts-expect-error - We are deliberately causing an error.
           beforeCreate: () => undefined,
         },
-        hookOptions: {
-          asyncContext: new AsyncLocalStorage(),
-        },
+        asyncContext: new AsyncLocalStorage(),
       });
 
       await factory.create.account({ with: { handle: 'leo' } });
@@ -100,12 +98,10 @@ describe('edge runtime', () => {
           },
         },
       },
-      hookOptions: {
-        waitUntil: (promise) => {
-          promisesToAwait.push(promise);
-        },
-        asyncContext: new AsyncLocalStorage(),
+      waitUntil: (promise) => {
+        promisesToAwait.push(promise);
       },
+      asyncContext: new AsyncLocalStorage(),
     });
 
     // Restore the old runtime.
