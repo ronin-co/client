@@ -154,93 +154,6 @@ export interface HookContext {
 }
 
 /**
- * Based on which type of query is being executed (e.g. "get" or "create"),
- * this function checks if a hook is defined for the affected schema and runs
- * said hook with several arguments (such as the query that was run).
- * For example, if `create.account.with.id('1234');` is run and the `hookType`
- * is `before`, then the `beforeCreate` hook would be invoked if one is defined
- * for the "account" schema in the list of hooks.
- *
- * @param hookType - The type of hook, so "before", "during", or "after".
- * @param query - A deconstructed query for which the hook should be run.
- * @param options - A list of options to change how the queries are executed.
- *
- * @returns Information about whether a hook was run, and its potential output.
- */
-const invokeHook = async (
-  hookType: HookType,
-  query: {
-    type: QueryType;
-    schema: string;
-    plural: boolean;
-    instruction: unknown;
-    resultBefore: object | null;
-    result: object | null;
-  },
-  options: HookCallerOptions,
-): Promise<{ ran: boolean; result: Query | Results<unknown> | void | null | unknown }> => {
-  const { hooks, asyncContext } = options;
-
-  const hooksForSchema = hooks[query.schema];
-  const hookName = getMethodName(hookType, query.type);
-
-  // If `oldInstruction` is falsy (e.g. `null`), we want to default to `{}`.
-  // This would happen in cases where all records of a particular schema are
-  // retrieved. For example, the query `get.members();` would trigger this.
-  // It's important to provide an object to hooks, as people might otherwise
-  // try to set properties on a value that's not an object, which would cause
-  // the hook to crash with an exception.
-  // It's also extremely important to clone both of the variables below, as the
-  // hooks will otherwise modify the original that was passed from the outside.
-  const queryInstruction = query.instruction
-    ? structuredClone<CombinedInstructions>(query.instruction as CombinedInstructions)
-    : ({} as CombinedInstructions);
-
-  // Learn more about this behavior in the comment of the `autoSkipHooks` option.
-  const parentHook = asyncContext.getStore();
-  const shouldSkip =
-    options.autoSkipHooks === false
-      ? false
-      : parentHook &&
-        (HOOK_TYPES.indexOf(hookType) <= HOOK_TYPES.indexOf(parentHook.hookType) ||
-          (query.schema === parentHook.querySchema &&
-            HOOK_TYPES.indexOf(hookType) > HOOK_TYPES.indexOf(parentHook.hookType)));
-
-  if (hooksForSchema && hookName in hooksForSchema && !shouldSkip) {
-    const hook = hooksForSchema[hookName as keyof typeof hooksForSchema];
-
-    const result = await asyncContext.run(
-      {
-        hookType,
-        queryType: query.type,
-        querySchema: query.schema,
-      },
-      async () => {
-        // For data hooks of type "after" (such as `afterCreate`), we want to pass
-        // a special function argument that contains the result of the query.
-        if (hookType === 'after') {
-          const resultBefore = structuredClone<object | null | Array<object | null>>(query.resultBefore);
-          const result = structuredClone<object | null | Array<object | null>>(query.result);
-
-          return (hook as AfterHook<QueryType, unknown>)(
-            queryInstruction,
-            query.plural,
-            resultBefore,
-            result,
-          );
-        }
-
-        return (hook as BeforeHook<QueryType> | DuringHook<QueryType>)(queryInstruction, query.plural);
-      },
-    );
-
-    return { ran: true, result };
-  }
-
-  return { ran: false, result: null };
-};
-
-/**
  * Invokes a particular hook (such as `afterCreate`) and handles its output.
  * In the case of an "before" hook, a query is returned from the hook, which
  * must replace the original query in the list of queries. For a "during" hook,
@@ -259,58 +172,92 @@ const invokeHooks = async (
   hookType: HookType,
   query: {
     definition: Query;
-    resultBefore: unknown;
-    result: unknown;
-    diffForIndex?: number;
+
+    resultBefore?: unknown;
+    resultAfter?: unknown;
   },
   options: HookCallerOptions,
-): Promise<void> => {
+): Promise<{
+  definition: Query;
+  result?: unknown;
+}> => {
   const queryType = Object.keys(query.definition)[0] as QueryType;
   const queryInstructions = query.definition[queryType] as QuerySchemaType;
   const { key, schema, multipleRecords } = getSchema(queryInstructions);
   const oldInstruction = queryInstructions[key];
 
-  const executedHookResults = await invokeHook(
-    hookType,
-    {
-      type: queryType,
-      schema,
-      plural: multipleRecords,
-      instruction: oldInstruction,
+  const hooksForSchema = options.hooks[schema];
+  const hookName = getMethodName(hookType, queryType);
 
-      // For "after" hooks, we want to pass the final result associated with a
-      // particular query, so that the hook can read it.
-      result: hookType === 'after' ? { resultBefore: query.resultBefore, result: query.result } : null,
-    },
-    options,
-  );
+  // If `oldInstruction` is falsy (e.g. `null`), we want to default to `{}`.
+  // This would happen in cases where all records of a particular schema are
+  // retrieved. For example, the query `get.members();` would trigger this.
+  // It's important to provide an object to hooks, as people might otherwise
+  // try to set properties on a value that's not an object, which would cause
+  // the hook to crash with an exception.
+  // It's also extremely important to clone both of the variables below, as the
+  // hooks will otherwise modify the original that was passed from the outside.
+  const queryInstruction = oldInstruction
+    ? structuredClone<CombinedInstructions>(oldInstruction as CombinedInstructions)
+    : ({} as CombinedInstructions);
 
-  // We can't assert based on what the hook returned, only based on whether the
-  // hook ran or not. That's because a hook might return any falsy value and
-  // then we would be mislead into thinking that the hook didn't run.
-  const { ran, result: hookResult } = executedHookResults;
+  // Learn more about this behavior in the comment of the `autoSkipHooks` option.
+  const parentHook = options.asyncContext.getStore();
+  const shouldSkip =
+    options.autoSkipHooks === false
+      ? false
+      : parentHook &&
+        (HOOK_TYPES.indexOf(hookType) <= HOOK_TYPES.indexOf(parentHook.hookType) ||
+          (schema === parentHook.querySchema &&
+            HOOK_TYPES.indexOf(hookType) > HOOK_TYPES.indexOf(parentHook.hookType)));
 
-  if (!ran) return;
+  if (hooksForSchema && hookName in hooksForSchema && !shouldSkip) {
+    const hook = hooksForSchema[hookName as keyof typeof hooksForSchema];
 
-  switch (hookType) {
-    case 'before':
-      // If the hook returned a query, we want to replace the original query
-      // with the one returned by the hook.
+    const hookResult = await options.asyncContext.run(
+      {
+        hookType,
+        queryType: queryType,
+        querySchema: schema,
+      },
+      async () => {
+        // For data hooks of type "after" (such as `afterCreate`), we want to
+        // pass special function arguments that contain the value of the
+        // affected records before and after the query was executed.
+        if (hookType === 'after') {
+          const resultBefore = structuredClone(query.resultBefore);
+          const result = structuredClone(query.resultAfter);
+
+          return (hook as AfterHook<QueryType, unknown>)(
+            queryInstruction,
+            multipleRecords,
+            resultBefore,
+            result,
+          );
+        }
+
+        return (hook as BeforeHook<QueryType> | DuringHook<QueryType>)(queryInstruction, multipleRecords);
+      },
+    );
+
+    // If the hook returned a query, we want to replace the original query
+    // with the one returned by the hook.
+    if (hookType === 'before') {
       queryInstructions[key] = hookResult as CombinedInstructions;
-      query.definition = { [queryType]: queryInstructions };
-      break;
+      return { definition: { [queryType]: queryInstructions } };
+    }
 
-    case 'during':
+    if (hookType === 'during') {
       // The hook returned a record (or multiple), so we'd like to add those
       // records to the list of final results.
-      query.result = hookResult;
-      break;
+      return { definition: query.definition, result: hookResult };
+    }
 
-    case 'after':
-      // In the case of "after" hooks, we don't need to do anything, because
-      // they are run asynchronously and aren't expected to return anything.
-      break;
+    // In the case of "after" hooks, we don't need to do anything, because
+    // they are run asynchronously and aren't expected to return anything.
   }
+
+  return { definition: query.definition };
 };
 
 /**
@@ -368,6 +315,21 @@ export const runQueriesWithHooks = async <T>(
     .map((query, index) => {
       const details = { definition: query, result: EMPTY };
 
+      // If data hooks are enabled, we want to send a separate `get` query for
+      // every `set` query (in the same transaction), so that we can provide the
+      // data hooks with a "before and after" of the modified records.
+      //
+      // The version of the record *after* the modification is already available
+      // without the extra `get` query, since `set` queries return the modified
+      // record afterward, but in order to get the version of the record
+      // *before* the modification, we need a separate `get` query.
+      //
+      // That latter version of the record is then provided exclusively to
+      // `afterSet` hooks, since it doesn't make sense for data hooks of other
+      // write queries like `afterCreate` or `afterDrop`, since, in the case of
+      // "create", the record doesn't even exist before the creation, and in
+      // the case of "drop", the record doesn't exist after the drop. So the
+      // only case in which the diff is needed is for queries of type "set".
       if (query.set) {
         const schemaSlug = Object.keys(query.set)[0];
 
@@ -395,16 +357,22 @@ export const runQueriesWithHooks = async <T>(
   // Invoke `beforeCreate`, `beforeGet`, `beforeSet`, `beforeDrop`, and
   // also `beforeCount`.
   await Promise.all(
-    queryList.map((query) => {
+    queryList.map(async (query) => {
       // For diff queries, we don't want to run "before" hooks.
       if (typeof query.diffForIndex !== 'undefined') return;
 
-      return invokeHooks('before', query, hookCallerOptions);
+      const modifiedQuery = await invokeHooks('before', { definition: query.definition }, hookCallerOptions);
+      query.definition = modifiedQuery.definition;
     }),
   );
 
   // Invoke `create`, `get`, `set`, `drop`, and `count`.
-  await Promise.all(queryList.map((query) => invokeHooks('during', query, hookCallerOptions)));
+  await Promise.all(
+    queryList.map(async (query) => {
+      const modifiedQuery = await invokeHooks('during', { definition: query.definition }, hookCallerOptions);
+      query.result = modifiedQuery.result;
+    }),
+  );
 
   const queriesWithoutResults = queryList
     .map((query, index) => ({ ...query, index }))
@@ -419,6 +387,7 @@ export const runQueriesWithHooks = async <T>(
     options,
   );
 
+  // Assign the results from the database to the list of queries.
   for (let index = 0; index < resultsFromDatabase.length; index++) {
     const query = queriesWithoutResults[index];
     const result = resultsFromDatabase[index];
@@ -426,70 +395,36 @@ export const runQueriesWithHooks = async <T>(
     queryList[query.index].result = result;
   }
 
-  const queriesWithDiffs = queryList
-    .filter((query) => typeof query.diffForIndex === 'undefined')
-    .map((query, index) => {
-      const diff = queryList.find((item) => item.diffForIndex === index);
-      return { definition: query.definition, resultBefore: diff, result: query.result };
-    });
-
   // Invoke `afterCreate`, `afterGet`, `afterSet`, `afterDrop` and `afterCount`
   // (asynchronously, since they shouldn't block).
-  await Promise.all(
-    queriesWithDiffs.map((query) => {
-      const queryType = Object.keys(query.definition)[0];
-
-      // "after" hooks should only fire for writes — not reads.
-      if (queryType !== 'set' && queryType !== 'drop' && queryType !== 'create') {
-        return;
-      }
-
-      // Run the actual hook functions.
-      const promise = invokeHooks('after', query, hookCallerOptions);
-
-      // If the configuration option for extending the lifetime of the edge
-      // worker invocation was passed, provide it with the resulting promise of
-      // the hook invocation above. This will ensure that the worker will
-      // continue to be executed until all of the asynchronous actions
-      // (non-awaited promises) have been resolved.
-      if (waitUntil) {
-        waitUntil(promise);
-        return;
-      }
-
-      return promise;
-    }),
-  );
-
-  // Invoke `afterCreate`, `afterGet`, `afterSet`, `afterDrop` and `afterCount`
-  // (asynchronously, since they shouldn't block).
-  for (let queryIndex = 0; queryIndex < queries.length; queryIndex++) {
-    const query = queries[queryIndex];
-    const queryType = Object.keys(query)[0];
+  for (let index = 0; index < queryList.length; index++) {
+    const query = queryList[index];
+    const queryType = Object.keys(query.definition)[0];
 
     // "after" hooks should only fire for writes — not reads.
     if (queryType !== 'set' && queryType !== 'drop' && queryType !== 'create') {
       continue;
     }
 
-    // Select the results that are associated with the current query. Also
-    // ensure an array, to avoid people having to conditionally support both
-    // arrays and objects inside the data hook.
-    const queryResult = (
-      Array.isArray(results?.[queryIndex]) ? results?.[queryIndex] : [results?.[queryIndex]]
-    ) as Array<unknown | null>;
+    // For diff queries, we don't want to run "after" hooks.
+    if (typeof query.diffForIndex !== 'undefined') {
+      continue;
+    }
+
+    const diff = queryList.find((item) => item.diffForIndex === index);
 
     // Run the actual hook functions.
     const promise = invokeHooks(
       'after',
-      queries,
-      [],
-      {
-        definition: query,
-        index: queryIndex,
-        result: queryResult,
-      },
+      { definition: query.definition, resultBefore: diff, resultAfter: query.result },
       hookCallerOptions,
+    );
+
+    // The result of the hook should not be made available, otherwise
+    // developers might start relying on it. Only errors should be propagated.
+    const clearPromise = promise.then(
+      () => {},
+      (error) => Promise.reject(error),
     );
 
     // If the configuration option for extending the lifetime of the edge
@@ -497,8 +432,10 @@ export const runQueriesWithHooks = async <T>(
     // the hook invocation above. This will ensure that the worker will
     // continue to be executed until all of the asynchronous actions
     // (non-awaited promises) have been resolved.
-    if (waitUntil) waitUntil(promise);
+    if (waitUntil) waitUntil(clearPromise);
   }
 
-  return results;
+  return queryList
+    .filter((query) => typeof query.diffForIndex === 'undefined')
+    .map(({ result }) => result) as Results<T>;
 };
