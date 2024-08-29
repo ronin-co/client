@@ -11,7 +11,9 @@ describe('syntax proxy', () => {
     const details = getBatchProxy(
       () => [get.account()],
       {
-        asyncContext: new AsyncLocalStorage(),
+        hookOptions: {
+          asyncContext: new AsyncLocalStorage(),
+        },
       },
       (queries) => (queries.length === 1 ? { result: true } : null),
     );
@@ -35,7 +37,9 @@ describe('syntax proxy', () => {
         ),
       ],
       {
-        asyncContext: new AsyncLocalStorage(),
+        hookOptions: {
+          asyncContext: new AsyncLocalStorage(),
+        },
       },
       (queries) => queryList.push(...queries),
     );

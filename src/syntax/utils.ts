@@ -113,8 +113,8 @@ export const getBatchProxy = <
 ): Promise<PromiseTuple<T>> | T => {
   let queries: QueryItem[] = [];
 
-  if (options.asyncContext) {
-    IN_BATCH_ASYNC = options.asyncContext;
+  if (options.hookOptions?.asyncContext) {
+    IN_BATCH_ASYNC = options.hookOptions.asyncContext;
     queries = IN_BATCH_ASYNC.run(true, () => operations());
   } else {
     IN_BATCH_SYNC = true;
