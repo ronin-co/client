@@ -179,6 +179,7 @@ const invokeHooks = async (
   options: HookCallerOptions,
 ): Promise<{
   definition: Query;
+
   result?: unknown;
 }> => {
   const queryType = Object.keys(query.definition)[0] as QueryType;
@@ -192,9 +193,11 @@ const invokeHooks = async (
   // If `oldInstruction` is falsy (e.g. `null`), we want to default to `{}`.
   // This would happen in cases where all records of a particular schema are
   // retrieved. For example, the query `get.members();` would trigger this.
+  //
   // It's important to provide an object to hooks, as people might otherwise
   // try to set properties on a value that's not an object, which would cause
   // the hook to crash with an exception.
+  //
   // It's also extremely important to clone both of the variables below, as the
   // hooks will otherwise modify the original that was passed from the outside.
   const queryInstruction = oldInstruction
@@ -240,21 +243,21 @@ const invokeHooks = async (
       },
     );
 
-    // If the hook returned a query, we want to replace the original query
-    // with the one returned by the hook.
+    // If the hook returned a query, we want to replace the original query with
+    // the one returned by the hook.
     if (hookType === 'before') {
       queryInstructions[key] = hookResult as CombinedInstructions;
       return { definition: { [queryType]: queryInstructions } };
     }
 
+    // If the hook record (or multiple), we'd like to add those records to the
+    // list of final results.
     if (hookType === 'during') {
-      // The hook returned a record (or multiple), so we'd like to add those
-      // records to the list of final results.
       return { definition: query.definition, result: hookResult };
     }
 
-    // In the case of "after" hooks, we don't need to do anything, because
-    // they are run asynchronously and aren't expected to return anything.
+    // In the case of "after" hooks, we don't need to do anything, because they
+    // are run asynchronously and aren't expected to return anything.
   }
 
   return { definition: query.definition };
@@ -357,20 +360,20 @@ export const runQueriesWithHooks = async <T>(
   // Invoke `beforeCreate`, `beforeGet`, `beforeSet`, `beforeDrop`, and
   // also `beforeCount`.
   await Promise.all(
-    queryList.map(async (query) => {
+    queryList.map(async ({ definition, diffForIndex }, index) => {
       // For diff queries, we don't want to run "before" hooks.
-      if (typeof query.diffForIndex !== 'undefined') return;
+      if (typeof diffForIndex !== 'undefined') return;
 
-      const modifiedQuery = await invokeHooks('before', { definition: query.definition }, hookCallerOptions);
-      query.definition = modifiedQuery.definition;
+      const modifiedQuery = await invokeHooks('before', { definition }, hookCallerOptions);
+      queryList[index].definition = modifiedQuery.definition;
     }),
   );
 
   // Invoke `create`, `get`, `set`, `drop`, and `count`.
   await Promise.all(
-    queryList.map(async (query) => {
-      const modifiedQuery = await invokeHooks('during', { definition: query.definition }, hookCallerOptions);
-      query.result = modifiedQuery.result;
+    queryList.map(async ({ definition }, index) => {
+      const modifiedQuery = await invokeHooks('during', { definition }, hookCallerOptions);
+      queryList[index].result = modifiedQuery.result;
     }),
   );
 
