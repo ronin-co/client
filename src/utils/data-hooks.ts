@@ -40,7 +40,8 @@ export type DuringHookHandler<TType extends QueryType, TSchema = unknown> = (
 export type AfterHookHandler<TType extends QueryType, TSchema = unknown> = (
   query: FilteredHookQuery<CombinedInstructions, TType>,
   multipleRecords: boolean,
-  result: TSchema,
+  beforeResult: TSchema,
+  afterResult: TSchema,
 ) => void | Promise<void>;
 
 // The order of these types is important, as they determine the order in which
@@ -173,6 +174,7 @@ const invokeHook = async (
     schema: string;
     plural: boolean;
     instruction: unknown;
+    resultBefore: object | null;
     result: object | null;
   },
   options: HookCallerOptions,
@@ -194,24 +196,6 @@ const invokeHook = async (
     ? structuredClone<CombinedInstructions>(query.instruction as CombinedInstructions)
     : ({} as CombinedInstructions);
 
-  // A list of function arguments that will be passed to every data hook,
-  // regardless of its type or schema.
-  // The first argument is the query instructions, the second argument is a
-  // boolean that indicates whether the query is plural (e.g. `get.members();`),
-  // and the third argument is the result of the query (if any).
-  const hookArguments: [CombinedInstructions, boolean, object | null | undefined] = [
-    queryInstruction,
-    query.plural,
-    undefined,
-  ];
-
-  // For data hooks of type "after" (such as `afterCreate`), we want to pass
-  // a special function argument that contains the result of the query.
-  if (hookType === 'after') {
-    const queryResult = structuredClone<object | null | Array<object | null>>(query.result);
-    hookArguments[2] = queryResult;
-  }
-
   // Learn more about this behavior in the comment of the `autoSkipHooks` option.
   const parentHook = asyncContext.getStore();
   const shouldSkip =
@@ -223,8 +207,6 @@ const invokeHook = async (
             HOOK_TYPES.indexOf(hookType) > HOOK_TYPES.indexOf(parentHook.hookType)));
 
   if (hooksForSchema && hookName in hooksForSchema && !shouldSkip) {
-    const [instructions, isMultiple, queryResults] = hookArguments;
-
     const hook = hooksForSchema[hookName as keyof typeof hooksForSchema];
 
     const result = await asyncContext.run(
@@ -234,9 +216,21 @@ const invokeHook = async (
         querySchema: query.schema,
       },
       async () => {
-        return hookType === 'after'
-          ? await (hook as AfterHook<QueryType, unknown>)(instructions, isMultiple, queryResults)
-          : await (hook as BeforeHook<QueryType> | DuringHook<QueryType>)(instructions, isMultiple);
+        // For data hooks of type "after" (such as `afterCreate`), we want to pass
+        // a special function argument that contains the result of the query.
+        if (hookType === 'after') {
+          const resultBefore = structuredClone<object | null | Array<object | null>>(query.resultBefore);
+          const result = structuredClone<object | null | Array<object | null>>(query.result);
+
+          return (hook as AfterHook<QueryType, unknown>)(
+            queryInstruction,
+            query.plural,
+            resultBefore,
+            result,
+          );
+        }
+
+        return (hook as BeforeHook<QueryType> | DuringHook<QueryType>)(queryInstruction, query.plural);
       },
     );
 
@@ -255,8 +249,6 @@ const invokeHook = async (
  * because no output is returned by the hook.
  *
  * @param hookType - The type of hook, so "before", "during", or "after".
- * @param modifiableQueries - The final list of queries.
- * @param modifiableResults - The final list of query results.
  * @param query - The definition and other details of a query that is being run.
  * @param options - A list of options to change how the queries are executed.
  *
@@ -265,12 +257,11 @@ const invokeHook = async (
  */
 const invokeHooks = async (
   hookType: HookType,
-  modifiableQueries: (RecursivePartial<Query> | typeof EMPTY)[],
-  modifiableResults: unknown[],
   query: {
     definition: Query;
-    index: number;
-    result: object | null | Array<unknown | null>;
+    resultBefore: unknown;
+    result: unknown;
+    diffForIndex?: number;
   },
   options: HookCallerOptions,
 ): Promise<void> => {
@@ -289,7 +280,7 @@ const invokeHooks = async (
 
       // For "after" hooks, we want to pass the final result associated with a
       // particular query, so that the hook can read it.
-      result: hookType === 'after' ? query.result : null,
+      result: hookType === 'after' ? { resultBefore: query.resultBefore, result: query.result } : null,
     },
     options,
   );
@@ -299,39 +290,20 @@ const invokeHooks = async (
   // then we would be mislead into thinking that the hook didn't run.
   const { ran, result: hookResult } = executedHookResults;
 
+  if (!ran) return;
+
   switch (hookType) {
     case 'before':
-      if (!ran) break;
       // If the hook returned a query, we want to replace the original query
       // with the one returned by the hook.
       queryInstructions[key] = hookResult as CombinedInstructions;
-      modifiableQueries[query.index] = { [queryType]: queryInstructions };
+      query.definition = { [queryType]: queryInstructions };
       break;
 
     case 'during':
-      if (ran) {
-        // In the case of "during" hooks, we don't want to keep the query
-        // that's responsible for querying a particular schema, because queries
-        // of that schema would be entirely handled by the "during" hooks.
-        // That's why we're deleting the query here. We can't use `splice`, as
-        // that would change the array position of future items that we haven't
-        // yet iterated over, so they would not be able to splice themselves
-        // correctly, as their index in the iterator would not match their
-        // actual index.
-        modifiableQueries[query.index] = EMPTY;
-
-        // The hook returned a record (or multiple), so we'd like to add those
-        // records to the list of final results.
-        (modifiableResults as unknown[])[query.index] = hookResult;
-      } else {
-        // In the case that the hook didn't run and we're dealing with "during"
-        // hooks, we still want to add an empty item to the list, so that the
-        // indexes of results being added afterwards are correct. We have to
-        // use a symbol instead of something like `undefined`, because a hook
-        // might return `undefined` so we wouldn't know whether the array item
-        // is a result or just an empty placeholder.
-        (modifiableResults as unknown[])[query.index] = EMPTY;
-      }
+      // The hook returned a record (or multiple), so we'd like to add those
+      // records to the list of final results.
+      query.result = hookResult;
       break;
 
     case 'after':
@@ -355,14 +327,11 @@ export const runQueriesWithHooks = async <T>(
   queries: Query[],
   options: QueryHandlerOptions = {},
 ): Promise<Results<T>> => {
-  let modifiableQueries = Array.from(queries);
-  const modifiableResults = new Array<T>();
-
   const { hooks, waitUntil, asyncContext, autoSkipHooks = true } = options;
 
   // If no hooks were provided, we can just run the queries and return
   // the results.
-  if (!hooks) return runQueries<T>(modifiableQueries, options);
+  if (!hooks) return runQueries<T>(queries, options);
 
   if (typeof process === 'undefined' && !waitUntil) {
     let message = 'In the case that the "ronin" package receives a value for';
@@ -391,66 +360,106 @@ export const runQueriesWithHooks = async <T>(
     throw new Error(message);
   }
 
+  const queryList: {
+    definition: Query;
+    result: unknown;
+    diffForIndex?: number;
+  }[] = queries
+    .map((query, index) => {
+      const details = { definition: query, result: EMPTY };
+
+      if (query.set) {
+        const schemaSlug = Object.keys(query.set)[0];
+
+        const diffQuery = {
+          definition: {
+            get: {
+              [schemaSlug]: {
+                with: query.set[schemaSlug].with,
+              },
+            },
+          },
+          diffForIndex: index,
+          result: EMPTY,
+        };
+
+        return [diffQuery, details];
+      }
+
+      return [details];
+    })
+    .flat();
+
   const hookCallerOptions = { hooks, asyncContext, autoSkipHooks };
 
   // Invoke `beforeCreate`, `beforeGet`, `beforeSet`, `beforeDrop`, and
   // also `beforeCount`.
   await Promise.all(
-    queries.map((query, index) => {
-      return invokeHooks(
-        'before',
-        modifiableQueries,
-        modifiableResults,
-        {
-          definition: query,
-          index,
-          result: null,
-        },
-        hookCallerOptions,
-      );
+    queryList.map((query) => {
+      // For diff queries, we don't want to run "before" hooks.
+      if (typeof query.diffForIndex !== 'undefined') return;
+
+      return invokeHooks('before', query, hookCallerOptions);
     }),
   );
 
   // Invoke `create`, `get`, `set`, `drop`, and `count`.
-  await Promise.all(
-    queries.map((query, index) => {
-      return invokeHooks(
-        'during',
-        modifiableQueries,
-        modifiableResults,
-        {
-          definition: query,
-          index,
-          result: null,
-        },
-        hookCallerOptions,
-      );
-    }),
-  );
+  await Promise.all(queryList.map((query) => invokeHooks('during', query, hookCallerOptions)));
 
-  // Filter out queries that were marked as removable by the `invokeHooks`
-  // calls above. We can't just filter by something like `undefined`, because
-  // hooks might be returning those values as successful results.
-  modifiableQueries = modifiableQueries.filter((query: Query | typeof EMPTY) => query !== EMPTY);
+  const queriesWithoutResults = queryList
+    .map((query, index) => ({ ...query, index }))
+    .filter((query) => query.result === EMPTY);
 
   // If no queries are remaining, that means all the queries were handled by
   // "during" hooks above, so there are none remaining to send for execution.
-  if (modifiableQueries.length === 0) return modifiableResults as Results<T>;
+  if (queriesWithoutResults.length === 0) return queryList.map(({ result }) => result) as Results<T>;
 
-  const results = await runQueries<T>(modifiableQueries, options);
+  const resultsFromDatabase = await runQueries<T>(
+    queriesWithoutResults.map(({ definition }) => definition),
+    options,
+  );
 
-  for (let index = 0; index < modifiableResults.length; index++) {
-    const existingResult = modifiableResults[index];
+  for (let index = 0; index < resultsFromDatabase.length; index++) {
+    const query = queriesWithoutResults[index];
+    const result = resultsFromDatabase[index];
 
-    // If there isn't an existing result for the current index, that means
-    // `results` will contain the result for that index. However, note that
-    // the indexes in `results` are different because they don't consider the
-    // results that weren't retrieved from RONIN and only retrieved from
-    // "during" hooks.
-    if (existingResult === EMPTY) continue;
-
-    (results as Array<T>).splice(index, 0, existingResult);
+    queryList[query.index].result = result;
   }
+
+  const queriesWithDiffs = queryList
+    .filter((query) => typeof query.diffForIndex === 'undefined')
+    .map((query, index) => {
+      const diff = queryList.find((item) => item.diffForIndex === index);
+      return { definition: query.definition, resultBefore: diff, result: query.result };
+    });
+
+  // Invoke `afterCreate`, `afterGet`, `afterSet`, `afterDrop` and `afterCount`
+  // (asynchronously, since they shouldn't block).
+  await Promise.all(
+    queriesWithDiffs.map((query) => {
+      const queryType = Object.keys(query.definition)[0];
+
+      // "after" hooks should only fire for writes — not reads.
+      if (queryType !== 'set' && queryType !== 'drop' && queryType !== 'create') {
+        return;
+      }
+
+      // Run the actual hook functions.
+      const promise = invokeHooks('after', query, hookCallerOptions);
+
+      // If the configuration option for extending the lifetime of the edge
+      // worker invocation was passed, provide it with the resulting promise of
+      // the hook invocation above. This will ensure that the worker will
+      // continue to be executed until all of the asynchronous actions
+      // (non-awaited promises) have been resolved.
+      if (waitUntil) {
+        waitUntil(promise);
+        return;
+      }
+
+      return promise;
+    }),
+  );
 
   // Invoke `afterCreate`, `afterGet`, `afterSet`, `afterDrop` and `afterCount`
   // (asynchronously, since they shouldn't block).
