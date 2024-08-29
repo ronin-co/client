@@ -143,7 +143,7 @@ const getMethodName = (hookType: HookType, queryType: QueryType): string => {
 interface HookCallerOptions {
   hooks: NonNullable<QueryHandlerOptions['hooks']>;
   asyncContext: NonNullable<HookOptions['asyncContext']>;
-  autoSkipHooks: NonNullable<HookOptions['autoSkipHooks']>;
+  autoSkip: NonNullable<HookOptions['autoSkip']>;
 }
 
 export interface HookContext {
@@ -212,10 +212,10 @@ const invokeHook = async (
     hookArguments[2] = queryResult;
   }
 
-  // Learn more about this behavior in the comment of the `autoSkipHooks` option.
+  // Learn more about this behavior in the comment of the `autoSkip` option.
   const parentHook = asyncContext.getStore();
   const shouldSkip =
-    options.autoSkipHooks === false
+    options.autoSkip === false
       ? false
       : parentHook &&
         (HOOK_TYPES.indexOf(hookType) <= HOOK_TYPES.indexOf(parentHook.hookType) ||
@@ -359,7 +359,7 @@ export const runQueriesWithHooks = async <T>(
   const modifiableResults = new Array<T>();
 
   const { hooks, hookOptions } = options;
-  const { waitUntil, asyncContext, autoSkipHooks = true } = hookOptions || {};
+  const { waitUntil, asyncContext, autoSkip = true } = hookOptions || {};
 
   // If no hooks were provided, we can just run the queries and return
   // the results.
@@ -392,7 +392,7 @@ export const runQueriesWithHooks = async <T>(
     throw new Error(message);
   }
 
-  const hookCallerOptions = { hooks, asyncContext, autoSkipHooks };
+  const hookCallerOptions = { hooks, asyncContext, autoSkip };
 
   // Invoke `beforeCreate`, `beforeGet`, `beforeSet`, `beforeDrop`, and
   // also `beforeCount`.
