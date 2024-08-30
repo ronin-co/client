@@ -217,6 +217,6 @@ describe('edge runtime', () => {
     // Ensure that the internal results of the hook run are not being exposed.
     // In other words, the promises handed to `waitUntil` must not resolve with
     // any value, since their purpose is to run asynchronous "after" hooks.
-    expect(result).toEqual([undefined]);
+    expect(result).toMatchObject([undefined]);
   });
 });

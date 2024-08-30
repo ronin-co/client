@@ -142,13 +142,20 @@ const getMethodName = (hookType: HookType, queryType: QueryType): string => {
 };
 
 /**
- * Ensures that the output is always an array.
+ * Takes the result of a query and normalizes it to an array, to avoid
+ * developers having to conditionally support both arrays and objects inside
+ * the data hooks. Furthermore, the result is cloned to allow for modifying it
+ * within data hooks without affecting the original query result that is being
+ * returned from the client.
  *
- * @param input An object or an array of objects.
+ * @param result - The result of a query.
  *
- * @returns An array.
+ * @returns The normalized result of a query.
  */
-const normalizeArray = (input: unknown) => (Array.isArray(input) ? input : [input]);
+const normalizeResults = (result: unknown) => {
+  const value = Array.isArray(result) ? result : result === EMPTY ? [] : [result];
+  return structuredClone(value);
+};
 
 interface HookCallerOptions extends Omit<QueryHandlerOptions, 'hooks' | 'asyncContext' | 'autoSkipHooks'> {
   hooks: NonNullable<QueryHandlerOptions['hooks']>;
@@ -238,18 +245,12 @@ const invokeHooks = async (
         // pass special function arguments that contain the value of the
         // affected records before and after the query was executed.
         if (hookType === 'after') {
-          const resultBefore = structuredClone(query.resultBefore);
-          const resultAfter = structuredClone(query.resultAfter);
-
           return (hook as AfterHook<QueryType, unknown>)(
             queryInstruction,
             multipleRecords,
 
-            // Ensure ensure an array regardless of whether a single or multiple
-            // records were affected, to avoid people having to conditionally
-            // support both arrays and objects inside the data hook.
-            normalizeArray(resultBefore),
-            normalizeArray(resultAfter),
+            normalizeResults(query.resultBefore),
+            normalizeResults(query.resultAfter),
           );
         }
 
@@ -415,7 +416,9 @@ export const runQueriesWithHooks = async <T>(
       continue;
     }
 
-    let resultBefore = queryList.find((item) => item.diffForIndex === index)?.result;
+    const diffMatch = queryList.find((item) => item.diffForIndex === index);
+
+    let resultBefore = diffMatch ? diffMatch.result : EMPTY;
     let resultAfter = query.result;
 
     // For queries of type "drop", we want to set `resultBefore` to the result
@@ -424,7 +427,7 @@ export const runQueriesWithHooks = async <T>(
     // to expose the record as `resultAfter` in the data hooks.
     if (queryType === 'drop') {
       resultBefore = query.result;
-      resultAfter = undefined;
+      resultAfter = EMPTY;
     }
 
     // Run the actual hook functions.
