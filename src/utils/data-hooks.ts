@@ -141,6 +141,14 @@ const getMethodName = (hookType: HookType, queryType: QueryType): string => {
   return hookType === 'during' ? queryType : hookType + capitalizedQueryType;
 };
 
+/**
+ * Ensures that the output is always an array.
+ *
+ * @param input An object or an array of objects.
+ * @returns An array.
+ */
+const normalizeArray = (input: unknown) => (Array.isArray(input) ? input : [input]);
+
 interface HookCallerOptions extends Omit<QueryHandlerOptions, 'hooks' | 'asyncContext' | 'autoSkipHooks'> {
   hooks: NonNullable<QueryHandlerOptions['hooks']>;
   asyncContext: NonNullable<QueryHandlerOptions['asyncContext']>;
@@ -229,13 +237,17 @@ const invokeHooks = async (
         // affected records before and after the query was executed.
         if (hookType === 'after') {
           const resultBefore = structuredClone(query.resultBefore);
-          const result = structuredClone(query.resultAfter);
+          const resultAfter = structuredClone(query.resultAfter);
 
           return (hook as AfterHook<QueryType, unknown>)(
             queryInstruction,
             multipleRecords,
-            resultBefore,
-            result,
+
+            // Ensure ensure an array regardless of whether a single or multiple
+            // records were affected, to avoid people having to conditionally
+            // support both arrays and objects inside the data hook.
+            normalizeArray(resultBefore),
+            normalizeArray(resultAfter),
           );
         }
 

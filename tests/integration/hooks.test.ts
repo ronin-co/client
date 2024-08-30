@@ -224,10 +224,10 @@ describe('hooks', () => {
 
     // Make sure `finalBeforeResult` is not defined, since a new record is
     // being created.
-    expect(finalBeforeResult).toEqual(undefined);
+    expect(finalBeforeResult).toEqual([undefined]);
 
     // Make sure `finalAfterResult` matches the resolved account.
-    expect(finalAfterResult).toEqual(account);
+    expect(finalAfterResult).toEqual([account]);
 
     expect(finalMultiple).toBe(false);
   });
@@ -270,11 +270,11 @@ describe('hooks', () => {
 
     // Make sure `finalBeforeResult` is defined and contains the value of the
     // record before it was deleted.
-    expect(finalBeforeResult).toEqual(account);
+    expect(finalBeforeResult).toEqual([account]);
 
     // Make sure `finalAfterResult` is not available, since the record was
     // deleted from the database.
-    expect(finalAfterResult).toEqual(undefined);
+    expect(finalAfterResult).toEqual([undefined]);
   });
 
   test('run `set` query affecting multiple accounts through factory containing `after` data hook', async () => {
