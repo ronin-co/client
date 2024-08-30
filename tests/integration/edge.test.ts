@@ -116,4 +116,52 @@ describe('edge runtime', () => {
     await Promise.all(promisesToAwait);
     expect(hookInvocationHappened).toHaveBeenCalled();
   });
+
+  test('invoke `ronin` from an edge runtime with `waitUntil` set and error being thrown', async () => {
+    const queries = [
+      {
+        create: { account: { with: { handle: 'leo' } } },
+      },
+    ];
+
+    const promisesToAwait: Promise<unknown>[] = [];
+
+    // Simulate a web runtime.
+    const oldProcess = global.process;
+    global.process = undefined as unknown as NodeJS.Process;
+
+    await runQueriesWithHooks(queries, {
+      fetch: async () => {
+        return Response.json({
+          results: [
+            {
+              record: {
+                id: '1',
+                handle: 'leo',
+                firstName: 'Leo',
+                lastName: 'Lamprecht',
+              },
+            },
+          ],
+        });
+      },
+      hooks: {
+        account: {
+          afterCreate: async function () {
+            throw new Error('I am an error');
+          },
+        },
+      },
+      waitUntil: (promise) => {
+        promisesToAwait.push(promise);
+      },
+      asyncContext: new AsyncLocalStorage(),
+    });
+
+    // Restore the old runtime.
+    global.process = oldProcess;
+
+    // Wait for asynchronous actions to finish.
+    expect(promisesToAwait[0]).rejects.toThrow('I am an error');
+  });
 });
