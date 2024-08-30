@@ -164,4 +164,58 @@ describe('edge runtime', () => {
     // Wait for asynchronous actions to finish.
     expect(promisesToAwait[0]).rejects.toThrow('I am an error');
   });
+
+  test('invoke `ronin` from an edge runtime with `waitUntil` set and ensure hidden result', async () => {
+    const queries = [
+      {
+        create: { account: { with: { handle: 'leo' } } },
+      },
+    ];
+
+    const promisesToAwait: Promise<unknown>[] = [];
+
+    // Simulate a web runtime.
+    const oldProcess = global.process;
+    global.process = undefined as unknown as NodeJS.Process;
+
+    await runQueriesWithHooks(queries, {
+      fetch: async () => {
+        return Response.json({
+          results: [
+            {
+              record: {
+                id: '1',
+                handle: 'leo',
+                firstName: 'Leo',
+                lastName: 'Lamprecht',
+              },
+            },
+          ],
+        });
+      },
+      hooks: {
+        account: {
+          afterCreate: async function () {
+            // Sleep for 50 milliseconds to simulate an asynchronous action.
+            await new Promise((resolve) => setTimeout(resolve, 50));
+          },
+        },
+      },
+      waitUntil: (promise) => {
+        promisesToAwait.push(promise);
+      },
+      asyncContext: new AsyncLocalStorage(),
+    });
+
+    // Restore the old runtime.
+    global.process = oldProcess;
+
+    // Wait for asynchronous actions to finish.
+    const result = await Promise.all(promisesToAwait);
+
+    // Ensure that the internal results of the hook run are not being exposed.
+    // In other words, the promises handed to `waitUntil` must not resolve with
+    // any value, since their purpose is to run asynchronous "after" hooks.
+    expect(result).toEqual([undefined]);
+  });
 });
