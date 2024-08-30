@@ -1,23 +1,11 @@
 import { AsyncLocalStorage } from 'node:async_hooks';
 
-import { beforeEach, describe, expect, mock, spyOn, test } from 'bun:test';
+import { describe, expect, spyOn, test } from 'bun:test';
 
 import createSyntaxFactory from '@/src/index';
 import { runQueriesWithHooks } from '@/src/utils/data-hooks';
 
-const mockFetch = mock(async () => {
-  return Response.json({
-    results: [],
-  });
-});
-
-global.fetch = mockFetch;
-
 describe('edge runtime', () => {
-  beforeEach(() => {
-    mockFetch.mockClear();
-  });
-
   test('invoke `ronin` from an edge runtime without passing a token', async () => {
     let error: Error | undefined;
 
@@ -88,6 +76,20 @@ describe('edge runtime', () => {
     global.process = undefined as unknown as NodeJS.Process;
 
     await runQueriesWithHooks(queries, {
+      fetch: async () => {
+        return Response.json({
+          results: [
+            {
+              record: {
+                id: '1',
+                handle: 'leo',
+                firstName: 'Leo',
+                lastName: 'Lamprecht',
+              },
+            },
+          ],
+        });
+      },
       hooks: {
         account: {
           afterCreate: async function () {
