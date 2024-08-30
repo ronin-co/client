@@ -344,7 +344,7 @@ export const runQueriesWithHooks = async <T>(
               },
             },
           },
-          diffForIndex: index,
+          diffForIndex: index + 1,
           result: EMPTY,
         };
 
@@ -419,7 +419,7 @@ export const runQueriesWithHooks = async <T>(
     // Run the actual hook functions.
     const promise = invokeHooks(
       'after',
-      { definition: query.definition, resultBefore: diff, resultAfter: query.result },
+      { definition: query.definition, resultBefore: diff?.result, resultAfter: query.result },
       hookCallerOptions,
     );
 

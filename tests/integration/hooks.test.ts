@@ -174,27 +174,31 @@ describe('hooks', () => {
   test('run `create` query through factory containing `after` data hook', async () => {
     let finalQuery: FilteredHookQuery<CombinedInstructions, QueryType> | undefined;
     let finalMultiple: boolean | undefined;
-    let finalResult: unknown;
+    let finalBeforeResult: unknown;
+    let finalAfterResult: unknown;
 
     const { create } = createSyntaxFactory({
       fetch: async () => {
         return Response.json({
           results: [
             {
-              id: '1',
-              handle: 'juri',
-              firstName: 'Juri',
-              lastName: 'Adams',
+              record: {
+                id: '1',
+                handle: 'juri',
+                firstName: 'Juri',
+                lastName: 'Adams',
+              },
             },
           ],
         });
       },
       hooks: {
         account: {
-          afterCreate(query, multiple, results) {
+          afterCreate(query, multiple, beforeResult, afterResult) {
             finalQuery = query;
             finalMultiple = multiple;
-            finalResult = results;
+            finalBeforeResult = beforeResult;
+            finalAfterResult = afterResult;
           },
         },
       },
@@ -218,8 +222,12 @@ describe('hooks', () => {
       },
     });
 
-    // Make sure `finalResult` matches the resolved account.
-    expect(finalResult).toMatchObject([account]);
+    // Make sure `finalBeforeResult` is not defined, since a new record is
+    // being created.
+    expect(finalBeforeResult).toEqual(undefined);
+
+    // Make sure `finalAfterResult` matches the resolved account.
+    expect(finalAfterResult).toEqual(account);
 
     expect(finalMultiple).toBe(false);
   });
@@ -255,7 +263,7 @@ describe('hooks', () => {
     const { set } = createSyntaxFactory({
       fetch: async () => {
         return Response.json({
-          results: [previousAccounts, nextAccounts],
+          results: [{ records: previousAccounts }, { records: nextAccounts }],
         });
       },
       hooks: {
