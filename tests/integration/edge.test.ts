@@ -111,7 +111,7 @@ describe('edge runtime', () => {
 
     expect(promisesToAwait.length).toBeGreaterThan(0);
 
-    // Wait for asynchronous actions to finish.
+    // Wait for asynchronous "after" data hooks to finish.
     expect(hookInvocationHappened).not.toHaveBeenCalled();
     await Promise.all(promisesToAwait);
     expect(hookInvocationHappened).toHaveBeenCalled();
@@ -124,6 +124,7 @@ describe('edge runtime', () => {
       },
     ];
 
+    const errorText = 'I am an error';
     const promisesToAwait: Promise<unknown>[] = [];
 
     // Simulate a web runtime.
@@ -148,7 +149,7 @@ describe('edge runtime', () => {
       hooks: {
         account: {
           afterCreate: async function () {
-            throw new Error('I am an error');
+            throw new Error(errorText);
           },
         },
       },
@@ -161,8 +162,8 @@ describe('edge runtime', () => {
     // Restore the old runtime.
     global.process = oldProcess;
 
-    // Wait for asynchronous actions to finish.
-    expect(promisesToAwait[0]).rejects.toThrow('I am an error');
+    // Wait for asynchronous "after" data hooks to finish.
+    expect(promisesToAwait[0]).rejects.toThrow(errorText);
   });
 
   test('invoke `ronin` from an edge runtime with `waitUntil` set and ensure hidden result', async () => {
@@ -210,7 +211,7 @@ describe('edge runtime', () => {
     // Restore the old runtime.
     global.process = oldProcess;
 
-    // Wait for asynchronous actions to finish.
+    // Wait for asynchronous "after" data hooks to finish.
     const result = await Promise.all(promisesToAwait);
 
     // Ensure that the internal results of the hook run are not being exposed.

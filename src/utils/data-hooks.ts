@@ -145,6 +145,7 @@ const getMethodName = (hookType: HookType, queryType: QueryType): string => {
  * Ensures that the output is always an array.
  *
  * @param input An object or an array of objects.
+ *
  * @returns An array.
  */
 const normalizeArray = (input: unknown) => (Array.isArray(input) ? input : [input]);
@@ -173,8 +174,7 @@ export interface HookContext {
  * @param query - The definition and other details of a query that is being run.
  * @param options - A list of options to change how the queries are executed.
  *
- * @returns Nothing, because `modifiableQueries` and `modifiableResults` are
- * directly modified instead.
+ * @returns The modified query and its results, if any are available.
  */
 const invokeHooks = async (
   hookType: HookType,
@@ -190,12 +190,14 @@ const invokeHooks = async (
 
   result?: unknown;
 }> => {
+  const { hooks, asyncContext, autoSkipHooks } = options;
+
   const queryType = Object.keys(query.definition)[0] as QueryType;
   const queryInstructions = query.definition[queryType] as QuerySchemaType;
-  const { key, schema, multipleRecords } = getSchema(queryInstructions);
+  const { key, schema: querySchema, multipleRecords } = getSchema(queryInstructions);
   const oldInstruction = queryInstructions[key];
 
-  const hooksForSchema = options.hooks[schema];
+  const hooksForSchema = hooks[querySchema];
   const hookName = getMethodName(hookType, queryType);
 
   // If `oldInstruction` is falsy (e.g. `null`), we want to default to `{}`.
@@ -213,23 +215,23 @@ const invokeHooks = async (
     : ({} as CombinedInstructions);
 
   // Learn more about this behavior in the comment of the `autoSkipHooks` option.
-  const parentHook = options.asyncContext.getStore();
+  const parentHook = asyncContext.getStore();
   const shouldSkip =
-    options.autoSkipHooks === false
+    autoSkipHooks === false
       ? false
       : parentHook &&
         (HOOK_TYPES.indexOf(hookType) <= HOOK_TYPES.indexOf(parentHook.hookType) ||
-          (schema === parentHook.querySchema &&
+          (querySchema === parentHook.querySchema &&
             HOOK_TYPES.indexOf(hookType) > HOOK_TYPES.indexOf(parentHook.hookType)));
 
   if (hooksForSchema && hookName in hooksForSchema && !shouldSkip) {
     const hook = hooksForSchema[hookName as keyof typeof hooksForSchema];
 
-    const hookResult = await options.asyncContext.run(
+    const hookResult = await asyncContext.run(
       {
         hookType,
-        queryType: queryType,
-        querySchema: schema,
+        queryType,
+        querySchema,
       },
       async () => {
         // For data hooks of type "after" (such as `afterCreate`), we want to
@@ -262,8 +264,8 @@ const invokeHooks = async (
       return { definition: { [queryType]: queryInstructions }, result: EMPTY };
     }
 
-    // If the hook record (or multiple), we'd like to add those records to the
-    // list of final results.
+    // If the hook returned a record (or multiple), we want to set the query's
+    // result to the value returned by the hook.
     if (hookType === 'during') {
       return { definition: query.definition, result: hookResult };
     }
@@ -338,13 +340,6 @@ export const runQueriesWithHooks = async <T>(
       // without the extra `get` query, since `set` queries return the modified
       // record afterward, but in order to get the version of the record
       // *before* the modification, we need a separate `get` query.
-      //
-      // That latter version of the record is then provided exclusively to
-      // `afterSet` hooks, since it doesn't make sense for data hooks of other
-      // write queries like `afterCreate` or `afterDrop`, since, in the case of
-      // "create", the record doesn't even exist before the creation, and in
-      // the case of "drop", the record doesn't exist after the drop. So the
-      // only case in which the diff is needed is for queries of type "set".
       if (query.set) {
         const schemaSlug = Object.keys(query.set)[0];
 
@@ -454,6 +449,9 @@ export const runQueriesWithHooks = async <T>(
     if (waitUntil) waitUntil(clearPromise);
   }
 
+  // Filter the list of queries to remove any potential queries used for
+  // "diffing" (retrieving the previous value of a record) and return only the
+  // results of the queries.
   return queryList
     .filter((query) => typeof query.diffForIndex === 'undefined')
     .map(({ result }) => result) as Results<T>;
