@@ -227,31 +227,44 @@ describe('hooks', () => {
   test('run `set` query affecting multiple accounts through factory containing `after` data hook', async () => {
     let finalQuery: FilteredHookQuery<CombinedInstructions, QueryType> | undefined;
     let finalMultiple: boolean | undefined;
-    let finalResult: unknown;
+    let finalBeforeResult: unknown;
+    let finalAfterResult: unknown;
+
+    const previousAccounts = [
+      {
+        id: '1',
+        email: 'prev@ronin.co',
+      },
+      {
+        id: '2',
+        email: 'prev@ronin.co',
+      },
+    ];
+
+    const nextAccounts = [
+      {
+        id: '1',
+        email: 'test@ronin.co',
+      },
+      {
+        id: '2',
+        email: 'test@ronin.co',
+      },
+    ];
 
     const { set } = createSyntaxFactory({
       fetch: async () => {
         return Response.json({
-          results: [
-            [
-              {
-                id: '1',
-                email: 'test@ronin.co',
-              },
-              {
-                id: '2',
-                email: 'test@ronin.co',
-              },
-            ],
-          ],
+          results: [previousAccounts, nextAccounts],
         });
       },
       hooks: {
         account: {
-          afterSet(query, multiple, results) {
+          afterSet(query, multiple, beforeResult, afterResult) {
             finalQuery = query;
             finalMultiple = multiple;
-            finalResult = results;
+            finalBeforeResult = beforeResult;
+            finalAfterResult = afterResult;
           },
         },
       },
@@ -284,8 +297,11 @@ describe('hooks', () => {
       },
     });
 
-    // Make sure `finalResult` matches the resolved accounts.
-    expect(finalResult).toEqual(accounts);
+    // Make sure `finalBeforeResult` matches the previous accounts.
+    expect(finalBeforeResult).toEqual(previousAccounts);
+
+    // Make sure `finalAfterResult` matches the resolved accounts.
+    expect(finalAfterResult).toEqual(accounts);
 
     expect(finalMultiple).toBe(true);
   });

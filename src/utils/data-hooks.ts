@@ -247,7 +247,7 @@ const invokeHooks = async (
     // the one returned by the hook.
     if (hookType === 'before') {
       queryInstructions[key] = hookResult as CombinedInstructions;
-      return { definition: { [queryType]: queryInstructions } };
+      return { definition: { [queryType]: queryInstructions }, result: EMPTY };
     }
 
     // If the hook record (or multiple), we'd like to add those records to the
@@ -260,7 +260,7 @@ const invokeHooks = async (
     // are run asynchronously and aren't expected to return anything.
   }
 
-  return { definition: query.definition };
+  return { definition: query.definition, result: EMPTY };
 };
 
 /**
