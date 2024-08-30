@@ -174,27 +174,31 @@ describe('hooks', () => {
   test('run `create` query through factory containing `after` data hook', async () => {
     let finalQuery: FilteredHookQuery<CombinedInstructions, QueryType> | undefined;
     let finalMultiple: boolean | undefined;
-    let finalResult: unknown;
+    let finalBeforeResult: unknown;
+    let finalAfterResult: unknown;
 
     const { create } = createSyntaxFactory({
       fetch: async () => {
         return Response.json({
           results: [
             {
-              id: '1',
-              handle: 'juri',
-              firstName: 'Juri',
-              lastName: 'Adams',
+              record: {
+                id: '1',
+                handle: 'juri',
+                firstName: 'Juri',
+                lastName: 'Adams',
+              },
             },
           ],
         });
       },
       hooks: {
         account: {
-          afterCreate(query, multiple, results) {
+          afterCreate(query, multiple, beforeResult, afterResult) {
             finalQuery = query;
             finalMultiple = multiple;
-            finalResult = results;
+            finalBeforeResult = beforeResult;
+            finalAfterResult = afterResult;
           },
         },
       },
@@ -218,40 +222,108 @@ describe('hooks', () => {
       },
     });
 
-    // Make sure `finalResult` matches the resolved account.
-    expect(finalResult).toMatchObject([account]);
+    // Make sure `finalBeforeResult` is empty, since the record is being
+    // created and didn't exist before.
+    //
+    // We must use `toMatchObject` here, to ensure that the array is really
+    // empty and doesn't contain any `undefined` items.
+    expect(finalBeforeResult).toMatchObject([]);
+
+    // Make sure `finalAfterResult` matches the resolved account.
+    expect(finalAfterResult).toEqual([account]);
 
     expect(finalMultiple).toBe(false);
   });
 
-  test('run `set` query affecting multiple accounts through factory containing `after` data hook', async () => {
-    let finalQuery: FilteredHookQuery<CombinedInstructions, QueryType> | undefined;
-    let finalMultiple: boolean | undefined;
-    let finalResult: unknown;
+  test('run `drop` query through factory containing `after` data hook', async () => {
+    let finalBeforeResult: unknown;
+    let finalAfterResult: unknown;
 
-    const { set } = createSyntaxFactory({
+    const { drop } = createSyntaxFactory({
       fetch: async () => {
         return Response.json({
           results: [
-            [
-              {
+            {
+              record: {
                 id: '1',
-                email: 'test@ronin.co',
+                handle: 'juri',
+                firstName: 'Juri',
+                lastName: 'Adams',
               },
-              {
-                id: '2',
-                email: 'test@ronin.co',
-              },
-            ],
+            },
           ],
         });
       },
       hooks: {
         account: {
-          afterSet(query, multiple, results) {
+          afterDrop(_query, _multiple, beforeResult, afterResult) {
+            finalBeforeResult = beforeResult;
+            finalAfterResult = afterResult;
+          },
+        },
+      },
+      asyncContext: new AsyncLocalStorage(),
+    });
+
+    const account = await drop.account({
+      with: {
+        handle: 'juri',
+      },
+    });
+
+    // Make sure `finalBeforeResult` is defined and contains the value of the
+    // record before it was deleted.
+    expect(finalBeforeResult).toEqual([account]);
+
+    // Make sure `finalAfterResult` is empty, since the record was deleted from
+    // the database.
+    //
+    // We must use `toMatchObject` here, to ensure that the array is really
+    // empty and doesn't contain any `undefined` items.
+    expect(finalAfterResult).toMatchObject([]);
+  });
+
+  test('run `set` query affecting multiple accounts through factory containing `after` data hook', async () => {
+    let finalQuery: FilteredHookQuery<CombinedInstructions, QueryType> | undefined;
+    let finalMultiple: boolean | undefined;
+    let finalBeforeResult: unknown;
+    let finalAfterResult: unknown;
+
+    const previousAccounts = [
+      {
+        id: '1',
+        email: 'prev@ronin.co',
+      },
+      {
+        id: '2',
+        email: 'prev@ronin.co',
+      },
+    ];
+
+    const nextAccounts = [
+      {
+        id: '1',
+        email: 'test@ronin.co',
+      },
+      {
+        id: '2',
+        email: 'test@ronin.co',
+      },
+    ];
+
+    const { set } = createSyntaxFactory({
+      fetch: async () => {
+        return Response.json({
+          results: [{ records: previousAccounts }, { records: nextAccounts }],
+        });
+      },
+      hooks: {
+        account: {
+          afterSet(query, multiple, beforeResult, afterResult) {
             finalQuery = query;
             finalMultiple = multiple;
-            finalResult = results;
+            finalBeforeResult = beforeResult;
+            finalAfterResult = afterResult;
           },
         },
       },
@@ -284,8 +356,11 @@ describe('hooks', () => {
       },
     });
 
-    // Make sure `finalResult` matches the resolved accounts.
-    expect(finalResult).toEqual(accounts);
+    // Make sure `finalBeforeResult` matches the previous accounts.
+    expect(finalBeforeResult).toEqual(previousAccounts);
+
+    // Make sure `finalAfterResult` matches the resolved accounts.
+    expect(finalAfterResult).toEqual(accounts);
 
     expect(finalMultiple).toBe(true);
   });

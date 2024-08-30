@@ -81,8 +81,8 @@ export const runQueries = async <T>(
 
   const startFormatting = performance.now();
 
-  for (let i = 0; i < results.length; i++) {
-    const result = results[i];
+  for (let index = 0; index < results.length; index++) {
+    const result = results[index];
 
     if ('error' in result && result.error) {
       const message = result.error.code === 'BAD_REQUEST' ? 'Invalid query provided.' : result.error.message;
@@ -116,7 +116,7 @@ export const runQueries = async <T>(
 
     // Handle `count` query result.
     if ('amount' in result && typeof result.amount !== 'undefined' && result.amount !== null) {
-      results[i] = Number(result.amount) as unknown as Result<T>;
+      results[index] = Number(result.amount) as unknown as Result<T>;
       continue;
     }
 
@@ -132,13 +132,13 @@ export const runQueries = async <T>(
       // This happens if no matching record was found for a singular query,
       // such as `get.account.with.handle('leo')`.
       if (result.record === null) {
-        results[i] = null as unknown as QueryResponse<T>['results'][number];
+        results[index] = null as unknown as QueryResponse<T>['results'][number];
         continue;
       }
 
       formatDateFields(result.record, dateFields);
 
-      results[i] = result.record;
+      results[index] = result.record;
       continue;
     }
 
@@ -156,7 +156,7 @@ export const runQueries = async <T>(
       if (typeof result.moreBefore !== 'undefined') result.records.moreBefore = result.moreBefore;
       if (typeof result.moreAfter !== 'undefined') result.records.moreAfter = result.moreAfter;
 
-      results[i] = result.records as unknown as Result<T>;
+      results[index] = result.records as unknown as Result<T>;
       continue;
     }
   }
