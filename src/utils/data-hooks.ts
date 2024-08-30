@@ -409,11 +409,6 @@ export const runQueriesWithHooks = async <T>(
       continue;
     }
 
-    // For diff queries, we don't want to run "after" hooks.
-    if (typeof query.diffForIndex !== 'undefined') {
-      continue;
-    }
-
     const diff = queryList.find((item) => item.diffForIndex === index);
 
     // Run the actual hook functions.
