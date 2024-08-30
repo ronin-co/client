@@ -232,6 +232,51 @@ describe('hooks', () => {
     expect(finalMultiple).toBe(false);
   });
 
+  test('run `drop` query through factory containing `after` data hook', async () => {
+    let finalBeforeResult: unknown;
+    let finalAfterResult: unknown;
+
+    const { drop } = createSyntaxFactory({
+      fetch: async () => {
+        return Response.json({
+          results: [
+            {
+              record: {
+                id: '1',
+                handle: 'juri',
+                firstName: 'Juri',
+                lastName: 'Adams',
+              },
+            },
+          ],
+        });
+      },
+      hooks: {
+        account: {
+          afterDrop(_query, _multiple, beforeResult, afterResult) {
+            finalBeforeResult = beforeResult;
+            finalAfterResult = afterResult;
+          },
+        },
+      },
+      asyncContext: new AsyncLocalStorage(),
+    });
+
+    const account = await drop.account({
+      with: {
+        handle: 'juri',
+      },
+    });
+
+    // Make sure `finalBeforeResult` is defined and contains the value of the
+    // record before it was deleted.
+    expect(finalBeforeResult).toEqual(account);
+
+    // Make sure `finalAfterResult` is not available, since the record was
+    // deleted from the database.
+    expect(finalAfterResult).toEqual(undefined);
+  });
+
   test('run `set` query affecting multiple accounts through factory containing `after` data hook', async () => {
     let finalQuery: FilteredHookQuery<CombinedInstructions, QueryType> | undefined;
     let finalMultiple: boolean | undefined;

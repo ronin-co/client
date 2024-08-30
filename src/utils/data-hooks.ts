@@ -398,23 +398,32 @@ export const runQueriesWithHooks = async <T>(
     queryList[query.index].result = result;
   }
 
-  // Invoke `afterCreate`, `afterGet`, `afterSet`, `afterDrop` and `afterCount`
-  // (asynchronously, since they shouldn't block).
+  // Asynchronously invoke `afterCreate`, `afterSet`, and `afterDrop`.
   for (let index = 0; index < queryList.length; index++) {
     const query = queryList[index];
     const queryType = Object.keys(query.definition)[0];
 
     // "after" hooks should only fire for writes — not reads.
-    if (queryType !== 'set' && queryType !== 'drop' && queryType !== 'create') {
+    if (queryType !== 'create' && queryType !== 'set' && queryType !== 'drop') {
       continue;
     }
 
-    const diff = queryList.find((item) => item.diffForIndex === index);
+    let resultBefore = queryList.find((item) => item.diffForIndex === index)?.result;
+    let resultAfter = query.result;
+
+    // For queries of type "drop", we want to set `resultBefore` to the result
+    // of the query (which contains the record), because the record will no
+    // longer exist after the query has been executed, so it wouldn't make sense
+    // to expose the record as `resultAfter` in the data hooks.
+    if (queryType === 'drop') {
+      resultBefore = query.result;
+      resultAfter = undefined;
+    }
 
     // Run the actual hook functions.
     const promise = invokeHooks(
       'after',
-      { definition: query.definition, resultBefore: diff?.result, resultAfter: query.result },
+      { definition: query.definition, resultBefore, resultAfter },
       hookCallerOptions,
     );
 
