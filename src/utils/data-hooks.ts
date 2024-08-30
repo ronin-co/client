@@ -187,14 +187,12 @@ const invokeHooks = async (
   hookType: HookType,
   query: {
     definition: Query;
-
     resultBefore?: unknown;
     resultAfter?: unknown;
   },
   options: HookCallerOptions,
 ): Promise<{
   definition: Query;
-
   result?: unknown;
 }> => {
   const { hooks, asyncContext, autoSkipHooks } = options;
