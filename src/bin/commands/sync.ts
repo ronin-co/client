@@ -52,7 +52,7 @@ export default async (
   try {
     if (!config.spaceId && !appToken && sessionToken) {
       const spaces = await getSpaces(sessionToken);
-      console.log(spaces.length);
+
       if (!spaces || spaces.length === 0) {
         spinner.fail(
           "You don't have access to any space or your CLI session is invalid.\n\n" +
@@ -98,6 +98,7 @@ export default async (
     // Replace field IDs with existing field IDs.
     schemaDefinitions = await replaceFieldIdsWithExisting(schemaDefinitions, remoteSchemas);
     // Add summary to schema definitions.
+
     schemaDefinitions = schemaDefinitions.map((schema) => ({
       ...schema,
       summary:
@@ -111,7 +112,7 @@ export default async (
 
     status = 'syncing';
     spinner.text = 'Syncing schema definitions';
-    const res = await fetch('https://ronin.supply/-/ronin/sync', {
+    const res = await fetch('http://localhost:3002/-/ronin/sync', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

@@ -77,7 +77,6 @@ export const getSchemas = async (token: string, space: string): Promise<Schema[]
     });
 
     text = await res.text();
-
     if (!res.ok) {
       throw new Error(text);
     }
