@@ -157,10 +157,9 @@ const normalizeResults = (result: unknown) => {
   return structuredClone(value);
 };
 
-interface HookCallerOptions extends Omit<QueryHandlerOptions, 'hooks' | 'asyncContext' | 'autoSkipHooks'> {
+interface HookCallerOptions extends Omit<QueryHandlerOptions, 'hooks' | 'asyncContext'> {
   hooks: NonNullable<QueryHandlerOptions['hooks']>;
   asyncContext: NonNullable<QueryHandlerOptions['asyncContext']>;
-  autoSkipHooks: NonNullable<QueryHandlerOptions['autoSkipHooks']>;
 }
 
 export interface HookContext {
@@ -195,7 +194,7 @@ const invokeHooks = async (
   definition: Query;
   result?: unknown;
 }> => {
-  const { hooks, asyncContext, autoSkipHooks } = options;
+  const { hooks, asyncContext } = options;
 
   const queryType = Object.keys(query.definition)[0] as QueryType;
   const queryInstructions = query.definition[queryType] as QuerySchemaType;
@@ -219,10 +218,39 @@ const invokeHooks = async (
     ? structuredClone<CombinedInstructions>(oldInstruction as CombinedInstructions)
     : ({} as CombinedInstructions);
 
-  // Learn more about this behavior in the comment of the `autoSkipHooks` option.
+  // To prevent recursions in data hooks, we have to only execute data hooks
+  // that come after the lifecycle level of the current data hook (1).
+  //
+  // Additionally, no data hooks should be called for queries inside data hooks
+  // that are addressing the same schema as the surrounding data hook (2).
+  //
+  // For queries that target a schema that has "during" data hooks defined,
+  // however, this behavior should not apply (3).
+  //
+  // **EXAMPLES**
+  //
+  // 1. If a query targeting the `customer` schema is executed in the
+  // `beforeCreate` data hook of the `account` schema, only data hooks after
+  // the "before" lifecycle level (such as `set`, `afterSet`, `create`,
+  // `afterCreate` etc.) will be executed for the `customer` query.
+  //
+  // 2. If a query targeting the `customer` schema is executed in the
+  // `beforeCreate` data hook of the `customer` schema, no data hooks will be
+  // executed for the `customer` query.
+  //
+  // 3. If a query targeting the `customer` schema is executed and that schema
+  // contains data hooks of the "during" lifecycle level, all data hooks of
+  // that target schema will be executed and none will be skipped.
   const parentHook = asyncContext.getStore();
   const shouldSkip =
-    autoSkipHooks === false
+    hooksForSchema &&
+    (hooksForSchema['get'] ||
+      hooksForSchema['count'] ||
+      hooksForSchema['create'] ||
+      hooksForSchema['set'] ||
+      hooksForSchema['drop']) &&
+    parentHook &&
+    querySchema !== parentHook.querySchema
       ? false
       : parentHook &&
         (HOOK_TYPES.indexOf(hookType) <= HOOK_TYPES.indexOf(parentHook.hookType) ||
@@ -290,7 +318,7 @@ export const runQueriesWithHooks = async <T>(
   queries: Query[],
   options: QueryHandlerOptions = {},
 ): Promise<Results<T>> => {
-  const { hooks, waitUntil, asyncContext, autoSkipHooks = true } = options;
+  const { hooks, waitUntil, asyncContext } = options;
 
   // If no hooks were provided, we can just run the queries and return
   // the results.
@@ -361,7 +389,7 @@ export const runQueriesWithHooks = async <T>(
     })
     .flat();
 
-  const hookCallerOptions = { hooks, asyncContext, autoSkipHooks };
+  const hookCallerOptions = { hooks, asyncContext };
 
   // Invoke `beforeCreate`, `beforeGet`, `beforeSet`, `beforeDrop`, and
   // also `beforeCount`.

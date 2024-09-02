@@ -39,32 +39,6 @@ export interface QueryHandlerOptions {
    * option is required.
    */
   asyncContext?: AsyncLocalStorage<any>;
-
-  /**
-   * By default, the client tries to intelligently prevent recursions in data
-   * hooks by only executing data hooks that come after the lifecycle level of
-   * the current data hook.
-   *
-   * Additionally, no data hooks will be called for queries inside data hooks
-   * that are addressing the same schema as the surrounding data hook.
-   *
-   * To disable this intelligent recursion prevention, you can disable the
-   * option right here.
-   *
-   * **EXAMPLES**
-   *
-   * - If a query targeting the `customer` schema is executed in the
-   * `beforeCreate` data hook of the `account` schema, only data hooks after
-   * the "before" lifecycle level (such as `set`, `afterSet`, `create`,
-   * `afterCreate` etc.) will be executed for the `customer` query.
-   *
-   * - If a query targeting the `customer` schema is executed in the
-   * `beforeCreate` data hook of the `customer` schema, no data hooks will be
-   * executed for the `customer` query.
-   *
-   * @default true
-   */
-  autoSkipHooks?: boolean;
 }
 
 /**

@@ -448,7 +448,7 @@ describe('hooks', () => {
             // immediately instead of performing a test assertion, because the
             // code will otherwise run forever (until memory is exceeded).
             if (hookInvoked) {
-              console.error('Infinite recursion detected in test. Exiting.');
+              console.error('Infinite recursion detected in test. Exiting (search for this message).');
               process.exit(1);
             }
 
