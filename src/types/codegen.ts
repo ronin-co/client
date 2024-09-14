@@ -242,7 +242,7 @@ export namespace RONIN {
   };
 
   type WithFunction<TSchema, TReturn, TOptions> = Omit<ReducedFunction, keyof TSchema> & {
-    (filter: Partial<WithObject<TSchema>>, options?: TOptions): Promise<TReturn>;
+    (filter: Partial<WithObject<TSchema> | Array<WithObject<TSchema>>>, options?: TOptions): Promise<TReturn>;
   };
 
   type With<TSchema, R, O> = WithFunction<TSchema, R, O> & WithFilterFunctions<TSchema, R>;
