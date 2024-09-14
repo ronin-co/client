@@ -296,7 +296,7 @@ export namespace RONIN {
   export interface IGetterSingular<TSchema, TOptions = undefined> extends ReducedFunction {
     <TIncluding extends Including<TSchema> = []>(
       filter?: {
-        with?: Partial<WithObject<TSchema>>;
+        with?: Partial<WithObject<TSchema> | Array<WithObject<TSchema>>>;
         including?: TIncluding;
       },
       options?: TOptions,
@@ -315,7 +315,7 @@ export namespace RONIN {
   > extends ReducedFunction {
     <TIncluding extends Including<TSchema> = []>(
       filter?: {
-        with?: Partial<WithObject<TSchema>>;
+        with?: Partial<WithObject<TSchema> | Array<WithObject<TSchema>>>;
         orderedBy?: OrderedByObject<TSchema>;
         limitedTo?: number;
         including?: TIncluding;
@@ -338,7 +338,7 @@ export namespace RONIN {
   export interface ISetter<TSchema, TOptions = undefined> extends ReducedFunction {
     <TIncluding extends Including<TSchema> = []>(
       filter: {
-        with: Partial<WithObject<TSchema>>;
+        with: Partial<WithObject<TSchema> | Array<WithObject<TSchema>>>;
         to: Partial<ReplaceForSetter<TSchema>>;
         including?: TIncluding;
       },
@@ -349,7 +349,7 @@ export namespace RONIN {
   export interface ICreator<TSchema, TOptions = undefined> extends ReducedFunction {
     <TIncluding extends Including<TSchema> = []>(
       filter?: {
-        with: Partial<ReplaceForSetter<TSchema>>;
+        with: Partial<ReplaceForSetter<TSchema> | Array<ReplaceForSetter<TSchema>>>;
         including?: TIncluding;
       },
       options?: TOptions,
@@ -361,7 +361,7 @@ export namespace RONIN {
   }
 
   export interface ICounter<TSchema, TOptions = undefined> extends ReducedFunction {
-    (filter?: { with?: Partial<WithObject<TSchema>> }): Promise<number>;
+    (filter?: { with?: Partial<WithObject<TSchema> | Array<WithObject<TSchema>>> }): Promise<number>;
     with: With<TSchema, number, TOptions>;
   }
 
@@ -370,7 +370,10 @@ export namespace RONIN {
     TOptions = undefined,
     TModifiedReturn = Replace<TSchema, RONIN.RoninRecord, string>,
   > extends ReducedFunction {
-    (filter?: { with?: Partial<WithObject<TSchema>> }, options?: TOptions): Promise<TModifiedReturn>;
+    (
+      filter?: { with?: Partial<WithObject<TSchema> | Array<WithObject<TSchema>>> },
+      options?: TOptions,
+    ): Promise<TModifiedReturn>;
     with: With<TSchema, TSchema, TOptions>;
   }
 
