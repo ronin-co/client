@@ -12,30 +12,18 @@
     "dev": "bun run build -- --watch",
     "build": "tsup",
     "test": "bun test",
-    "lint": "bun run lint:tsc && bun run lint:eslint --",
-    "lint:eslint": "eslint . --ext .ts --ignore-path .gitignore",
-    "lint:tsc": "tsc",
+    "lint": "bun run --bun lint:tsc && bun run --bun lint:biome",
+    "lint:biome": "biome check",
+    "lint:tsc": "lint:tsc && tsc --noEmit --pretty",
     "prepare": "husky && bun run build",
-    "prettify": "prettier --write --ignore-unknown \"**/*.{css,js,json,jsx,ts,tsx}\""
+    "format": "biome format --write"
   },
-  "files": [
-    "dist"
-  ],
+  "files": ["dist"],
   "repository": "ronin-co/client",
   "homepage": "https://ronin.co/docs/typescript-client",
-  "keywords": [
-    "ronin",
-    "client",
-    "database",
-    "orm",
-    "edge",
-    "serverless"
-  ],
+  "keywords": ["ronin", "client", "database", "orm", "edge", "serverless"],
   "lint-staged": {
-    "**/*": [
-      "prettier --ignore-unknown --write",
-      "eslint --fix --ignore-path .gitignore"
-    ]
+    "**/*": ["biome check"]
   },
   "exports": {
     ".": {
@@ -57,18 +45,10 @@
   },
   "typesVersions": {
     "*": {
-      "*": [
-        "dist/index.d.ts"
-      ],
-      "types": [
-        "dist/types/index.d.ts"
-      ],
-      "schema": [
-        "dist/schema/index.d.ts"
-      ],
-      "utils": [
-        "dist/utils/index.d.ts"
-      ]
+      "*": ["dist/index.d.ts"],
+      "types": ["dist/types/index.d.ts"],
+      "schema": ["dist/schema/index.d.ts"],
+      "utils": ["dist/utils/index.d.ts"]
     }
   },
   "engines": {
@@ -78,6 +58,7 @@
     "@iarna/toml": "2.2.5",
     "@inquirer/prompts": "5.3.4",
     "@paralleldrive/cuid2": "2.2.2",
+    "biome": "0.3.3",
     "chalk-template": "1.1.0",
     "get-port": "7.1.0",
     "ini": "4.1.3",
@@ -91,17 +72,8 @@
     "@types/bun": "1.1.6",
     "@types/ini": "4.1.1",
     "@types/pluralize": "0.0.33",
-    "@typescript-eslint/eslint-plugin": "7.17.0",
-    "@typescript-eslint/parser": "7.17.0",
-    "eslint": "8.57.0",
-    "eslint-config-prettier": "9.1.0",
-    "eslint-plugin-import": "2.29.1",
-    "eslint-plugin-simple-import-sort": "12.1.1",
-    "eslint-plugin-spellcheck": "0.0.20",
-    "eslint-plugin-unused-imports": "4.0.1",
     "husky": "9.1.4",
     "lint-staged": "15.2.7",
-    "prettier": "3.3.3",
     "tsup": "8.2.3"
   }
 }

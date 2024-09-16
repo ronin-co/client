@@ -1,3 +1,10 @@
 {
-  "recommendations": ["oven.bun-vscode", "dbaeumer.vscode-eslint", "redhat.vscode-yaml"]
+	"recommendations": [
+		"oven.bun-vscode",
+		"dbaeumer.vscode-eslint",
+		"redhat.vscode-yaml",
+		"mikestead.dotenv",
+		"gruntfuggly.todo-tree",
+		"biomejs.biome"
+	]
 }
