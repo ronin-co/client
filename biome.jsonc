@@ -1,5 +1,5 @@
 {
-  "$schema": "https://biomejs.dev/schemas/1.8.3/schema.json",
+  "$schema": "https://biomejs.dev/schemas/1.9.1/schema.json",
   "files": {
     "include": ["./**/*.ts", "./**/*.json"],
     "ignore": ["node_modules/", "bun.lockb"]
@@ -39,10 +39,7 @@
       },
       "nursery": {
         "all": true,
-        "noConsole": "off",
-        "noUndeclaredDependencies": "off",
-        "useSortedClasses": "warn",
-        "useImportExtensions": "off"
+        "useSortedClasses": "warn"
       },
       "performance": {
         "all": true,

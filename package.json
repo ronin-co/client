@@ -68,7 +68,7 @@
     "typescript": "5.5.4"
   },
   "devDependencies": {
-    "@biomejs/biome": "1.8.3",
+    "@biomejs/biome": "1.9.1",
     "@types/bun": "1.1.6",
     "@types/ini": "4.1.1",
     "@types/pluralize": "0.0.33",
