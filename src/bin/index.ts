@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { parseArgs } from 'util';
+import { parseArgs } from 'node:util';
 
 import initializeProject from '@/src/bin/commands/init';
 import logIn from '@/src/bin/commands/login';
@@ -8,8 +8,8 @@ import sync from '@/src/bin/commands/sync';
 import { printHelp, printVersion } from '@/src/bin/utils/info';
 import { getSession } from '@/src/bin/utils/session';
 
-let values;
-let positionals;
+let values: Record<string, unknown>;
+let positionals: Array<string>;
 
 try {
   ({ values, positionals } = parseArgs({
@@ -69,15 +69,16 @@ const run = async () => {
   // command itself will handle it already.
   const session = await getSession();
 
-  if (!process.stdout.isTTY && !session && !appToken) {
+  if (!(process.stdout.isTTY || session || appToken)) {
     let message = 'If RONIN CLI is invoked from a non-interactive shell, ';
-    message += 'a `RONIN_TOKEN` environment variable containing an app token must be provided.';
+    message +=
+      'a `RONIN_TOKEN` environment variable containing an app token must be provided.';
 
     console.error(message);
     process.exit(1);
   }
 
-  if (!session && !normalizedPositionals.includes('login')) await logIn(appToken, false);
+  if (!(session || normalizedPositionals.includes('login'))) await logIn(appToken, false);
 
   // `login` sub command
   if (normalizedPositionals.includes('login')) return logIn(appToken);
@@ -87,9 +88,14 @@ const run = async () => {
 
   // `sync` sub command
   if (normalizedPositionals.includes('sync')) {
-    const reset = values.reset || false; // Get the reset flag value
+    const reset = values.reset as boolean; // Explicitly cast reset to boolean
 
-    return sync(positionals.slice(positionals.indexOf('sync') + 1), appToken, session?.token, reset);
+    return sync(
+      positionals.slice(positionals.indexOf('sync') + 1),
+      appToken,
+      session?.token,
+      reset,
+    );
   }
 
   // If no matching flags or commands were found, render the help, since we

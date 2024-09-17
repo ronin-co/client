@@ -1,5 +1,11 @@
 import { runQueries } from '@/src/queries';
-import type { CombinedInstructions, Query, QuerySchemaType, QueryType, Results } from '@/src/types/query';
+import type {
+  CombinedInstructions,
+  Query,
+  QuerySchemaType,
+  QueryType,
+  Results,
+} from '@/src/types/query';
 import type { QueryHandlerOptions, RecursivePartial } from '@/src/types/utils';
 import { toDashCase } from '@/src/utils/helpers';
 
@@ -79,8 +85,16 @@ type HookList<TSchema = unknown> = {
 export type Hooks<TSchema = unknown> = Record<string, HookList<TSchema>>;
 
 type BeforeHook<TType extends QueryType> = Hook<'before', TType>;
-type DuringHook<TType extends QueryType, TSchema = unknown> = Hook<'during', TType, TSchema>;
-type AfterHook<TType extends QueryType, TSchema = unknown> = Hook<'after', TType, TSchema>;
+type DuringHook<TType extends QueryType, TSchema = unknown> = Hook<
+  'during',
+  TType,
+  TSchema
+>;
+type AfterHook<TType extends QueryType, TSchema = unknown> = Hook<
+  'after',
+  TType,
+  TSchema
+>;
 
 export type BeforeCreateHook = BeforeHook<'create'>;
 export type BeforeGetHook = BeforeHook<'get'>;
@@ -244,11 +258,11 @@ const invokeHooks = async (
   const parentHook = asyncContext.getStore();
   const shouldSkip =
     hooksForSchema &&
-    (hooksForSchema['get'] ||
-      hooksForSchema['count'] ||
-      hooksForSchema['create'] ||
-      hooksForSchema['set'] ||
-      hooksForSchema['drop']) &&
+    (hooksForSchema.get ||
+      hooksForSchema.count ||
+      hooksForSchema.create ||
+      hooksForSchema.set ||
+      hooksForSchema.drop) &&
     parentHook &&
     querySchema !== parentHook.querySchema
       ? false
@@ -280,7 +294,10 @@ const invokeHooks = async (
           );
         }
 
-        return (hook as BeforeHook<QueryType> | DuringHook<QueryType>)(queryInstruction, multipleRecords);
+        return (hook as BeforeHook<QueryType> | DuringHook<QueryType>)(
+          queryInstruction,
+          multipleRecords,
+        );
       },
     );
 
@@ -355,39 +372,37 @@ export const runQueriesWithHooks = async <T>(
     definition: Query;
     result: unknown;
     diffForIndex?: number;
-  }[] = queries
-    .map((query, index) => {
-      const details = { definition: query, result: EMPTY };
+  }[] = queries.flatMap((query, index) => {
+    const details = { definition: query, result: EMPTY };
 
-      // If data hooks are enabled, we want to send a separate `get` query for
-      // every `set` query (in the same transaction), so that we can provide the
-      // data hooks with a "before and after" of the modified records.
-      //
-      // The version of the record *after* the modification is already available
-      // without the extra `get` query, since `set` queries return the modified
-      // record afterward, but in order to get the version of the record
-      // *before* the modification, we need a separate `get` query.
-      if (query.set) {
-        const schemaSlug = Object.keys(query.set)[0];
+    // If data hooks are enabled, we want to send a separate `get` query for
+    // every `set` query (in the same transaction), so that we can provide the
+    // data hooks with a "before and after" of the modified records.
+    //
+    // The version of the record *after* the modification is already available
+    // without the extra `get` query, since `set` queries return the modified
+    // record afterward, but in order to get the version of the record
+    // *before* the modification, we need a separate `get` query.
+    if (query.set) {
+      const schemaSlug = Object.keys(query.set)[0];
 
-        const diffQuery = {
-          definition: {
-            get: {
-              [schemaSlug]: {
-                with: query.set[schemaSlug].with,
-              },
+      const diffQuery = {
+        definition: {
+          get: {
+            [schemaSlug]: {
+              with: query.set[schemaSlug].with,
             },
           },
-          diffForIndex: index + 1,
-          result: EMPTY,
-        };
+        },
+        diffForIndex: index + 1,
+        result: EMPTY,
+      };
 
-        return [diffQuery, details];
-      }
+      return [diffQuery, details];
+    }
 
-      return [details];
-    })
-    .flat();
+    return [details];
+  });
 
   const hookCallerOptions = { hooks, asyncContext };
 
@@ -398,7 +413,11 @@ export const runQueriesWithHooks = async <T>(
       // For diff queries, we don't want to run "before" hooks.
       if (typeof diffForIndex !== 'undefined') return;
 
-      const modifiedQuery = await invokeHooks('before', { definition }, hookCallerOptions);
+      const modifiedQuery = await invokeHooks(
+        'before',
+        { definition },
+        hookCallerOptions,
+      );
       queryList[index].definition = modifiedQuery.definition;
     }),
   );
@@ -406,7 +425,11 @@ export const runQueriesWithHooks = async <T>(
   // Invoke `create`, `get`, `set`, `drop`, and `count`.
   await Promise.all(
     queryList.map(async ({ definition }, index) => {
-      const modifiedQuery = await invokeHooks('during', { definition }, hookCallerOptions);
+      const modifiedQuery = await invokeHooks(
+        'during',
+        { definition },
+        hookCallerOptions,
+      );
       queryList[index].result = modifiedQuery.result;
     }),
   );
@@ -417,7 +440,8 @@ export const runQueriesWithHooks = async <T>(
 
   // If no queries are remaining, that means all the queries were handled by
   // "during" hooks above, so there are none remaining to send for execution.
-  if (queriesWithoutResults.length === 0) return queryList.map(({ result }) => result) as Results<T>;
+  if (queriesWithoutResults.length === 0)
+    return queryList.map(({ result }) => result) as Results<T>;
 
   const resultsFromDatabase = await runQueries<T>(
     queriesWithoutResults.map(({ definition }) => definition),

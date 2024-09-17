@@ -1,8 +1,8 @@
+import fs from 'node:fs/promises';
+import os from 'node:os';
+import path from 'node:path';
 import toml from '@iarna/toml';
-import fs from 'fs/promises';
 import ini from 'ini';
-import os from 'os';
-import path from 'path';
 
 const CACHE_DIR = path.join(os.homedir(), '.ronin');
 const CACHE_DIR_FILE = path.join(CACHE_DIR, 'session.json');
@@ -45,7 +45,7 @@ const readConfigFile = async (
   return npmConfigContents;
 };
 
-const writeConfigFile = async (filePath: string, contents: string) => {
+const writeConfigFile = (filePath: string, contents: string) => {
   return fs.writeFile(filePath, contents, { encoding: 'utf-8' });
 };
 
@@ -65,7 +65,8 @@ export const storeSession = async (token: string) => {
 };
 
 export const storeTokenForNPM = async (token: string) => {
-  const npmConfigFile = process.env['npm_config_userconfig'] || path.join(os.homedir(), '.npmrc');
+  const npmConfigFile =
+    process.env.npm_config_userconfig || path.join(os.homedir(), '.npmrc');
   const npmConfigContents = await readConfigFile(npmConfigFile, 'npm', ini.parse);
 
   npmConfigContents['@ronin:registry'] = 'https://ronin.supply';
@@ -81,7 +82,8 @@ export const storeTokenForBun = async (token: string) => {
   // Safely initialize potentially missing keys.
   if (!bunConfigContents.install) bunConfigContents.install = {};
   if (!bunConfigContents.install.scopes) bunConfigContents.install.scopes = {};
-  if (!bunConfigContents.install.scopes.ronin) bunConfigContents.install.scopes.ronin = {};
+  if (!bunConfigContents.install.scopes.ronin)
+    bunConfigContents.install.scopes.ronin = {};
 
   bunConfigContents.install.scopes.ronin.url = 'https://ronin.supply';
   bunConfigContents.install.scopes.ronin.token = token;

@@ -69,7 +69,7 @@ describe('edge runtime', () => {
     const hookInvocation = { happened: () => true };
     const hookInvocationHappened = spyOn(hookInvocation, 'happened');
 
-    const promisesToAwait: Promise<unknown>[] = [];
+    const promisesToAwait: Array<Promise<unknown>> = [];
 
     // Simulate a web runtime.
     const oldProcess = global.process;
@@ -92,7 +92,7 @@ describe('edge runtime', () => {
       },
       hooks: {
         account: {
-          afterCreate: async function () {
+          afterCreate: async () => {
             // Sleep for 50 milliseconds to simulate an asynchronous action.
             await new Promise((resolve) => setTimeout(resolve, 50));
 
@@ -125,7 +125,7 @@ describe('edge runtime', () => {
     ];
 
     const errorText = 'I am an error';
-    const promisesToAwait: Promise<unknown>[] = [];
+    const promisesToAwait: Array<Promise<unknown>> = [];
 
     // Simulate a web runtime.
     const oldProcess = global.process;
@@ -148,7 +148,7 @@ describe('edge runtime', () => {
       },
       hooks: {
         account: {
-          afterCreate: async function () {
+          afterCreate: () => {
             throw new Error(errorText);
           },
         },
@@ -173,7 +173,7 @@ describe('edge runtime', () => {
       },
     ];
 
-    const promisesToAwait: Promise<unknown>[] = [];
+    const promisesToAwait: Array<Promise<unknown>> = [];
 
     // Simulate a web runtime.
     const oldProcess = global.process;
@@ -196,7 +196,7 @@ describe('edge runtime', () => {
       },
       hooks: {
         account: {
-          afterCreate: async function () {
+          afterCreate: async () => {
             // Sleep for 50 milliseconds to simulate an asynchronous action.
             await new Promise((resolve) => setTimeout(resolve, 50));
           },

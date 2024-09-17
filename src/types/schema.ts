@@ -15,7 +15,9 @@ export type StringSchemaField = Omit<BasicSchemaField, 'type'> & {
 
 export type ListSchemaField = Omit<BasicSchemaField, 'type'> & {
   type: 'list';
-  shape: (BasicSchemaField | StringSchemaField | ReferenceSchemaField | JSONSchemaField)[];
+  shape: Array<
+    BasicSchemaField | StringSchemaField | ReferenceSchemaField | JSONSchemaField
+  >;
 };
 
 export type ReferenceSchemaField = Omit<BasicSchemaField, 'type'> & {
@@ -45,7 +47,7 @@ export type SchemaField =
 export type Schema = {
   id: string;
   summary: string;
-  fields: SchemaField[] | null;
+  fields: Array<SchemaField> | null;
   identifiers: {
     title: string | null;
     slug: string | null;

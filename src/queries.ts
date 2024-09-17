@@ -2,11 +2,15 @@ import { processStorableObjects, uploadStorableObjects } from '@/src/storage';
 import type { Query, Results } from '@/src/types/query';
 import type { QueryHandlerOptions } from '@/src/types/utils';
 import { runQueriesWithHooks } from '@/src/utils/data-hooks';
-import { getDotNotatedPath, getResponseBody, InvalidQueryError } from '@/src/utils/errors';
+import {
+  InvalidQueryError,
+  getDotNotatedPath,
+  getResponseBody,
+} from '@/src/utils/errors';
 import { formatDateFields, getProperty } from '@/src/utils/helpers';
 
 type QueryResponse<T> = {
-  results: Result<T>[];
+  results: Array<Result<T>>;
   error?: any;
 };
 
@@ -27,7 +31,7 @@ type Result<T> =
       schema: Record<string, SchemaFieldType>;
     }
   | {
-      records: (T | any)[] & { moreBefore?: string; moreAfter?: string };
+      records: Array<T | any> & { moreBefore?: string; moreAfter?: string };
       moreBefore: string;
       moreAfter: string;
       schema: Record<string, SchemaFieldType>;
@@ -36,7 +40,7 @@ type Result<T> =
       amount: number;
     }
   | {
-      error: any;
+      error?: any;
     };
 
 /**
@@ -50,10 +54,12 @@ type Result<T> =
  * @returns Promise resolving the queried data.
  */
 export const runQueries = async <T>(
-  queries: Query[],
+  queries: Array<Query>,
   options: QueryHandlerOptions = {},
 ): Promise<Results<T>> => {
-  const hasWriteQuery = queries.some((query) => ['create', 'set', 'drop'].includes(Object.keys(query)[0]));
+  const hasWriteQuery = queries.some((query) =>
+    ['create', 'set', 'drop'].includes(Object.keys(query)[0]),
+  );
 
   // Runtimes like Cloudflare Workers don't support `cache` yet.
   const hasCachingSupport = 'cache' in new Request('https://ronin.co');
@@ -85,10 +91,15 @@ export const runQueries = async <T>(
     const result = results[index];
 
     if ('error' in result && result.error) {
-      const message = result.error.code === 'BAD_REQUEST' ? 'Invalid query provided.' : result.error.message;
+      const message =
+        result.error.code === 'BAD_REQUEST'
+          ? 'Invalid query provided.'
+          : result.error.message;
 
       // Get a dot-notated path to the field that caused the error.
-      const path = result.error.issues?.[0]?.path ? getDotNotatedPath(result.error.issues[0].path) : null;
+      const path = result.error.issues?.[0]?.path
+        ? getDotNotatedPath(result.error.issues[0].path)
+        : null;
 
       // If a path is given, try resolving the query that caused the error.
       const query =
@@ -97,7 +108,8 @@ export const runQueries = async <T>(
           : null;
 
       // Get the last part of the instruction that is invalid.
-      const instruction = query && path ? getProperty(query, path.replace(/queries\[\d+\]\./, '')) : null;
+      const instruction =
+        query && path ? getProperty(query, path.replace(/queries\[\d+\]\./, '')) : null;
 
       // Get potential details about the error. These contain instructions how
       // the issue might be resolved.
@@ -106,7 +118,9 @@ export const runQueries = async <T>(
       throw new InvalidQueryError({
         message,
         query:
-          query && path ? `${path.replace(/queries\[\d+\]\./, '')} = ${JSON.stringify(instruction)}` : null,
+          query && path
+            ? `${path.replace(/queries\[\d+\]\./, '')} = ${JSON.stringify(instruction)}`
+            : null,
         path: path,
         details,
         code: result.error.code || null,
@@ -115,7 +129,11 @@ export const runQueries = async <T>(
     }
 
     // Handle `count` query result.
-    if ('amount' in result && typeof result.amount !== 'undefined' && result.amount !== null) {
+    if (
+      'amount' in result &&
+      typeof result.amount !== 'undefined' &&
+      result.amount !== null
+    ) {
       results[index] = Number(result.amount) as unknown as Result<T>;
       continue;
     }
@@ -153,19 +171,23 @@ export const runQueries = async <T>(
       //
       // This value is already available on `result`, but since we're only
       // returning `result.records`, we want it to be set on that array.
-      if (typeof result.moreBefore !== 'undefined') result.records.moreBefore = result.moreBefore;
-      if (typeof result.moreAfter !== 'undefined') result.records.moreAfter = result.moreAfter;
+      if (typeof result.moreBefore !== 'undefined')
+        result.records.moreBefore = result.moreBefore;
+      if (typeof result.moreAfter !== 'undefined')
+        result.records.moreAfter = result.moreAfter;
 
       results[index] = result.records as unknown as Result<T>;
-      continue;
     }
   }
 
   const endFormatting = performance.now();
 
   const VERBOSE_LOGGING =
-    (typeof process !== 'undefined' && process?.env && process.env.__RENDER_DEBUG_LEVEL === 'verbose') ||
-    (typeof import.meta?.env !== 'undefined' && import.meta.env.__RENDER_DEBUG_LEVEL === 'verbose');
+    (typeof process !== 'undefined' &&
+      process?.env &&
+      process.env.__RENDER_DEBUG_LEVEL === 'verbose') ||
+    (typeof import.meta?.env !== 'undefined' &&
+      import.meta.env.__RENDER_DEBUG_LEVEL === 'verbose');
 
   if (VERBOSE_LOGGING) {
     console.log(`Formatting took ${endFormatting - startFormatting}ms`);
@@ -183,7 +205,7 @@ export const runQueries = async <T>(
  * @returns The results of the queries that were passed.
  */
 export const runQueriesWithStorageAndHooks = async <T>(
-  queries: Query[],
+  queries: Array<Query>,
   options: QueryHandlerOptions = {},
 ): Promise<Results<T>> => {
   // Extract and process `StorableObject`s, if any are present.
@@ -192,9 +214,12 @@ export const runQueriesWithStorageAndHooks = async <T>(
   // field has been replaced with the reference to the `StoredObject`.
   // This way, we only store the `reference` of the `StoredObject` inside the
   // database for better performance.
-  const queriesPopulatedWithReferences = await processStorableObjects(queries, (objects) => {
-    return uploadStorableObjects(objects, options);
-  });
+  const queriesPopulatedWithReferences = await processStorableObjects(
+    queries,
+    (objects) => {
+      return uploadStorableObjects(objects, options);
+    },
+  );
 
   return runQueriesWithHooks<T>(queriesPopulatedWithReferences, options);
 };

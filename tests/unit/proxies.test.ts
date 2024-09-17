@@ -22,7 +22,7 @@ describe('syntax proxy', () => {
   });
 
   test('using options for query in batch', async () => {
-    const queryList: QueryItem[] = [];
+    const queryList: Array<QueryItem> = [];
 
     getBatchProxy(
       () => [

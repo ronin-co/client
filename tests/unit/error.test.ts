@@ -18,7 +18,7 @@ describe('generate dot notation', () => {
   });
 
   test('generate path from empty array of segments', () => {
-    const segments: string[] = [];
+    const segments: Array<string> = [];
     const path = getDotNotatedPath(segments);
 
     expect(path).toBe(null);

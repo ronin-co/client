@@ -1242,25 +1242,46 @@ type Instructions =
               | (string | number | boolean | null | any)
               | {
                   being?:
-                    | ((string | number | boolean | null | any) | (string | number | boolean | null | any)[])
+                    | (
+                        | (string | number | boolean | null | any)
+                        | (string | number | boolean | null | any)[]
+                      )
                     | undefined;
                   notBeing?:
-                    | ((string | number | boolean | null | any) | (string | number | boolean | null | any)[])
+                    | (
+                        | (string | number | boolean | null | any)
+                        | (string | number | boolean | null | any)[]
+                      )
                     | undefined;
                   startingWith?:
-                    | ((string | number | boolean | null | any) | (string | number | boolean | null | any)[])
+                    | (
+                        | (string | number | boolean | null | any)
+                        | (string | number | boolean | null | any)[]
+                      )
                     | undefined;
                   endingWith?:
-                    | ((string | number | boolean | null | any) | (string | number | boolean | null | any)[])
+                    | (
+                        | (string | number | boolean | null | any)
+                        | (string | number | boolean | null | any)[]
+                      )
                     | undefined;
                   containing?:
-                    | ((string | number | boolean | null | any) | (string | number | boolean | null | any)[])
+                    | (
+                        | (string | number | boolean | null | any)
+                        | (string | number | boolean | null | any)[]
+                      )
                     | undefined;
                   greaterThan?:
-                    | ((string | number | boolean | null | any) | (string | number | boolean | null | any)[])
+                    | (
+                        | (string | number | boolean | null | any)
+                        | (string | number | boolean | null | any)[]
+                      )
                     | undefined;
                   lessThan?:
-                    | ((string | number | boolean | null | any) | (string | number | boolean | null | any)[])
+                    | (
+                        | (string | number | boolean | null | any)
+                        | (string | number | boolean | null | any)[]
+                      )
                     | undefined;
                 }
             )
@@ -2737,25 +2758,46 @@ type QueryInstructionType = {
               | (string | number | boolean | null | any)
               | {
                   being?:
-                    | ((string | number | boolean | null | any) | (string | number | boolean | null | any)[])
+                    | (
+                        | (string | number | boolean | null | any)
+                        | (string | number | boolean | null | any)[]
+                      )
                     | undefined;
                   notBeing?:
-                    | ((string | number | boolean | null | any) | (string | number | boolean | null | any)[])
+                    | (
+                        | (string | number | boolean | null | any)
+                        | (string | number | boolean | null | any)[]
+                      )
                     | undefined;
                   startingWith?:
-                    | ((string | number | boolean | null | any) | (string | number | boolean | null | any)[])
+                    | (
+                        | (string | number | boolean | null | any)
+                        | (string | number | boolean | null | any)[]
+                      )
                     | undefined;
                   endingWith?:
-                    | ((string | number | boolean | null | any) | (string | number | boolean | null | any)[])
+                    | (
+                        | (string | number | boolean | null | any)
+                        | (string | number | boolean | null | any)[]
+                      )
                     | undefined;
                   containing?:
-                    | ((string | number | boolean | null | any) | (string | number | boolean | null | any)[])
+                    | (
+                        | (string | number | boolean | null | any)
+                        | (string | number | boolean | null | any)[]
+                      )
                     | undefined;
                   greaterThan?:
-                    | ((string | number | boolean | null | any) | (string | number | boolean | null | any)[])
+                    | (
+                        | (string | number | boolean | null | any)
+                        | (string | number | boolean | null | any)[]
+                      )
                     | undefined;
                   lessThan?:
-                    | ((string | number | boolean | null | any) | (string | number | boolean | null | any)[])
+                    | (
+                        | (string | number | boolean | null | any)
+                        | (string | number | boolean | null | any)[]
+                      )
                     | undefined;
                 }
             )
@@ -3010,25 +3052,46 @@ type QueryInstructionType = {
               | (string | number | boolean | null | any)
               | {
                   being?:
-                    | ((string | number | boolean | null | any) | (string | number | boolean | null | any)[])
+                    | (
+                        | (string | number | boolean | null | any)
+                        | (string | number | boolean | null | any)[]
+                      )
                     | undefined;
                   notBeing?:
-                    | ((string | number | boolean | null | any) | (string | number | boolean | null | any)[])
+                    | (
+                        | (string | number | boolean | null | any)
+                        | (string | number | boolean | null | any)[]
+                      )
                     | undefined;
                   startingWith?:
-                    | ((string | number | boolean | null | any) | (string | number | boolean | null | any)[])
+                    | (
+                        | (string | number | boolean | null | any)
+                        | (string | number | boolean | null | any)[]
+                      )
                     | undefined;
                   endingWith?:
-                    | ((string | number | boolean | null | any) | (string | number | boolean | null | any)[])
+                    | (
+                        | (string | number | boolean | null | any)
+                        | (string | number | boolean | null | any)[]
+                      )
                     | undefined;
                   containing?:
-                    | ((string | number | boolean | null | any) | (string | number | boolean | null | any)[])
+                    | (
+                        | (string | number | boolean | null | any)
+                        | (string | number | boolean | null | any)[]
+                      )
                     | undefined;
                   greaterThan?:
-                    | ((string | number | boolean | null | any) | (string | number | boolean | null | any)[])
+                    | (
+                        | (string | number | boolean | null | any)
+                        | (string | number | boolean | null | any)[]
+                      )
                     | undefined;
                   lessThan?:
-                    | ((string | number | boolean | null | any) | (string | number | boolean | null | any)[])
+                    | (
+                        | (string | number | boolean | null | any)
+                        | (string | number | boolean | null | any)[]
+                      )
                     | undefined;
                 }
             )
@@ -4539,25 +4602,46 @@ type CreateInstructions = {
           | (string | number | boolean | null | any)
           | {
               being?:
-                | ((string | number | boolean | null | any) | (string | number | boolean | null | any)[])
+                | (
+                    | (string | number | boolean | null | any)
+                    | (string | number | boolean | null | any)[]
+                  )
                 | undefined;
               notBeing?:
-                | ((string | number | boolean | null | any) | (string | number | boolean | null | any)[])
+                | (
+                    | (string | number | boolean | null | any)
+                    | (string | number | boolean | null | any)[]
+                  )
                 | undefined;
               startingWith?:
-                | ((string | number | boolean | null | any) | (string | number | boolean | null | any)[])
+                | (
+                    | (string | number | boolean | null | any)
+                    | (string | number | boolean | null | any)[]
+                  )
                 | undefined;
               endingWith?:
-                | ((string | number | boolean | null | any) | (string | number | boolean | null | any)[])
+                | (
+                    | (string | number | boolean | null | any)
+                    | (string | number | boolean | null | any)[]
+                  )
                 | undefined;
               containing?:
-                | ((string | number | boolean | null | any) | (string | number | boolean | null | any)[])
+                | (
+                    | (string | number | boolean | null | any)
+                    | (string | number | boolean | null | any)[]
+                  )
                 | undefined;
               greaterThan?:
-                | ((string | number | boolean | null | any) | (string | number | boolean | null | any)[])
+                | (
+                    | (string | number | boolean | null | any)
+                    | (string | number | boolean | null | any)[]
+                  )
                 | undefined;
               lessThan?:
-                | ((string | number | boolean | null | any) | (string | number | boolean | null | any)[])
+                | (
+                    | (string | number | boolean | null | any)
+                    | (string | number | boolean | null | any)[]
+                  )
                 | undefined;
             }
         )
@@ -4566,25 +4650,46 @@ type CreateInstructions = {
             | (string | number | boolean | null | any)
             | {
                 being?:
-                  | ((string | number | boolean | null | any) | (string | number | boolean | null | any)[])
+                  | (
+                      | (string | number | boolean | null | any)
+                      | (string | number | boolean | null | any)[]
+                    )
                   | undefined;
                 notBeing?:
-                  | ((string | number | boolean | null | any) | (string | number | boolean | null | any)[])
+                  | (
+                      | (string | number | boolean | null | any)
+                      | (string | number | boolean | null | any)[]
+                    )
                   | undefined;
                 startingWith?:
-                  | ((string | number | boolean | null | any) | (string | number | boolean | null | any)[])
+                  | (
+                      | (string | number | boolean | null | any)
+                      | (string | number | boolean | null | any)[]
+                    )
                   | undefined;
                 endingWith?:
-                  | ((string | number | boolean | null | any) | (string | number | boolean | null | any)[])
+                  | (
+                      | (string | number | boolean | null | any)
+                      | (string | number | boolean | null | any)[]
+                    )
                   | undefined;
                 containing?:
-                  | ((string | number | boolean | null | any) | (string | number | boolean | null | any)[])
+                  | (
+                      | (string | number | boolean | null | any)
+                      | (string | number | boolean | null | any)[]
+                    )
                   | undefined;
                 greaterThan?:
-                  | ((string | number | boolean | null | any) | (string | number | boolean | null | any)[])
+                  | (
+                      | (string | number | boolean | null | any)
+                      | (string | number | boolean | null | any)[]
+                    )
                   | undefined;
                 lessThan?:
-                  | ((string | number | boolean | null | any) | (string | number | boolean | null | any)[])
+                  | (
+                      | (string | number | boolean | null | any)
+                      | (string | number | boolean | null | any)[]
+                    )
                   | undefined;
               };
         }
@@ -4593,25 +4698,46 @@ type CreateInstructions = {
               | (string | number | boolean | null | any)
               | {
                   being?:
-                    | ((string | number | boolean | null | any) | (string | number | boolean | null | any)[])
+                    | (
+                        | (string | number | boolean | null | any)
+                        | (string | number | boolean | null | any)[]
+                      )
                     | undefined;
                   notBeing?:
-                    | ((string | number | boolean | null | any) | (string | number | boolean | null | any)[])
+                    | (
+                        | (string | number | boolean | null | any)
+                        | (string | number | boolean | null | any)[]
+                      )
                     | undefined;
                   startingWith?:
-                    | ((string | number | boolean | null | any) | (string | number | boolean | null | any)[])
+                    | (
+                        | (string | number | boolean | null | any)
+                        | (string | number | boolean | null | any)[]
+                      )
                     | undefined;
                   endingWith?:
-                    | ((string | number | boolean | null | any) | (string | number | boolean | null | any)[])
+                    | (
+                        | (string | number | boolean | null | any)
+                        | (string | number | boolean | null | any)[]
+                      )
                     | undefined;
                   containing?:
-                    | ((string | number | boolean | null | any) | (string | number | boolean | null | any)[])
+                    | (
+                        | (string | number | boolean | null | any)
+                        | (string | number | boolean | null | any)[]
+                      )
                     | undefined;
                   greaterThan?:
-                    | ((string | number | boolean | null | any) | (string | number | boolean | null | any)[])
+                    | (
+                        | (string | number | boolean | null | any)
+                        | (string | number | boolean | null | any)[]
+                      )
                     | undefined;
                   lessThan?:
-                    | ((string | number | boolean | null | any) | (string | number | boolean | null | any)[])
+                    | (
+                        | (string | number | boolean | null | any)
+                        | (string | number | boolean | null | any)[]
+                      )
                     | undefined;
                 }
             )
@@ -4790,25 +4916,46 @@ type CreateQuery = {
               | (string | number | boolean | null | any)
               | {
                   being?:
-                    | ((string | number | boolean | null | any) | (string | number | boolean | null | any)[])
+                    | (
+                        | (string | number | boolean | null | any)
+                        | (string | number | boolean | null | any)[]
+                      )
                     | undefined;
                   notBeing?:
-                    | ((string | number | boolean | null | any) | (string | number | boolean | null | any)[])
+                    | (
+                        | (string | number | boolean | null | any)
+                        | (string | number | boolean | null | any)[]
+                      )
                     | undefined;
                   startingWith?:
-                    | ((string | number | boolean | null | any) | (string | number | boolean | null | any)[])
+                    | (
+                        | (string | number | boolean | null | any)
+                        | (string | number | boolean | null | any)[]
+                      )
                     | undefined;
                   endingWith?:
-                    | ((string | number | boolean | null | any) | (string | number | boolean | null | any)[])
+                    | (
+                        | (string | number | boolean | null | any)
+                        | (string | number | boolean | null | any)[]
+                      )
                     | undefined;
                   containing?:
-                    | ((string | number | boolean | null | any) | (string | number | boolean | null | any)[])
+                    | (
+                        | (string | number | boolean | null | any)
+                        | (string | number | boolean | null | any)[]
+                      )
                     | undefined;
                   greaterThan?:
-                    | ((string | number | boolean | null | any) | (string | number | boolean | null | any)[])
+                    | (
+                        | (string | number | boolean | null | any)
+                        | (string | number | boolean | null | any)[]
+                      )
                     | undefined;
                   lessThan?:
-                    | ((string | number | boolean | null | any) | (string | number | boolean | null | any)[])
+                    | (
+                        | (string | number | boolean | null | any)
+                        | (string | number | boolean | null | any)[]
+                      )
                     | undefined;
                 }
             )
@@ -7531,25 +7678,46 @@ type CombinedInstructions = {
               | (string | number | boolean | null | any)
               | {
                   being?:
-                    | ((string | number | boolean | null | any) | (string | number | boolean | null | any)[])
+                    | (
+                        | (string | number | boolean | null | any)
+                        | (string | number | boolean | null | any)[]
+                      )
                     | undefined;
                   notBeing?:
-                    | ((string | number | boolean | null | any) | (string | number | boolean | null | any)[])
+                    | (
+                        | (string | number | boolean | null | any)
+                        | (string | number | boolean | null | any)[]
+                      )
                     | undefined;
                   startingWith?:
-                    | ((string | number | boolean | null | any) | (string | number | boolean | null | any)[])
+                    | (
+                        | (string | number | boolean | null | any)
+                        | (string | number | boolean | null | any)[]
+                      )
                     | undefined;
                   endingWith?:
-                    | ((string | number | boolean | null | any) | (string | number | boolean | null | any)[])
+                    | (
+                        | (string | number | boolean | null | any)
+                        | (string | number | boolean | null | any)[]
+                      )
                     | undefined;
                   containing?:
-                    | ((string | number | boolean | null | any) | (string | number | boolean | null | any)[])
+                    | (
+                        | (string | number | boolean | null | any)
+                        | (string | number | boolean | null | any)[]
+                      )
                     | undefined;
                   greaterThan?:
-                    | ((string | number | boolean | null | any) | (string | number | boolean | null | any)[])
+                    | (
+                        | (string | number | boolean | null | any)
+                        | (string | number | boolean | null | any)[]
+                      )
                     | undefined;
                   lessThan?:
-                    | ((string | number | boolean | null | any) | (string | number | boolean | null | any)[])
+                    | (
+                        | (string | number | boolean | null | any)
+                        | (string | number | boolean | null | any)[]
+                      )
                     | undefined;
                 }
             )
@@ -7804,25 +7972,46 @@ type CombinedInstructions = {
               | (string | number | boolean | null | any)
               | {
                   being?:
-                    | ((string | number | boolean | null | any) | (string | number | boolean | null | any)[])
+                    | (
+                        | (string | number | boolean | null | any)
+                        | (string | number | boolean | null | any)[]
+                      )
                     | undefined;
                   notBeing?:
-                    | ((string | number | boolean | null | any) | (string | number | boolean | null | any)[])
+                    | (
+                        | (string | number | boolean | null | any)
+                        | (string | number | boolean | null | any)[]
+                      )
                     | undefined;
                   startingWith?:
-                    | ((string | number | boolean | null | any) | (string | number | boolean | null | any)[])
+                    | (
+                        | (string | number | boolean | null | any)
+                        | (string | number | boolean | null | any)[]
+                      )
                     | undefined;
                   endingWith?:
-                    | ((string | number | boolean | null | any) | (string | number | boolean | null | any)[])
+                    | (
+                        | (string | number | boolean | null | any)
+                        | (string | number | boolean | null | any)[]
+                      )
                     | undefined;
                   containing?:
-                    | ((string | number | boolean | null | any) | (string | number | boolean | null | any)[])
+                    | (
+                        | (string | number | boolean | null | any)
+                        | (string | number | boolean | null | any)[]
+                      )
                     | undefined;
                   greaterThan?:
-                    | ((string | number | boolean | null | any) | (string | number | boolean | null | any)[])
+                    | (
+                        | (string | number | boolean | null | any)
+                        | (string | number | boolean | null | any)[]
+                      )
                     | undefined;
                   lessThan?:
-                    | ((string | number | boolean | null | any) | (string | number | boolean | null | any)[])
+                    | (
+                        | (string | number | boolean | null | any)
+                        | (string | number | boolean | null | any)[]
+                      )
                     | undefined;
                 }
             )
@@ -12727,25 +12916,46 @@ type WithInstruction = {
         | (string | number | boolean | null | any)
         | {
             being?:
-              | ((string | number | boolean | null | any) | (string | number | boolean | null | any)[])
+              | (
+                  | (string | number | boolean | null | any)
+                  | (string | number | boolean | null | any)[]
+                )
               | undefined;
             notBeing?:
-              | ((string | number | boolean | null | any) | (string | number | boolean | null | any)[])
+              | (
+                  | (string | number | boolean | null | any)
+                  | (string | number | boolean | null | any)[]
+                )
               | undefined;
             startingWith?:
-              | ((string | number | boolean | null | any) | (string | number | boolean | null | any)[])
+              | (
+                  | (string | number | boolean | null | any)
+                  | (string | number | boolean | null | any)[]
+                )
               | undefined;
             endingWith?:
-              | ((string | number | boolean | null | any) | (string | number | boolean | null | any)[])
+              | (
+                  | (string | number | boolean | null | any)
+                  | (string | number | boolean | null | any)[]
+                )
               | undefined;
             containing?:
-              | ((string | number | boolean | null | any) | (string | number | boolean | null | any)[])
+              | (
+                  | (string | number | boolean | null | any)
+                  | (string | number | boolean | null | any)[]
+                )
               | undefined;
             greaterThan?:
-              | ((string | number | boolean | null | any) | (string | number | boolean | null | any)[])
+              | (
+                  | (string | number | boolean | null | any)
+                  | (string | number | boolean | null | any)[]
+                )
               | undefined;
             lessThan?:
-              | ((string | number | boolean | null | any) | (string | number | boolean | null | any)[])
+              | (
+                  | (string | number | boolean | null | any)
+                  | (string | number | boolean | null | any)[]
+                )
               | undefined;
           }
       )
@@ -12754,25 +12964,46 @@ type WithInstruction = {
           | (string | number | boolean | null | any)
           | {
               being?:
-                | ((string | number | boolean | null | any) | (string | number | boolean | null | any)[])
+                | (
+                    | (string | number | boolean | null | any)
+                    | (string | number | boolean | null | any)[]
+                  )
                 | undefined;
               notBeing?:
-                | ((string | number | boolean | null | any) | (string | number | boolean | null | any)[])
+                | (
+                    | (string | number | boolean | null | any)
+                    | (string | number | boolean | null | any)[]
+                  )
                 | undefined;
               startingWith?:
-                | ((string | number | boolean | null | any) | (string | number | boolean | null | any)[])
+                | (
+                    | (string | number | boolean | null | any)
+                    | (string | number | boolean | null | any)[]
+                  )
                 | undefined;
               endingWith?:
-                | ((string | number | boolean | null | any) | (string | number | boolean | null | any)[])
+                | (
+                    | (string | number | boolean | null | any)
+                    | (string | number | boolean | null | any)[]
+                  )
                 | undefined;
               containing?:
-                | ((string | number | boolean | null | any) | (string | number | boolean | null | any)[])
+                | (
+                    | (string | number | boolean | null | any)
+                    | (string | number | boolean | null | any)[]
+                  )
                 | undefined;
               greaterThan?:
-                | ((string | number | boolean | null | any) | (string | number | boolean | null | any)[])
+                | (
+                    | (string | number | boolean | null | any)
+                    | (string | number | boolean | null | any)[]
+                  )
                 | undefined;
               lessThan?:
-                | ((string | number | boolean | null | any) | (string | number | boolean | null | any)[])
+                | (
+                    | (string | number | boolean | null | any)
+                    | (string | number | boolean | null | any)[]
+                  )
                 | undefined;
             };
       }
@@ -12781,25 +13012,46 @@ type WithInstruction = {
             | (string | number | boolean | null | any)
             | {
                 being?:
-                  | ((string | number | boolean | null | any) | (string | number | boolean | null | any)[])
+                  | (
+                      | (string | number | boolean | null | any)
+                      | (string | number | boolean | null | any)[]
+                    )
                   | undefined;
                 notBeing?:
-                  | ((string | number | boolean | null | any) | (string | number | boolean | null | any)[])
+                  | (
+                      | (string | number | boolean | null | any)
+                      | (string | number | boolean | null | any)[]
+                    )
                   | undefined;
                 startingWith?:
-                  | ((string | number | boolean | null | any) | (string | number | boolean | null | any)[])
+                  | (
+                      | (string | number | boolean | null | any)
+                      | (string | number | boolean | null | any)[]
+                    )
                   | undefined;
                 endingWith?:
-                  | ((string | number | boolean | null | any) | (string | number | boolean | null | any)[])
+                  | (
+                      | (string | number | boolean | null | any)
+                      | (string | number | boolean | null | any)[]
+                    )
                   | undefined;
                 containing?:
-                  | ((string | number | boolean | null | any) | (string | number | boolean | null | any)[])
+                  | (
+                      | (string | number | boolean | null | any)
+                      | (string | number | boolean | null | any)[]
+                    )
                   | undefined;
                 greaterThan?:
-                  | ((string | number | boolean | null | any) | (string | number | boolean | null | any)[])
+                  | (
+                      | (string | number | boolean | null | any)
+                      | (string | number | boolean | null | any)[]
+                    )
                   | undefined;
                 lessThan?:
-                  | ((string | number | boolean | null | any) | (string | number | boolean | null | any)[])
+                  | (
+                      | (string | number | boolean | null | any)
+                      | (string | number | boolean | null | any)[]
+                    )
                   | undefined;
               }
           )
@@ -12808,25 +13060,46 @@ type WithInstruction = {
               | (string | number | boolean | null | any)
               | {
                   being?:
-                    | ((string | number | boolean | null | any) | (string | number | boolean | null | any)[])
+                    | (
+                        | (string | number | boolean | null | any)
+                        | (string | number | boolean | null | any)[]
+                      )
                     | undefined;
                   notBeing?:
-                    | ((string | number | boolean | null | any) | (string | number | boolean | null | any)[])
+                    | (
+                        | (string | number | boolean | null | any)
+                        | (string | number | boolean | null | any)[]
+                      )
                     | undefined;
                   startingWith?:
-                    | ((string | number | boolean | null | any) | (string | number | boolean | null | any)[])
+                    | (
+                        | (string | number | boolean | null | any)
+                        | (string | number | boolean | null | any)[]
+                      )
                     | undefined;
                   endingWith?:
-                    | ((string | number | boolean | null | any) | (string | number | boolean | null | any)[])
+                    | (
+                        | (string | number | boolean | null | any)
+                        | (string | number | boolean | null | any)[]
+                      )
                     | undefined;
                   containing?:
-                    | ((string | number | boolean | null | any) | (string | number | boolean | null | any)[])
+                    | (
+                        | (string | number | boolean | null | any)
+                        | (string | number | boolean | null | any)[]
+                      )
                     | undefined;
                   greaterThan?:
-                    | ((string | number | boolean | null | any) | (string | number | boolean | null | any)[])
+                    | (
+                        | (string | number | boolean | null | any)
+                        | (string | number | boolean | null | any)[]
+                      )
                     | undefined;
                   lessThan?:
-                    | ((string | number | boolean | null | any) | (string | number | boolean | null | any)[])
+                    | (
+                        | (string | number | boolean | null | any)
+                        | (string | number | boolean | null | any)[]
+                      )
                     | undefined;
                 };
           }
@@ -12837,25 +13110,46 @@ type WithInstruction = {
               | (string | number | boolean | null | any)
               | {
                   being?:
-                    | ((string | number | boolean | null | any) | (string | number | boolean | null | any)[])
+                    | (
+                        | (string | number | boolean | null | any)
+                        | (string | number | boolean | null | any)[]
+                      )
                     | undefined;
                   notBeing?:
-                    | ((string | number | boolean | null | any) | (string | number | boolean | null | any)[])
+                    | (
+                        | (string | number | boolean | null | any)
+                        | (string | number | boolean | null | any)[]
+                      )
                     | undefined;
                   startingWith?:
-                    | ((string | number | boolean | null | any) | (string | number | boolean | null | any)[])
+                    | (
+                        | (string | number | boolean | null | any)
+                        | (string | number | boolean | null | any)[]
+                      )
                     | undefined;
                   endingWith?:
-                    | ((string | number | boolean | null | any) | (string | number | boolean | null | any)[])
+                    | (
+                        | (string | number | boolean | null | any)
+                        | (string | number | boolean | null | any)[]
+                      )
                     | undefined;
                   containing?:
-                    | ((string | number | boolean | null | any) | (string | number | boolean | null | any)[])
+                    | (
+                        | (string | number | boolean | null | any)
+                        | (string | number | boolean | null | any)[]
+                      )
                     | undefined;
                   greaterThan?:
-                    | ((string | number | boolean | null | any) | (string | number | boolean | null | any)[])
+                    | (
+                        | (string | number | boolean | null | any)
+                        | (string | number | boolean | null | any)[]
+                      )
                     | undefined;
                   lessThan?:
-                    | ((string | number | boolean | null | any) | (string | number | boolean | null | any)[])
+                    | (
+                        | (string | number | boolean | null | any)
+                        | (string | number | boolean | null | any)[]
+                      )
                     | undefined;
                 }
             )

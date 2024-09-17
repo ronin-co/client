@@ -1,21 +1,26 @@
+import path from 'node:path';
 import { select } from '@inquirer/prompts';
 import ora from 'ora';
-import path from 'path';
 
 import { parseSchemaDefinitionFile } from '@/src/bin/parser';
 import { readConfig, resetConfig, saveConfig } from '@/src/bin/utils/config';
 import { exists } from '@/src/bin/utils/file';
 import { safeParseJson } from '@/src/bin/utils/json';
-import { compareSchemas, getSchemas, getSpaces, replaceFieldIdsWithExisting } from '@/src/bin/utils/sync';
+import {
+  compareSchemas,
+  getSchemas,
+  getSpaces,
+  replaceFieldIdsWithExisting,
+} from '@/src/bin/utils/sync';
 
 type Status = 'readingConfig' | 'readingSchemas' | 'comparing' | 'syncing';
 const DEFAULT_SCHEMA_SUMMARY = 'This is a newly created schema.';
 
 export default async (
-  positionals: string[],
+  positionals: Array<string>,
   appToken?: string,
   sessionToken?: string,
-  reset: boolean = false,
+  reset = false,
 ) => {
   if (reset) {
     resetConfig();
@@ -30,7 +35,8 @@ export default async (
     throw new Error('Either an app token or session token is required to sync schemas.');
   }
 
-  const customDir = positionals[0] && !positionals[0].startsWith('-') ? positionals[0] : undefined;
+  const customDir =
+    positionals[0] && !positionals[0].startsWith('-') ? positionals[0] : undefined;
 
   // Check if custom directory exists and save it to config
   if (customDir) {
@@ -50,7 +56,7 @@ export default async (
   const config = readConfig();
 
   try {
-    if (!config.spaceId && !appToken && sessionToken) {
+    if (!(config.spaceId || appToken) && sessionToken) {
       const spaces = await getSpaces(sessionToken);
 
       if (!spaces || spaces.length === 0) {
@@ -94,12 +100,17 @@ export default async (
     const remoteSchemas = await getSchemas(token, config.spaceId as string);
 
     // Replace field IDs with existing field IDs.
-    schemaDefinitions = await replaceFieldIdsWithExisting(schemaDefinitions, remoteSchemas);
+    schemaDefinitions = await replaceFieldIdsWithExisting(
+      schemaDefinitions,
+      remoteSchemas,
+    );
 
     // Add summary to schema definitions.
     schemaDefinitions = schemaDefinitions.map((schema) => ({
       ...schema,
-      summary: remoteSchemas.find(({ slug }) => slug === schema.slug)?.summary || DEFAULT_SCHEMA_SUMMARY,
+      summary:
+        remoteSchemas.find(({ slug }) => slug === schema.slug)?.summary ||
+        DEFAULT_SCHEMA_SUMMARY,
     }));
 
     status = 'comparing';
@@ -116,7 +127,10 @@ export default async (
         'Content-Type': 'application/json',
         Authorization: `Bearer ${appToken || sessionToken}`,
       },
-      body: JSON.stringify({ schemas: schemaDefinitions, space: config.spaceId }),
+      body: JSON.stringify({
+        schemas: schemaDefinitions,
+        space: config.spaceId,
+      }),
     });
 
     const text = await res.text();

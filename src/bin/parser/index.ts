@@ -1,5 +1,5 @@
-import fs from 'fs/promises';
-import path from 'path';
+import fs from 'node:fs/promises';
+import path from 'node:path';
 import ts from 'typescript';
 
 import {
@@ -19,7 +19,14 @@ import type { Schema, SchemaField } from '@/src/types/schema';
 
 export type ParsedSchema = Omit<
   Schema,
-  'id' | 'description' | 'summary' | 'identifiers' | 'idPrefix' | 'preview' | 'version' | 'fields'
+  | 'id'
+  | 'description'
+  | 'summary'
+  | 'identifiers'
+  | 'idPrefix'
+  | 'preview'
+  | 'version'
+  | 'fields'
 > & {
   fields: NonNullable<Schema['fields']>;
 };
@@ -58,7 +65,7 @@ const SCHEMAS_INTERFACE = 'Schemas';
  * @returns A promise that resolves to an array of `Schema` objects.
  */
 export async function parseSchemaDefinitionFile(
-  filePath: string = './schemas/index.ts',
+  filePath = './schemas/index.ts',
 ): Promise<ParsedSchema[]> {
   // Used for displaying the source line in error messages.
   const relativePath = path.relative(process.cwd(), filePath);
@@ -67,7 +74,9 @@ export async function parseSchemaDefinitionFile(
   const schemaFileExists = await exists(filePath);
 
   if (!schemaFileExists) {
-    throw new Error(`The given path to the schema definition file does not exist: ${fullPath}`);
+    throw new Error(
+      `The given path to the schema definition file does not exist: ${fullPath}`,
+    );
   }
 
   const fileContent = await fs.readFile(fullPath, 'utf-8');
@@ -91,7 +100,12 @@ export function parseSchemaDefinitions(
   /** Used for creating a source link in error message */
   relativePath: string,
 ): ParsedSchema[] {
-  const sourceFile = ts.createSourceFile('temp.ts', content, ts.ScriptTarget.Latest, true);
+  const sourceFile = ts.createSourceFile(
+    'temp.ts',
+    content,
+    ts.ScriptTarget.Latest,
+    true,
+  );
 
   const schemas: ParsedSchema[] = [];
 
@@ -126,7 +140,12 @@ export function parseSchemaDefinitions(
   const registeredSchemas: Map<string, string> = new Map();
 
   const missingSchemas: { name: string; parent: string; source: string }[] = [];
-  const unknownFields: { parent: string; name: string; type: string; source: string }[] = [];
+  const unknownFields: {
+    parent: string;
+    name: string;
+    type: string;
+    source: string;
+  }[] = [];
 
   // Used to keeping track of the aliases for `Schema.Record` and `Schema.Records.
   // For example, if they're imported with a name alias as such:
@@ -170,13 +189,19 @@ export function parseSchemaDefinitions(
    * @param node - The TypeScript AST node to visit.
    */
   function visitImports(node: ts.Node) {
-    if (ts.isImportDeclaration(node) && node.importClause && node.importClause.namedBindings) {
+    if (
+      ts.isImportDeclaration(node) &&
+      node.importClause &&
+      node.importClause.namedBindings
+    ) {
       const namedBindings = node.importClause.namedBindings;
 
       if (ts.isNamedImports(namedBindings)) {
         for (const element of namedBindings.elements) {
           const importedName = element.name.text;
-          const originalName = element.propertyName ? element.propertyName.text : importedName;
+          const originalName = element.propertyName
+            ? element.propertyName.text
+            : importedName;
           typeMapping.set(importedName, originalName);
 
           if (originalName === 'Record') {
@@ -186,7 +211,10 @@ export function parseSchemaDefinitions(
           }
         }
       } else if (ts.isNamespaceImport(namedBindings)) {
-        namespaces.set(namedBindings.name.text, node.moduleSpecifier.getText().replace(/['"]/g, ''));
+        namespaces.set(
+          namedBindings.name.text,
+          node.moduleSpecifier.getText().replace(/['"]/g, ''),
+        );
       }
     }
   }
@@ -205,7 +233,10 @@ export function parseSchemaDefinitions(
     if (ts.isModuleDeclaration(node) && node.name.text === RONIN_MODULE) {
       if (node.body && ts.isModuleBlock(node.body)) {
         for (const statement of node.body.statements) {
-          if (ts.isInterfaceDeclaration(statement) && statement.name.text === SCHEMAS_INTERFACE) {
+          if (
+            ts.isInterfaceDeclaration(statement) &&
+            statement.name.text === SCHEMAS_INTERFACE
+          ) {
             visitInterface(statement);
           }
         }
@@ -223,7 +254,9 @@ export function parseSchemaDefinitions(
       if (ts.isPropertySignature(member)) {
         const propertyName = member.name.getText();
         const typeName =
-          member.type && ts.isTypeReferenceNode(member.type) ? member.type.typeName.getText() : '';
+          member.type && ts.isTypeReferenceNode(member.type)
+            ? member.type.typeName.getText()
+            : '';
 
         if (typeName) {
           registeredSchemas.set(propertyName, typeName);
@@ -342,7 +375,9 @@ export function parseSchemaDefinitions(
             parsedField.children = parseTypeNode(member.type.elementType);
           } else if (ts.isUnionTypeNode(member.type)) {
             parsedField.type = 'enum';
-            parsedField.value = member.type.types.map((t) => t.getText().replace(/"/g, ''));
+            parsedField.value = member.type.types.map((t) =>
+              t.getText().replace(/"/g, ''),
+            );
           } else if (ts.isTypeReferenceNode(member.type)) {
             const typeName = member.type.typeName.getText();
             if (typeName === 'Array') {
@@ -368,33 +403,40 @@ export function parseSchemaDefinitions(
           return parsedField;
         }
 
-        throw new Error(`Unsupported property type \`${member.getText()}\` in ${typeNode.parent.getText()}`);
+        throw new Error(
+          `Unsupported property type \`${member.getText()}\` in ${typeNode.parent.getText()}`,
+        );
       });
-    } else if (ts.isUnionTypeNode(typeNode)) {
+    }
+    if (ts.isUnionTypeNode(typeNode)) {
       return {
         type: 'enum',
         value: typeNode.types.map((t) => t.getText().replace(/"/g, '')),
       };
-    } else if (ts.isArrayTypeNode(typeNode)) {
+    }
+    if (ts.isArrayTypeNode(typeNode)) {
       return {
         type: 'array',
         children: parseTypeNode(typeNode.elementType),
       };
-    } else if (ts.isTypeReferenceNode(typeNode)) {
+    }
+    if (ts.isTypeReferenceNode(typeNode)) {
       const typeName = typeNode.typeName.getText();
       return {
         name: typeName,
         type: getFieldType(typeName),
-        ...(typeNode.typeArguments ? { meta: parseTypeNode(typeNode.typeArguments[0]) } : {}),
+        ...(typeNode.typeArguments
+          ? { meta: parseTypeNode(typeNode.typeArguments[0]) }
+          : {}),
       };
-    } else if (ts.isLiteralTypeNode(typeNode)) {
+    }
+    if (ts.isLiteralTypeNode(typeNode)) {
       return {
         type: 'enum',
         value: [typeNode.literal.getText().replace(/"/g, '')],
       };
-    } else {
-      return { type: typeNode.getText() };
     }
+    return { type: typeNode.getText() };
   }
 
   /**
@@ -407,7 +449,10 @@ export function parseSchemaDefinitions(
    *
    * @returns The name of the schema property if found, otherwise null.
    */
-  function checkSchemaInclusion(node: ts.PropertySignature, parent: string): string | null {
+  function checkSchemaInclusion(
+    node: ts.PropertySignature,
+    parent: string,
+  ): string | null {
     // `node.type` cannot be `undefined` here because the function is only called
     // when `node.type` is equal to a defined value.
     const nodeType = node.type!;
@@ -419,17 +464,16 @@ export function parseSchemaDefinitions(
 
     if (schemaSlug) {
       return schemaSlug;
-    } else {
-      const source = getLineAndColumnsNumber(node, sourceFile);
-
-      missingSchemas.push({
-        name: typeName,
-        parent: parent,
-        source: `${relativePath}:${source.start.line}:${source.start.character}`,
-      });
-
-      return null;
     }
+    const source = getLineAndColumnsNumber(node, sourceFile);
+
+    missingSchemas.push({
+      name: typeName,
+      parent: parent,
+      source: `${relativePath}:${source.start.line}:${source.start.character}`,
+    });
+
+    return null;
   }
 
   function getTypeFromNamespace(typeName: string): string {
@@ -451,14 +495,21 @@ export function parseSchemaDefinitions(
    * @returns The parsed schema field or `null` if the field type cannot be
    * determined.
    */
-  function parseFieldDefinition(node: ts.PropertySignature, parent: string): SchemaField | null {
+  function parseFieldDefinition(
+    node: ts.PropertySignature,
+    parent: string,
+  ): SchemaField | null {
     if (!node.type) {
-      throw new Error(`Property signature \`${node.getText()}\` in ${parent} is missing a type`);
+      throw new Error(
+        `Property signature \`${node.getText()}\` in ${parent} is missing a type`,
+      );
     }
 
     const fieldName = node.name.getText();
 
-    const memberType = ts.isTypeReferenceNode(node.type) ? node.type.typeName.getText() : node.type.getText();
+    const memberType = ts.isTypeReferenceNode(node.type)
+      ? node.type.typeName.getText()
+      : node.type.getText();
 
     const memberTypeText = getTypeFromNamespace(memberType);
     const fieldType = getFieldType(memberTypeText);
@@ -534,7 +585,10 @@ export function parseSchemaDefinitions(
    *
    * @returns The parsed schema or `null` if no fields were found for the schema.
    */
-  function parseSchemaProperty(propertyName: string, typeAlias: string): ParsedSchema | null {
+  function parseSchemaProperty(
+    propertyName: string,
+    typeAlias: string,
+  ): ParsedSchema | null {
     const result: ParsedSchema = {
       name: convertToReadableText(typeAlias),
       slug: propertyName,
@@ -579,7 +633,12 @@ export function parseSchemaDefinitions(
 
     if (!result.pluralName && result.fields.length) {
       throw new Error(
-        createMissingPluralError(typeAlias, propertyName, result.slug as string, schemaRecordsAlias),
+        createMissingPluralError(
+          typeAlias,
+          propertyName,
+          result.slug as string,
+          schemaRecordsAlias,
+        ),
       );
     }
 
