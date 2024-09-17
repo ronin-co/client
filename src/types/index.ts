@@ -3,32 +3,26 @@ export type {
   CreateHook,
   BeforeCreateHook,
   AfterCreateHook,
-
   // Get Hooks
   GetHook,
   BeforeGetHook,
   AfterGetHook,
-
   // Set Hooks
   SetHook,
   BeforeSetHook,
   AfterSetHook,
-
   // Drop Hooks
   DropHook,
   BeforeDropHook,
   AfterDropHook,
-
   // Count Hooks
   CountHook,
   BeforeCountHook,
   AfterCountHook,
-
   // Hook Handlers
   BeforeHookHandler,
   AfterHookHandler,
   DuringHookHandler,
-
   // Async Context surrounding Hooks
   HookContext,
 } from '@/src/utils/data-hooks';
@@ -39,7 +33,6 @@ export type {
   QueryType,
   QueryInstructionType as QueryInstruction,
   Results,
-
   // Query Types
   GetQuery,
   GetInstructions,
@@ -56,7 +49,6 @@ export type {
   CountQuery,
   CountInstructions,
   CountInstructions as CountQueryInstructions,
-
   // Query Instructions
   WithInstruction,
 } from '@/src/types/query';

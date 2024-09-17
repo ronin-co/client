@@ -4,7 +4,7 @@ interface InvalidQueryErrorDetails {
   path: string | null;
   details: string;
   code: string;
-  fields: string[];
+  fields: Array<string>;
 }
 
 export class InvalidQueryError extends Error {
@@ -69,15 +69,15 @@ export const getResponseBody = async <T>(
 
   try {
     json = JSON.parse(text);
-  } catch (err) {
+  } catch (_err) {
     throw new InvalidResponseError({
-      message: `${options?.errorPrefix ? `${options.errorPrefix} ` : ``}${text}`,
+      message: `${options?.errorPrefix ? `${options.errorPrefix} ` : ''}${text}`,
       code: 'JSON_PARSE_ERROR',
     });
   }
 
   if (json.error) {
-    json.error.message = `${options?.errorPrefix ? `${options.errorPrefix} ` : ``}${json.error.message}`;
+    json.error.message = `${options?.errorPrefix ? `${options.errorPrefix} ` : ''}${json.error.message}`;
     throw new InvalidResponseError(json.error);
   }
 
@@ -97,7 +97,9 @@ export const getResponseBody = async <T>(
  *
  * @returns The dot-notated string.
  */
-export const getDotNotatedPath = (segments: (string | number)[] = []): string | null =>
+export const getDotNotatedPath = (
+  segments: Array<string | number> = [],
+): string | null =>
   segments.length > 0
     ? (segments.reduce((path, segment, index) => {
         if (typeof segment === 'number') return `${path}[${segment}]`;

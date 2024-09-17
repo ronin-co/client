@@ -42,7 +42,9 @@ describe('queries handler', () => {
     // Restore the original token.
     import.meta.env.RONIN_TOKEN = originalToken;
 
-    expect(mockRequestResolvedValue?.headers.get('Authorization')).toBe('Bearer supertoken');
+    expect(mockRequestResolvedValue?.headers.get('Authorization')).toBe(
+      'Bearer supertoken',
+    );
   });
 
   test('run in an "process"-less environment', async () => {
@@ -65,7 +67,9 @@ describe('queries handler', () => {
   test('correctly use the passed down token', async () => {
     await queriesHandler([], { token: 'takashitoken' });
 
-    expect(mockRequestResolvedValue?.headers.get('Authorization')).toBe('Bearer takashitoken');
+    expect(mockRequestResolvedValue?.headers.get('Authorization')).toBe(
+      'Bearer takashitoken',
+    );
   });
 
   test('use the custom fetcher', async () => {
@@ -83,7 +87,9 @@ describe('queries handler', () => {
     });
 
     expect(mockFetchNew).toHaveBeenCalledTimes(1);
-    expect(mockRequestResolvedValue?.headers.get('Authorization')).toBe('Bearer takashitoken');
+    expect(mockRequestResolvedValue?.headers.get('Authorization')).toBe(
+      'Bearer takashitoken',
+    );
   });
 
   test('handle BAD_REQUEST response', async () => {

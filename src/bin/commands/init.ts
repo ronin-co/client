@@ -1,15 +1,15 @@
-import childProcess from 'child_process';
-import fs from 'fs/promises';
+import childProcess from 'node:child_process';
+import fs from 'node:fs/promises';
+import path from 'node:path';
+import util from 'node:util';
 import json5 from 'json5';
 import ora from 'ora';
-import path from 'path';
-import util from 'util';
 
 import { exists } from '@/src/bin/utils/file';
 
 const exec = util.promisify(childProcess.exec);
 
-export default async (positionals: string[]) => {
+export default async (positionals: Array<string>) => {
   const spinner = ora('Initializing project').start();
   const lastPositional = positionals[positionals.length - 1];
   const spaceHandle = lastPositional === 'init' ? null : lastPositional;
@@ -20,7 +20,9 @@ export default async (positionals: string[]) => {
   }
 
   if (!(await exists('package.json'))) {
-    spinner.fail('No `package.json` found in the current directory. Please run the command in your project.');
+    spinner.fail(
+      'No `package.json` found in the current directory. Please run the command in your project.',
+    );
     process.exit(1);
   }
 
@@ -58,7 +60,7 @@ export default async (positionals: string[]) => {
     const contents = await fs.readFile(tsConfigPath, 'utf-8');
     const tsConfig = json5.parse(contents);
 
-    if (!tsConfig.compilerOptions.types || !tsConfig.compilerOptions.types.includes(`@ronin/${spaceHandle}`))
+    if (!tsConfig.compilerOptions.types?.includes(`@ronin/${spaceHandle}`))
       Object.assign(tsConfig.compilerOptions, {
         types: [...(tsConfig.compilerOptions.types || []), `@ronin/${spaceHandle}`],
       });
@@ -66,7 +68,9 @@ export default async (positionals: string[]) => {
     await fs.writeFile(tsConfigPath, JSON.stringify(tsConfig, null, 2));
   } catch (err) {
     if (err instanceof Error && err.message.includes('401')) {
-      spinner.fail(`You are not a member of the "${spaceHandle}" space or the space doesn't exist.`);
+      spinner.fail(
+        `You are not a member of the "${spaceHandle}" space or the space doesn't exist.`,
+      );
       process.exit(1);
     }
   }

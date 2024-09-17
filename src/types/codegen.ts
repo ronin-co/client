@@ -83,13 +83,13 @@ export namespace RONIN {
     (value: T, options?: O): Promise<R>;
   }
 
-  type RecordFilterFunction<T, R, O> = Omit<ReducedFunction, keyof T> & {
-    (value: null | string | string[], options?: O): Promise<R>;
-  };
+  type RecordFilterFunction<T, R, O> = Omit<ReducedFunction, keyof T> &
+    ((value: null | string | string[], options?: O) => Promise<R>);
   type RecordFilterObject<T, R, O> = {
     [K in keyof T]: FilterFunction<T[K], R, O>;
   };
-  type RecordFilter<T, R, O> = RecordFilterFunction<T, R, O> & RecordFilterObject<T, R, O>;
+  type RecordFilter<T, R, O> = RecordFilterFunction<T, R, O> &
+    RecordFilterObject<T, R, O>;
 
   type FilterFunction<T, R, O> = T extends string
     ? StringFilterFunction<T, R, O>
@@ -234,20 +234,29 @@ export namespace RONIN {
               : never;
 
   export type WithObject<TSchema> = {
-    [K in keyof TSchema]: null | TSchema[K] | Array<TSchema[K]> | Partial<FilterObject<TSchema[K]>>;
+    [K in keyof TSchema]:
+      | null
+      | TSchema[K]
+      | Array<TSchema[K]>
+      | Partial<FilterObject<TSchema[K]>>;
   };
 
   export type WithFilterFunctions<TSchema, R, O = undefined> = {
     [K in keyof TSchema]: FilterFunction<TSchema[K], R, O>;
   };
 
-  type WithFunction<TSchema, TReturn, TOptions> = Omit<ReducedFunction, keyof TSchema> & {
-    (filter: Partial<WithObject<TSchema> | Array<WithObject<TSchema>>>, options?: TOptions): Promise<TReturn>;
-  };
+  type WithFunction<TSchema, TReturn, TOptions> = Omit<ReducedFunction, keyof TSchema> &
+    ((
+      filter: Partial<WithObject<TSchema> | Array<WithObject<TSchema>>>,
+      options?: TOptions,
+    ) => Promise<TReturn>);
 
-  type With<TSchema, R, O> = WithFunction<TSchema, R, O> & WithFilterFunctions<TSchema, R>;
+  type With<TSchema, R, O> = WithFunction<TSchema, R, O> &
+    WithFilterFunctions<TSchema, R>;
 
-  type AllFields<TSchema> = `ronin.${keyof RoninMetadata}` | Exclude<keyof TSchema, 'ronin'>;
+  type AllFields<TSchema> =
+    | `ronin.${keyof RoninMetadata}`
+    | Exclude<keyof TSchema, 'ronin'>;
 
   type OrderedByObject<TSchema> = {
     /**
@@ -275,12 +284,19 @@ export namespace RONIN {
   }
 
   type RelatedFieldKeys<T> = {
-    [K in keyof T]: T[K] extends RONIN.RoninRecord ? (K extends string ? K : never) : never;
+    [K in keyof T]: T[K] extends RONIN.RoninRecord
+      ? K extends string
+        ? K
+        : never
+      : never;
   }[keyof T];
 
   export type Including<T> = RelatedFieldKeys<T>[] | 'all';
 
-  export type ReturnBasedOnIncluding<T, Keys extends string[] | 'all'> = Keys extends 'all'
+  export type ReturnBasedOnIncluding<
+    T,
+    Keys extends string[] | 'all',
+  > = Keys extends 'all'
     ? T
     : {
         [K in keyof T]: K extends 'ronin'
@@ -293,7 +309,8 @@ export namespace RONIN {
         // `NonNullable<unknown>` is needed here in order to "flatten" the output type.
       } & NonNullable<unknown>;
 
-  export interface IGetterSingular<TSchema, TOptions = undefined> extends ReducedFunction {
+  export interface IGetterSingular<TSchema, TOptions = undefined>
+    extends ReducedFunction {
     <TIncluding extends Including<TSchema> = []>(
       filter?: {
         with?: Partial<WithObject<TSchema> | Array<WithObject<TSchema>>>;
@@ -361,7 +378,9 @@ export namespace RONIN {
   }
 
   export interface ICounter<TSchema, TOptions = undefined> extends ReducedFunction {
-    (filter?: { with?: Partial<WithObject<TSchema> | Array<WithObject<TSchema>>> }): Promise<number>;
+    (filter?: {
+      with?: Partial<WithObject<TSchema> | Array<WithObject<TSchema>>>;
+    }): Promise<number>;
     with: With<TSchema, number, TOptions>;
   }
 
@@ -371,7 +390,9 @@ export namespace RONIN {
     TModifiedReturn = Replace<TSchema, RONIN.RoninRecord, string>,
   > extends ReducedFunction {
     (
-      filter?: { with?: Partial<WithObject<TSchema> | Array<WithObject<TSchema>>> },
+      filter?: {
+        with?: Partial<WithObject<TSchema> | Array<WithObject<TSchema>>>;
+      },
       options?: TOptions,
     ): Promise<TModifiedReturn>;
     with: With<TSchema, TSchema, TOptions>;

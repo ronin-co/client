@@ -1,5 +1,5 @@
+import * as fs from 'node:fs';
 import type { Plugin } from 'esbuild';
-import * as fs from 'fs';
 import { defineConfig } from 'tsup';
 
 const injectShimsPlugin: Plugin = {
@@ -19,7 +19,7 @@ const injectShimsPlugin: Plugin = {
         return;
       }
 
-      result.outputFiles = result.outputFiles!.map((outputFile) => {
+      result.outputFiles = result.outputFiles?.map((outputFile) => {
         if (!outputFile.path.endsWith(outputFilePath)) {
           return outputFile;
         }

@@ -47,7 +47,7 @@ export const getSyntaxProxy = (
     {},
     {
       get(_target: any, prop: string) {
-        function createProxy(path: string[]) {
+        function createProxy(path: Array<string>) {
           const proxyTargetFunction = () => {};
 
           // This is workaround to avoid "uncalled functions" in the test
@@ -56,10 +56,13 @@ export const getSyntaxProxy = (
           proxyTargetFunction();
 
           return new Proxy(proxyTargetFunction, {
-            apply(_target: any, _thisArg: any, args: any[]) {
+            apply(_target: any, _thisArg: any, args: Array<any>) {
               const value = args[0];
               const options = args[1];
-              const expanded = objectFromAccessor(path.join('.'), typeof value === 'undefined' ? {} : value);
+              const expanded = objectFromAccessor(
+                path.join('.'),
+                typeof value === 'undefined' ? {} : value,
+              );
 
               const query = { [queryType]: expanded };
 
@@ -105,13 +108,18 @@ export const getSyntaxProxy = (
  * ```
  */
 export const getBatchProxy = <
-  T extends [Promise<any> | any, ...(Promise<any> | any)[]] | (Promise<any> | any)[],
+  // biome-ignore lint/style/useConsistentArrayType: <explanation>
+  T extends [Promise<any> | any, ...Array<Promise<any> | any>] | (Promise<any> | any)[],
 >(
   operations: () => T,
+  // biome-ignore lint/style/useDefaultParameterLast:
   options: QueryHandlerOptions = {},
-  queriesHandler: (queries: QueryItem[], options?: Record<string, unknown>) => Promise<any> | any,
+  queriesHandler: (
+    queries: Array<QueryItem>,
+    options?: Record<string, unknown>,
+  ) => Promise<any> | any,
 ): Promise<PromiseTuple<T>> | T => {
-  let queries: QueryItem[] = [];
+  let queries: Array<QueryItem> = [];
 
   if (options.asyncContext) {
     IN_BATCH_ASYNC = options.asyncContext;

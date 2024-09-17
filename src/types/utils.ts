@@ -55,7 +55,9 @@ export type RecursivePartial<T> = {
 /**
  * Utility type to convert a tuple of promises into a tuple of their resolved types.
  */
-export type PromiseTuple<T extends [Promise<any>, ...Promise<any>[]] | Promise<any>[]> = {
+export type PromiseTuple<
+  T extends [Promise<any>, ...Array<Promise<any>>] | Array<Promise<any>>,
+> = {
   [P in keyof T]: Awaited<T[P]>;
 };
 
@@ -63,8 +65,7 @@ export type PromiseTuple<T extends [Promise<any>, ...Promise<any>[]] | Promise<a
  * Utility type to mark all Function.prototype methods as "deprecated" which
  * deranks them in the IDE suggestion popup.
  */
-// eslint-disable-next-line @typescript-eslint/ban-types
-export interface ReducedFunction extends Function {
+export interface ReducedFunction {
   /**
    * @deprecated
    */

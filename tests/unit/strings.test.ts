@@ -4,27 +4,27 @@ import { convertToReadableText } from '@/src/bin/parser/utils';
 import { toDashCase } from '@/src/utils/helpers';
 
 describe('toDashCase', () => {
-  test('correctly convert camelCase to dash case', async () => {
+  test('correctly convert camelCase to dash case', () => {
     expect(toDashCase('superLongSlug')).toBe('super-long-slug');
   });
 
-  test('correctly convert mixed case to dash case', async () => {
+  test('correctly convert mixed case to dash case', () => {
     expect(toDashCase('even-MoreWords')).toBe('even-more-words');
   });
 
-  test('correctly convert space-separated words to dash case', async () => {
+  test('correctly convert space-separated words to dash case', () => {
     expect(toDashCase('oh wow okay')).toBe('oh-wow-okay');
   });
 
-  test('correctly handle empty string', async () => {
+  test('correctly handle empty string', () => {
     expect(toDashCase('')).toBe('');
   });
 
-  test('correctly handle null input', async () => {
+  test('correctly handle null input', () => {
     expect(toDashCase(null)).toBe('');
   });
 
-  test('correctly handle undefined input', async () => {
+  test('correctly handle undefined input', () => {
     expect(toDashCase(undefined)).toBe('');
   });
 });

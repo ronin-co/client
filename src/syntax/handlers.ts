@@ -22,7 +22,10 @@ import type { QueryHandlerOptions } from '@/src/types/utils';
  * The `RONIN_TOKEN` environment variable will be used (if available) to
  * authenticate requests if the `token` option is not provided.
  */
-export const queriesHandler = async (queries: Query[], options: QueryHandlerOptions = {}) => {
+export const queriesHandler = async (
+  queries: Array<Query>,
+  options: QueryHandlerOptions = {},
+) => {
   if (!options.token && typeof process !== 'undefined') {
     const token =
       typeof process?.env !== 'undefined'
