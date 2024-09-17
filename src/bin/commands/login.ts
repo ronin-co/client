@@ -1,11 +1,15 @@
+import http from 'node:http';
 import getPort from 'get-port';
-import http from 'http';
 import open from 'open';
 import ora from 'ora';
 
-import { storeSession, storeTokenForBun, storeTokenForNPM } from '@/src/bin/utils/session';
+import {
+  storeSession,
+  storeTokenForBun,
+  storeTokenForNPM,
+} from '@/src/bin/utils/session';
 
-const logIn = async (appToken?: string, exit: boolean = true) => {
+const logIn = async (appToken?: string, exit = true) => {
   const spinner = ora('Logging in').start();
 
   // If an app token is provided, we don't want to store a session for the CLI,
@@ -35,7 +39,7 @@ const logIn = async (appToken?: string, exit: boolean = true) => {
   initURL.searchParams.set('from', currentHost);
 
   spinner.text = `Please log in using the following URL:\n${initURL.href}`;
-  spinner.suffixText = `\n`;
+  spinner.suffixText = '\n';
 
   try {
     [sessionToken] = await Promise.all([

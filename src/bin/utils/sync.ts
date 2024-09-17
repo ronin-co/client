@@ -14,8 +14,8 @@ import type { Schema } from '@/src/types/schema';
  */
 export const getSpaces = async (
   sessionToken: string,
-): Promise<{ id: string; handle: string; name: string }[]> => {
-  let text;
+): Promise<Array<{ id: string; handle: string; name: string }>> => {
+  let text: string;
   try {
     const res = await fetch('https://ronin.supply/-/ronin/spaces', {
       method: 'GET',
@@ -34,10 +34,10 @@ export const getSpaces = async (
     throw new Error(`Failed to fetch available spaces: ${(err as Error).message}`);
   }
 
-  let json;
+  let json: { spaces: Array<{ id: string; handle: string; name: string }> };
   try {
     json = JSON.parse(text);
-  } catch (err) {
+  } catch (_) {
     throw new Error(`Failed to parse response from server: ${text}`);
   }
 
@@ -52,16 +52,22 @@ export const getSpaces = async (
  *
  * @returns The schemas of the provided space.
  */
-export const getSchemas = async (token: string, space: string): Promise<Schema[]> => {
-  let text;
+export const getSchemas = async (
+  token: string,
+  space: string,
+): Promise<Array<Schema>> => {
+  let text: string;
   try {
-    const res = await fetch(`https://ronin.supply/-/ronin/schemas?data-selector=${space}`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
+    const res = await fetch(
+      `https://ronin.supply/-/ronin/schemas?data-selector=${space}`,
+      {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
       },
-    });
+    );
 
     text = await res.text();
 
@@ -72,10 +78,10 @@ export const getSchemas = async (token: string, space: string): Promise<Schema[]
     throw new Error(`Failed to fetch remote schemas: ${(err as Error).message}`);
   }
 
-  let json;
+  let json: { schemas: Array<Schema> };
   try {
     json = JSON.parse(text);
-  } catch (err) {
+  } catch (_) {
     throw new Error(`Failed to parse response from server: ${text}`);
   }
 
@@ -92,9 +98,9 @@ export const getSchemas = async (token: string, space: string): Promise<Schema[]
  * @returns Updated local schema definitions.
  */
 export const replaceFieldIdsWithExisting = async (
-  local: ParsedSchema[],
-  remote: Schema[],
-): Promise<ParsedSchema[]> => {
+  local: Array<ParsedSchema>,
+  remote: Array<Schema>,
+): Promise<Array<ParsedSchema>> => {
   return local.map((schema) => {
     const existingSchema = remote.find((s) => s.slug === schema.slug);
     if (!existingSchema) {
@@ -134,10 +140,14 @@ export const replaceFieldIdsWithExisting = async (
  * @param remote Existing remote schema definitions.
  * @param spinner The spinner instance to log messages.
  */
-export const compareSchemas = async (local: ParsedSchema[], remote: Schema[], spinner: Ora) => {
-  const fieldsWithDifferentTypes: string[] = [];
+export const compareSchemas = async (
+  local: Array<ParsedSchema>,
+  remote: Array<Schema>,
+  spinner: Ora,
+) => {
+  const fieldsWithDifferentTypes: Array<string> = [];
 
-  local.forEach(({ slug: schemaSlug, fields }) => {
+  for (const { slug: schemaSlug, fields } of local) {
     // The fields can't be undefined, but TS doesn't know that.
     if (!fields) return;
 
@@ -147,7 +157,7 @@ export const compareSchemas = async (local: ParsedSchema[], remote: Schema[], sp
       return;
     }
 
-    fields.forEach((field) => {
+    for (const field of fields) {
       const existingField = existingFields.find((f) => f.slug === field.slug);
 
       if (!existingField) {
@@ -159,10 +169,12 @@ export const compareSchemas = async (local: ParsedSchema[], remote: Schema[], sp
         // because it's essentially a new field.
         field.id = generateFieldId(field.type);
 
-        fieldsWithDifferentTypes.push(`${schemaSlug}.${field.slug} (${existingField.type} -> ${field.type})`);
+        fieldsWithDifferentTypes.push(
+          `${schemaSlug}.${field.slug} (${existingField.type} -> ${field.type})`,
+        );
       }
-    });
-  });
+    }
+  }
 
   if (fieldsWithDifferentTypes.length === 0) {
     return;

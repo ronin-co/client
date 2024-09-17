@@ -6,7 +6,7 @@ import { createSyntaxFactory } from '@/src/syntax';
 import type { CombinedInstructions, QueryType } from '@/src/types/query';
 import { type FilteredHookQuery, runQueriesWithHooks } from '@/src/utils/data-hooks';
 
-let mockResolvedRequestText: any = undefined;
+let mockResolvedRequestText: any;
 
 const mockFetch = mock(async (request) => {
   mockResolvedRequestText = await request.text();
@@ -85,7 +85,9 @@ describe('hooks', () => {
     // @ts-expect-error `handle` is undefined due not not having the schema types.
     await get.account.with.handle('juri');
     // Make sure `leo` is resolved as the account handle.
-    expect(mockResolvedRequestText).toEqual('{"queries":[{"get":{"account":{"with":{"handle":"leo"}}}}]}');
+    expect(mockResolvedRequestText).toEqual(
+      '{"queries":[{"get":{"account":{"with":{"handle":"leo"}}}}]}',
+    );
 
     await get.accounts();
     // Make sure the email address of all resolved accounts ends with the
@@ -122,7 +124,9 @@ describe('hooks', () => {
     // @ts-expect-error `handle` is undefined due not not having the schema types.
     await get.account.with.handle('juri');
     // Make sure `leo` is resolved as the account handle.
-    expect(mockResolvedRequestText).toEqual('{"queries":[{"get":{"account":{"with":{"handle":"leo"}}}}]}');
+    expect(mockResolvedRequestText).toEqual(
+      '{"queries":[{"get":{"account":{"with":{"handle":"leo"}}}}]}',
+    );
 
     await get.accounts();
     // Make sure the email address of all resolved accounts ends with the
@@ -168,7 +172,9 @@ describe('hooks', () => {
 
     // @ts-expect-error `handle` is undefined due not not having the schema types.
     await get.account.with.handle('juri');
-    expect(mockResolvedRequestText).toEqual('{"queries":[{"get":{"account":{"with":{"handle":"juri"}}}}]}');
+    expect(mockResolvedRequestText).toEqual(
+      '{"queries":[{"get":{"account":{"with":{"handle":"juri"}}}}]}',
+    );
   });
 
   test('run `create` query through factory containing `after` data hook', async () => {
@@ -448,7 +454,9 @@ describe('hooks', () => {
             // immediately instead of performing a test assertion, because the
             // code will otherwise run forever (until memory is exceeded).
             if (hookInvoked) {
-              console.error('Infinite recursion detected in test. Exiting (search for this message).');
+              console.error(
+                'Infinite recursion detected in test. Exiting (search for this message).',
+              );
               process.exit(1);
             }
 

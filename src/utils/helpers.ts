@@ -21,7 +21,7 @@ export const objectFromAccessor = (accessor: string, value: unknown): unknown =>
  *
  * @returns Array of path segments.
  */
-const getPathSegments = (path: string): string[] => {
+const getPathSegments = (path: string): Array<string> => {
   const segments = path
     // Split path on property and array accessors (`.` and `[]`). By using a
     // non-printable unicode character (u200B), we can achieve the same result
@@ -53,7 +53,7 @@ const getPathSegments = (path: string): string[] => {
  */
 const setPropertyViaPathSegments = (
   obj: object,
-  pathSegments: string[],
+  pathSegments: Array<string>,
   value: any | ((value: any) => any),
 ) => {
   let current = obj as Record<string, object>;
@@ -67,7 +67,10 @@ const setPropertyViaPathSegments = (
     } else {
       // Only create a new object if the current key does not exist, or if it
       // exists but is not of the correct type.
-      if (!Object.prototype.hasOwnProperty.call(current, key) || typeof current[key] !== 'object') {
+      if (
+        !Object.prototype.hasOwnProperty.call(current, key) ||
+        typeof current[key] !== 'object'
+      ) {
         current[key] = {};
       }
       current = current[key] as Record<string, object>;
@@ -106,7 +109,10 @@ const setProperty = <T extends object, K>(obj: T, path: string, value: K): T => 
  * console.log(getProperty(exampleObject, ['user', 'age'])); // Output: 30
  * console.log(getProperty(exampleObject, ['user', 'non', 'existing'])); // Output: undefined
  */
-const getPropertyViaPathSegments = (obj: object, pathSegments: string[]): unknown => {
+const getPropertyViaPathSegments = (
+  obj: object,
+  pathSegments: Array<string>,
+): unknown => {
   let current = obj as Record<string, object>;
 
   for (const key of pathSegments) {
@@ -153,10 +159,12 @@ export const toDashCase = (string?: string | null): string => {
  * @param record - A record to format the Date fields of.
  * @param dateFields - An array of property keys for the date fields.
  */
-export const formatDateFields = (record: object, dateFields: string[]) => {
-  dateFields.forEach((field) =>
-    setProperty(record, field, (value: string | null) => (value !== null ? new Date(value) : null)),
-  );
+export const formatDateFields = (record: object, dateFields: Array<string>) => {
+  for (const field of dateFields) {
+    setProperty(record, field, (value: string | null) =>
+      value !== null ? new Date(value) : null,
+    );
+  }
 };
 
 /**
@@ -167,10 +175,11 @@ export const formatDateFields = (record: object, dateFields: string[]) => {
  * @returns A single option object.
  */
 export const mergeOptions = (
-  ...options: (undefined | QueryHandlerOptions | (() => QueryHandlerOptions))[]
+  ...options: Array<undefined | QueryHandlerOptions | (() => QueryHandlerOptions)>
 ): QueryHandlerOptions => {
   return options.reduce((acc: QueryHandlerOptions, opt) => {
     const resolvedOpt = typeof opt === 'function' ? opt() : opt;
-    return { ...acc, ...resolvedOpt };
+    Object.assign(acc, resolvedOpt);
+    return acc;
   }, {});
 };

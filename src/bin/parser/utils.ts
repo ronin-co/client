@@ -34,13 +34,17 @@ export function convertToReadableText(str: undefined | null | string): string | 
   let spacedStr = str.replace(/([a-z])([A-Z])/g, '$1 $2');
 
   // Insert spaces between letters and digits.
-  spacedStr = spacedStr.replace(/([a-zA-Z])(\d)/g, '$1 $2').replace(/(\d)([a-zA-Z])/g, '$1 $2');
+  spacedStr = spacedStr
+    .replace(/([a-zA-Z])(\d)/g, '$1 $2')
+    .replace(/(\d)([a-zA-Z])/g, '$1 $2');
 
   // Split the string into words.
   const words = spacedStr.split(' ');
 
   // Capitalize the first letter of each word.
-  const capitalizedWords = words.map((word) => word.charAt(0).toUpperCase() + word.slice(1));
+  const capitalizedWords = words.map(
+    (word) => word.charAt(0).toUpperCase() + word.slice(1),
+  );
 
   // Join the words back into a single string with spaces.
   return capitalizedWords.join(' ');
@@ -56,12 +60,15 @@ export function convertToReadableText(str: undefined | null | string): string | 
 export function getLineAndColumnsNumber(
   node: ts.Node,
   sourceFile: ts.SourceFile,
-): { start: { line: number; character: number }; end: { line: number; character: number } } {
-  const { line: startLine, character: startCharacter } = sourceFile.getLineAndCharacterOfPosition(
-    node.getStart(),
-  );
+): {
+  start: { line: number; character: number };
+  end: { line: number; character: number };
+} {
+  const { line: startLine, character: startCharacter } =
+    sourceFile.getLineAndCharacterOfPosition(node.getStart());
 
-  const { line: endLine, character: endCharacter } = sourceFile.getLineAndCharacterOfPosition(node.getEnd());
+  const { line: endLine, character: endCharacter } =
+    sourceFile.getLineAndCharacterOfPosition(node.getEnd());
 
   return {
     start: { line: startLine + 1, character: startCharacter + 1 },
@@ -90,7 +97,9 @@ export function parseJsDoc(node: ts.Node): {
 
   if (commentsAndTags.length > 0) {
     const jsDoc = commentsAndTags[0];
-    const commentText = jsDoc.comment ? ts.getTextOfJSDocComment(jsDoc.comment) : undefined;
+    const commentText = jsDoc.comment
+      ? ts.getTextOfJSDocComment(jsDoc.comment)
+      : undefined;
 
     if (commentText) {
       const lines = commentText
@@ -104,13 +113,13 @@ export function parseJsDoc(node: ts.Node): {
     }
 
     if ('tags' in jsDoc && jsDoc.tags) {
-      jsDoc.tags.forEach((tag) => {
+      for (const tag of jsDoc.tags) {
         const tagName = tag.tagName.getText();
         const tagComment = ts.getTextOfJSDocComment(tag.comment);
         if (tagComment) {
           details[tagName] = tagComment;
         }
-      });
+      }
     }
   }
 

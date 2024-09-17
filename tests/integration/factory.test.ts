@@ -3,8 +3,8 @@ import { beforeEach, describe, expect, mock, test } from 'bun:test';
 import { createSyntaxFactory } from '@/src/syntax';
 import type { StoredObject } from '@/src/types/storage';
 
-let mockRequestResolvedValue: Request | undefined = undefined;
-let mockResolvedRequestText: any = undefined;
+let mockRequestResolvedValue: Request | undefined;
+let mockResolvedRequestText: any;
 
 const mockFetch = mock(async (request) => {
   mockRequestResolvedValue = request;
@@ -24,7 +24,9 @@ const mockFetch = mock(async (request) => {
 global.fetch = mockFetch;
 
 describe('factory', () => {
-  let { get, set, create, drop, count, batch } = {} as ReturnType<typeof createSyntaxFactory>;
+  let { get, set, create, drop, count, batch } = {} as ReturnType<
+    typeof createSyntaxFactory
+  >;
 
   beforeEach(() => {
     ({ get, set, create, drop, count, batch } = createSyntaxFactory({}));
@@ -39,14 +41,18 @@ describe('factory', () => {
 
     await factory1.get.accounts();
 
-    expect(mockRequestResolvedValue?.headers.get('Authorization')).toBe('Bearer takashitoken');
+    expect(mockRequestResolvedValue?.headers.get('Authorization')).toBe(
+      'Bearer takashitoken',
+    );
     expect(mockResolvedRequestText).toEqual('{"queries":[{"get":{"accounts":{}}}]}');
 
     const factory2 = createSyntaxFactory({ token: 'supatokken' });
 
     await factory2.get.members();
 
-    expect(mockRequestResolvedValue?.headers.get('Authorization')).toBe('Bearer supatokken');
+    expect(mockRequestResolvedValue?.headers.get('Authorization')).toBe(
+      'Bearer supatokken',
+    );
     expect(mockResolvedRequestText).toEqual('{"queries":[{"get":{"members":{}}}]}');
   });
 
@@ -67,7 +73,9 @@ describe('factory', () => {
     await factory.get.accounts();
 
     expect(mockFetchNew).toHaveBeenCalledTimes(1);
-    expect(mockRequestResolvedValue?.headers.get('Authorization')).toBe('Bearer takashitoken');
+    expect(mockRequestResolvedValue?.headers.get('Authorization')).toBe(
+      'Bearer takashitoken',
+    );
   });
 
   test('send correct `queries` for single `get` request', async () => {
@@ -351,9 +359,11 @@ describe('factory', () => {
 
   test('upload image', async () => {
     const bunFile = Bun.file('tests/assets/example.jpeg');
-    const file = new File([Buffer.from(await bunFile.arrayBuffer())], 'example.jpeg', { type: 'image/jpeg' });
+    const file = new File([Buffer.from(await bunFile.arrayBuffer())], 'example.jpeg', {
+      type: 'image/jpeg',
+    });
 
-    let mockResolvedStorageRequest: Request | undefined = undefined;
+    let mockResolvedStorageRequest: Request | undefined;
 
     const factory = createSyntaxFactory({
       fetch: async (request) => {
@@ -390,13 +400,15 @@ describe('factory', () => {
 
     const body = await (mockResolvedStorageRequest as Request | undefined)?.text();
 
-    expect((mockResolvedStorageRequest as Request | undefined)?.headers.get('Content-Type')).toBe(
-      'image/jpeg',
-    );
+    expect(
+      (mockResolvedStorageRequest as Request | undefined)?.headers.get('Content-Type'),
+    ).toBe('image/jpeg');
 
-    expect((mockResolvedStorageRequest as Request | undefined)?.headers.get('Content-Disposition')).toBe(
-      'form-data; filename="example.jpeg"',
-    );
+    expect(
+      (mockResolvedStorageRequest as Request | undefined)?.headers.get(
+        'Content-Disposition',
+      ),
+    ).toBe('form-data; filename="example.jpeg"');
     expect(body).toBe(await file.text());
 
     expect(mockResolvedRequestText).toEqual(
@@ -411,7 +423,7 @@ describe('factory', () => {
       type: 'image/jpeg',
     });
 
-    let mockResolvedStorageRequest: Request | undefined = undefined;
+    let mockResolvedStorageRequest: Request | undefined;
 
     const factory = createSyntaxFactory({
       fetch: async (request) => {
@@ -446,16 +458,22 @@ describe('factory', () => {
       },
     });
 
-    expect((mockResolvedStorageRequest as Request | undefined)?.headers.get('Content-Disposition')).toBe(
+    expect(
+      (mockResolvedStorageRequest as Request | undefined)?.headers.get(
+        'Content-Disposition',
+      ),
+    ).toBe(
       'form-data; filename="%D1%82%D0%B5%D1%81%D1%82%D1%83%D0%B2%D0%B0%D0%BD%D0%BD%D1%8F.jpeg"',
     );
   });
 
   test('upload video', async () => {
     const bunFile = Bun.file('tests/assets/example.mp4');
-    const file = new File([Buffer.from(await bunFile.arrayBuffer())], 'example.mp4', { type: 'video/mp4' });
+    const file = new File([Buffer.from(await bunFile.arrayBuffer())], 'example.mp4', {
+      type: 'video/mp4',
+    });
 
-    let mockResolvedStorageRequest: Request | undefined = undefined;
+    let mockResolvedStorageRequest: Request | undefined;
 
     const factory = createSyntaxFactory({
       fetch: async (request) => {
@@ -488,12 +506,14 @@ describe('factory', () => {
 
     const body = await (mockResolvedStorageRequest as Request | undefined)?.text();
 
-    expect((mockResolvedStorageRequest as Request | undefined)?.headers.get('Content-Type')).toBe(
-      'video/mp4',
-    );
-    expect((mockResolvedStorageRequest as Request | undefined)?.headers.get('Content-Disposition')).toBe(
-      'form-data; filename="example.mp4"',
-    );
+    expect(
+      (mockResolvedStorageRequest as Request | undefined)?.headers.get('Content-Type'),
+    ).toBe('video/mp4');
+    expect(
+      (mockResolvedStorageRequest as Request | undefined)?.headers.get(
+        'Content-Disposition',
+      ),
+    ).toBe('form-data; filename="example.mp4"');
     expect(body).toBe(await file.text());
 
     expect(mockResolvedRequestText).toEqual(

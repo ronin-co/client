@@ -47,7 +47,9 @@ import { mergeOptions } from '@/src/utils/helpers';
  * ]);
  * ```
  */
-export const createSyntaxFactory = (options: QueryHandlerOptions | (() => QueryHandlerOptions)) => ({
+export const createSyntaxFactory = (
+  options: QueryHandlerOptions | (() => QueryHandlerOptions),
+) => ({
   create: getSyntaxProxy('create', (query, queryOptions) =>
     queryHandler(query, mergeOptions(options, queryOptions)),
   ) as RONIN.Creator,
@@ -63,7 +65,7 @@ export const createSyntaxFactory = (options: QueryHandlerOptions | (() => QueryH
   count: getSyntaxProxy('count', (query, queryOptions) =>
     queryHandler(query, mergeOptions(options, queryOptions)),
   ) as RONIN.Counter,
-  batch: <T extends [Promise<any>, ...Promise<any>[]] | Promise<any>[]>(
+  batch: <T extends [Promise<any>, ...Array<Promise<any>>] | Array<Promise<any>>>(
     operations: () => T,
     batchQueryOptions?: Record<string, unknown>,
   ) =>
