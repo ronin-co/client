@@ -24,8 +24,7 @@
       "jsxQuoteStyle": "single",
       "quoteStyle": "single",
       "semicolons": "always"
-    },
-    "globals": ["Astro"]
+    }
   },
   "linter": {
     "enabled": true,
