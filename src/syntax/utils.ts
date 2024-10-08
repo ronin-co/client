@@ -66,7 +66,11 @@ export const getSyntaxProxy = (
 
               const query = { [queryType]: expanded };
 
-              if (IN_BATCH_ASYNC?.getStore() || IN_BATCH_SYNC) {
+              if (
+                IN_BATCH_ASYNC?.getStore() ||
+                IN_BATCH_SYNC ||
+                import.meta.env.IS_SCHEMAS_IN_CODE === '1'
+              ) {
                 return { query, options };
               }
 
