@@ -2,6 +2,7 @@ import type { AsyncLocalStorage } from 'node:async_hooks';
 
 import type { Query } from '@/src/types/query';
 import type { PromiseTuple, QueryHandlerOptions, QueryItem } from '@/src/types/utils';
+import { RONIN_SCHEMA_SYMBOLS } from '@/src/utils/constants';
 import { objectFromAccessor } from '@/src/utils/helpers';
 
 /**
@@ -57,8 +58,19 @@ export const getSyntaxProxy = (
 
           return new Proxy(proxyTargetFunction, {
             apply(_target: any, _thisArg: any, args: Array<any>) {
-              const value = args[0];
+              let value = args[0];
               const options = args[1];
+
+              if (typeof value === 'function') {
+                // Since `value()` is synchronous, `IN_BATCH_SYNC` should not affect any
+                // other queries somewhere else in the app, even if those are run inside
+                // an asynchronous function, so we don't need to use `IN_BATCH_ASYNC`,
+                // which avoids the need to pass it as an option to the client.
+                IN_BATCH_SYNC = true;
+                value = { [RONIN_SCHEMA_SYMBOLS.QUERY]: value().query };
+                IN_BATCH_SYNC = false;
+              }
+
               const expanded = objectFromAccessor(
                 path.join('.'),
                 typeof value === 'undefined' ? {} : value,
