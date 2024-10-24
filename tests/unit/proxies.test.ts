@@ -1,12 +1,43 @@
 import { AsyncLocalStorage } from 'node:async_hooks';
 
-import { describe, expect, test } from 'bun:test';
+import { describe, expect, spyOn, test } from 'bun:test';
 
 import { get } from '@/src/index';
 import type { QueryItem } from '@/src/types/utils';
-import { getBatchProxy } from '@/src/utils';
+import { getBatchProxy, getSyntaxProxy } from '@/src/utils';
 
 describe('syntax proxy', () => {
+  test('using sub query', async () => {
+    const options = {
+      asyncContext: new AsyncLocalStorage(),
+    };
+
+    const getQueryHandler = { callback: () => undefined };
+    const getQueryHandlerSpy = spyOn(getQueryHandler, 'callback');
+    const createQueryHandler = { callback: () => undefined };
+    const createQueryHandlerSpy = spyOn(createQueryHandler, 'callback');
+
+    const getProxy = getSyntaxProxy('get', getQueryHandlerSpy);
+    const createProxy = getSyntaxProxy('create', createQueryHandlerSpy);
+
+    createProxy.accounts.with(() => getProxy.oldAccounts(), options);
+
+    const finalQuery = {
+      create: {
+        accounts: {
+          with: {
+            __RONIN_QUERY: {
+              get: { oldAccounts: {} },
+            },
+          },
+        },
+      },
+    };
+
+    expect(getQueryHandlerSpy).not.toHaveBeenCalled();
+    expect(createQueryHandlerSpy).toHaveBeenCalledWith(finalQuery, options);
+  });
+
   test('using async context', async () => {
     const details = getBatchProxy(
       () => [get.account()],

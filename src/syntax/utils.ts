@@ -2,6 +2,7 @@ import type { AsyncLocalStorage } from 'node:async_hooks';
 
 import type { Query } from '@/src/types/query';
 import type { PromiseTuple, QueryHandlerOptions, QueryItem } from '@/src/types/utils';
+import { RONIN_SCHEMA_SYMBOLS } from '@/src/utils/constants';
 import { objectFromAccessor } from '@/src/utils/helpers';
 
 /**
@@ -57,8 +58,20 @@ export const getSyntaxProxy = (
 
           return new Proxy(proxyTargetFunction, {
             apply(_target: any, _thisArg: any, args: Array<any>) {
-              const value = args[0];
+              let value = args[0];
               const options = args[1];
+
+              if (options?.asyncContext) IN_BATCH_ASYNC = options.asyncContext;
+
+              if (typeof value === 'function') {
+                if (!IN_BATCH_ASYNC)
+                  throw new Error(
+                    'The `asyncContext` option must be provided when using sub queries.',
+                  );
+                const subQueryDetails = IN_BATCH_ASYNC.run(true, () => value());
+                value = { [RONIN_SCHEMA_SYMBOLS.QUERY]: subQueryDetails.query };
+              }
+
               const expanded = objectFromAccessor(
                 path.join('.'),
                 typeof value === 'undefined' ? {} : value,
