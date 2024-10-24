@@ -61,15 +61,14 @@ export const getSyntaxProxy = (
               let value = args[0];
               const options = args[1];
 
-              if (options?.asyncContext) IN_BATCH_ASYNC = options.asyncContext;
-
               if (typeof value === 'function') {
-                if (!IN_BATCH_ASYNC)
-                  throw new Error(
-                    'The `asyncContext` option must be provided when using sub queries.',
-                  );
-                const subQueryDetails = IN_BATCH_ASYNC.run(true, () => value());
-                value = { [RONIN_SCHEMA_SYMBOLS.QUERY]: subQueryDetails.query };
+                // Since `value()` is synchronous, `IN_BATCH_SYNC` should not affect any
+                // other queries somewhere else in the app, even if those are run inside
+                // an asynchronous function, so we don't need to use `IN_BATCH_ASYNC`,
+                // which avoids the need to pass it as an option to the client.
+                IN_BATCH_SYNC = true;
+                value = { [RONIN_SCHEMA_SYMBOLS.QUERY]: value().query };
+                IN_BATCH_SYNC = false;
               }
 
               const expanded = objectFromAccessor(

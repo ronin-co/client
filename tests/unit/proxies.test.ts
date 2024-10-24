@@ -8,10 +8,6 @@ import { getBatchProxy, getSyntaxProxy } from '@/src/utils';
 
 describe('syntax proxy', () => {
   test('using sub query', async () => {
-    const options = {
-      asyncContext: new AsyncLocalStorage(),
-    };
-
     const getQueryHandler = { callback: () => undefined };
     const getQueryHandlerSpy = spyOn(getQueryHandler, 'callback');
     const createQueryHandler = { callback: () => undefined };
@@ -20,7 +16,7 @@ describe('syntax proxy', () => {
     const getProxy = getSyntaxProxy('get', getQueryHandlerSpy);
     const createProxy = getSyntaxProxy('create', createQueryHandlerSpy);
 
-    createProxy.accounts.with(() => getProxy.oldAccounts(), options);
+    createProxy.accounts.with(() => getProxy.oldAccounts());
 
     const finalQuery = {
       create: {
@@ -35,7 +31,7 @@ describe('syntax proxy', () => {
     };
 
     expect(getQueryHandlerSpy).not.toHaveBeenCalled();
-    expect(createQueryHandlerSpy).toHaveBeenCalledWith(finalQuery, options);
+    expect(createQueryHandlerSpy).toHaveBeenCalledWith(finalQuery, undefined);
   });
 
   test('using async context', async () => {
