@@ -1,17 +1,6 @@
 import type { QueryHandlerOptions } from '@/src/types/utils';
 
 /**
- * Construct a new object from a "dot string" property accessor.
- *
- * @param accessor - Accessor to construct object from.
- * @param value - Value to set the given accessor to.
- *
- * @returns Object constructed from the given accessor and value.
- */
-export const objectFromAccessor = (accessor: string, value: unknown): unknown =>
-  setProperty({}, accessor, value);
-
-/**
  * Splits the given path into an array of so-called segments. This is done by
  * splitting the path on the `.` character, but only if it's not preceded by a
  * `\` character. This is done to allow for setting values on nested records,
@@ -78,7 +67,7 @@ const setPropertyViaPathSegments = (
   }
 };
 
-const setProperty = <T extends object, K>(obj: T, path: string, value: K): T => {
+export const setProperty = <T extends object, K>(obj: T, path: string, value: K): T => {
   const segments = getPathSegments(path);
   setPropertyViaPathSegments(obj, segments, value);
   return obj;

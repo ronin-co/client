@@ -3,7 +3,12 @@ import type { AsyncLocalStorage } from 'node:async_hooks';
 import type { Query } from '@/src/types/query';
 import type { PromiseTuple, QueryHandlerOptions, QueryItem } from '@/src/types/utils';
 import { RONIN_SCHEMA_SYMBOLS } from '@/src/utils/constants';
-import { objectFromAccessor } from '@/src/utils/helpers';
+import { setProperty } from '@/src/utils/helpers';
+
+interface BatchDetails {
+  query: Query;
+  options?: Record<string, unknown>;
+}
 
 /**
  * Used to track whether queries run in batches if `AsyncLocalStorage` is
@@ -48,7 +53,7 @@ export const getSyntaxProxy = (
     {},
     {
       get(_target: any, prop: string) {
-        function createProxy(path: Array<string>, customTarget?: object) {
+        function createProxy(path: Array<string>, customTarget?: BatchDetails) {
           const proxyTargetFunction = () => {};
 
           // This is workaround to avoid "uncalled functions" in the test
@@ -71,28 +76,25 @@ export const getSyntaxProxy = (
                 IN_BATCH_SYNC = false;
               }
 
-              const expanded = objectFromAccessor(
-                path.join('.'),
-                typeof value === 'undefined' ? {} : value,
-              );
+              const query = customTarget?.query || {};
+              const targetValue = typeof value === 'undefined' ? {} : value;
 
-              const query = { [queryType]: expanded };
+              setProperty(query, `${queryType}.${path.join('.')}`, targetValue);
 
               if (IN_BATCH_ASYNC?.getStore() || IN_BATCH_SYNC) {
                 const newPath = path.slice(0, -1);
-                const details = { query, path: newPath };
+                const details: BatchDetails = { query };
 
                 if (options) details.options = options;
 
                 return createProxy(newPath, details);
-                // return { query, options, ...targets };
               }
 
               return queryHandler(query, options);
             },
 
             get(target: any, nextProp: string, receiver: any): any {
-              if (customTarget && Object.hasOwn(customTarget, nextProp)) {
+              if (Object.hasOwn(target, nextProp)) {
                 return Reflect.get(target, nextProp, receiver);
               }
 
