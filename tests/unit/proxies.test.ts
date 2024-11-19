@@ -94,26 +94,44 @@ describe('syntax proxy', () => {
     const queryList: Array<QueryItem> = [];
 
     getBatchProxy(
-      () => [getProxy.members.with({ team: 'blue' }).orderedBy(['joinedAt'])],
+      () => [
+        // Test queries where the second function is called right after the first one.
+        getProxy.members
+          .with({ team: 'red' })
+          .excluding(['name']),
+        // Test queries where the second function is not called right after the first one.
+        getProxy.members
+          .with({ team: 'blue' })
+          .orderedBy.ascending(['joinedAt']),
+      ],
       {
         asyncContext: new AsyncLocalStorage(),
       },
       (queries) => queryList.push(...queries),
     );
 
-    expect(queryList).toMatchObject([
-      {
-        query: {
-          get: {
-            members: {
-              with: {
-                team: 'blue',
-              },
-              orderedBy: ['joinedAt'],
-            },
+    expect(queryList[0].query).toMatchObject({
+      get: {
+        members: {
+          with: {
+            team: 'red',
+          },
+          excluding: ['name'],
+        },
+      },
+    });
+
+    expect(queryList[1].query).toMatchObject({
+      get: {
+        members: {
+          with: {
+            team: 'blue',
+          },
+          orderedBy: {
+            ascending: ['joinedAt'],
           },
         },
       },
-    ]);
+    });
   });
 });
