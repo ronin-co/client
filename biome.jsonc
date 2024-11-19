@@ -39,7 +39,8 @@
       },
       "nursery": {
         "all": true,
-        "useSortedClasses": "warn"
+        "useSortedClasses": "warn",
+        "useExplicitType": "off"
       },
       "performance": {
         "all": true,
