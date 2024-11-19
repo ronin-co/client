@@ -94,9 +94,7 @@ describe('syntax proxy', () => {
     const queryList: Array<QueryItem> = [];
 
     getBatchProxy(
-      () => [
-        getProxy.members.with({ team: 'blue' }).orderedBy(['joinedAt'])
-      ],
+      () => [getProxy.members.with({ team: 'blue' }).orderedBy(['joinedAt'])],
       {
         asyncContext: new AsyncLocalStorage(),
       },
@@ -114,7 +112,7 @@ describe('syntax proxy', () => {
               orderedBy: ['joinedAt'],
             },
           },
-        }
+        },
       },
     ]);
   });

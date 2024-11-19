@@ -81,7 +81,7 @@ export const getSyntaxProxy = (
               if (IN_BATCH_ASYNC?.getStore() || IN_BATCH_SYNC) {
                 const newPath = path.slice(0, -1);
                 const details = { query, path: newPath };
-  
+
                 if (options) details.options = options;
 
                 return createProxy(newPath, details);
