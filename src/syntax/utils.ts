@@ -53,7 +53,7 @@ export const getSyntaxProxy = (
     {},
     {
       get(_target: any, prop: string) {
-        function createProxy(path: Array<string>, customTarget?: BatchDetails) {
+        function createProxy(path: Array<string>, targetProps?: BatchDetails) {
           const proxyTargetFunction = () => {};
 
           // This is workaround to avoid "uncalled functions" in the test
@@ -61,8 +61,12 @@ export const getSyntaxProxy = (
           // function is called when it's called via a Proxy.
           proxyTargetFunction();
 
-          return new Proxy(customTarget || proxyTargetFunction, {
-            apply(_target: any, _thisArg: any, args: Array<any>) {
+          // Since the proxy target must always be a function (so that it can be called),
+          // we need to assign properties to the function itself.
+          if (targetProps) Object.assign(proxyTargetFunction, targetProps);
+
+          return new Proxy(proxyTargetFunction, {
+            apply(target: any, _thisArg: any, args: Array<any>) {
               let value = args[0];
               const options = args[1];
 
@@ -76,7 +80,7 @@ export const getSyntaxProxy = (
                 IN_BATCH_SYNC = false;
               }
 
-              const query = customTarget?.query || {};
+              const query = target.query || {};
               const targetValue = typeof value === 'undefined' ? {} : value;
 
               setProperty(query, `${queryType}.${path.join('.')}`, targetValue);
@@ -98,7 +102,7 @@ export const getSyntaxProxy = (
                 return Reflect.get(target, nextProp, receiver);
               }
 
-              return createProxy(path.concat([nextProp]));
+              return createProxy(path.concat([nextProp]), target);
             },
           });
         }
