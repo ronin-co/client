@@ -84,4 +84,38 @@ describe('syntax proxy', () => {
       },
     ]);
   });
+
+  test('using function chaining in batch', async () => {
+    const getQueryHandler = { callback: () => undefined };
+    const getQueryHandlerSpy = spyOn(getQueryHandler, 'callback');
+
+    const getProxy = getSyntaxProxy('get', getQueryHandlerSpy);
+
+    const queryList: Array<QueryItem> = [];
+
+    getBatchProxy(
+      () => [
+        getProxy.members.with({ team: 'blue' }).orderedBy(['joinedAt'])
+      ],
+      {
+        asyncContext: new AsyncLocalStorage(),
+      },
+      (queries) => queryList.push(...queries),
+    );
+
+    expect(queryList).toMatchObject([
+      {
+        query: {
+          get: {
+            members: {
+              with: {
+                team: 'blue',
+              },
+              orderedBy: ['joinedAt'],
+            },
+          },
+        }
+      },
+    ]);
+  });
 });

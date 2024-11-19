@@ -48,7 +48,7 @@ export const getSyntaxProxy = (
     {},
     {
       get(_target: any, prop: string) {
-        function createProxy(path: Array<string>) {
+        function createProxy(path: Array<string>, customTarget?: object) {
           const proxyTargetFunction = () => {};
 
           // This is workaround to avoid "uncalled functions" in the test
@@ -56,7 +56,7 @@ export const getSyntaxProxy = (
           // function is called when it's called via a Proxy.
           proxyTargetFunction();
 
-          return new Proxy(proxyTargetFunction, {
+          return new Proxy(customTarget || proxyTargetFunction, {
             apply(_target: any, _thisArg: any, args: Array<any>) {
               let value = args[0];
               const options = args[1];
@@ -79,13 +79,23 @@ export const getSyntaxProxy = (
               const query = { [queryType]: expanded };
 
               if (IN_BATCH_ASYNC?.getStore() || IN_BATCH_SYNC) {
-                return { query, options };
+                const newPath = path.slice(0, -1);
+                const details = { query, path: newPath };
+  
+                if (options) details.options = options;
+
+                return createProxy(newPath, details);
+                // return { query, options, ...targets };
               }
 
               return queryHandler(query, options);
             },
 
-            get(_target: any, nextProp: string): any {
+            get(target: any, nextProp: string, receiver: any): any {
+              if (customTarget && Object.hasOwn(customTarget, nextProp)) {
+                return Reflect.get(target, nextProp, receiver);
+              }
+
               return createProxy(path.concat([nextProp]));
             },
           });
