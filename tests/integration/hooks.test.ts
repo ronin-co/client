@@ -183,24 +183,25 @@ describe('hooks', () => {
     let finalBeforeResult: unknown;
     let finalAfterResult: unknown;
 
-    const { add } = createSyntaxFactory({
+    const { create } = createSyntaxFactory({
       fetch: async () => {
         return Response.json({
           results: [
             {
               record: {
                 id: '1',
-                handle: 'juri',
-                firstName: 'Juri',
-                lastName: 'Adams',
+                slug: 'account',
+                pluralSlug: 'accounts',
+                name: 'Account',
+                pluralName: 'Accounts',
               },
             },
           ],
         });
       },
       hooks: {
-        account: {
-          afterAdd(query, multiple, beforeResult, afterResult) {
+        model: {
+          afterCreate(query, multiple, beforeResult, afterResult) {
             finalQuery = query;
             finalMultiple = multiple;
             finalBeforeResult = beforeResult;
@@ -211,21 +212,13 @@ describe('hooks', () => {
       asyncContext: new AsyncLocalStorage(),
     });
 
-    const account = await add.account({
-      with: {
-        handle: 'juri',
-        firstName: 'Juri',
-        lastName: 'Adams',
-      },
+    const model = await create.model({
+      slug: 'account',
     });
 
     // Make sure `finalQuery` matches the initial query.
     expect(finalQuery).toMatchObject({
-      with: {
-        handle: 'juri',
-        firstName: 'Juri',
-        lastName: 'Adams',
-      },
+      slug: 'account',
     });
 
     // Make sure `finalBeforeResult` is empty, since the record is being
@@ -236,7 +229,7 @@ describe('hooks', () => {
     expect(finalBeforeResult).toMatchObject([]);
 
     // Make sure `finalAfterResult` matches the resolved account.
-    expect(finalAfterResult).toEqual([account]);
+    expect(finalAfterResult).toEqual([model]);
 
     expect(finalMultiple).toBe(false);
   });

@@ -7,6 +7,7 @@ import type {
   Results,
 } from '@/src/types/query';
 import type { QueryHandlerOptions, RecursivePartial } from '@/src/types/utils';
+import { WRITE_QUERY_TYPES } from '@/src/utils/constants';
 import { toDashCase } from '@/src/utils/helpers';
 
 const EMPTY = Symbol('empty');
@@ -462,9 +463,7 @@ export const runQueriesWithHooks = async <T>(
     const queryType = Object.keys(query.definition)[0];
 
     // "after" hooks should only fire for writes — not reads.
-    if (queryType !== 'add' && queryType !== 'set' && queryType !== 'remove') {
-      continue;
-    }
+    if (!WRITE_QUERY_TYPES.includes(queryType)) continue;
 
     const diffMatch = queryList.find((item) => item.diffForIndex === index);
 

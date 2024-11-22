@@ -1,6 +1,7 @@
 import { processStorableObjects, uploadStorableObjects } from '@/src/storage';
 import type { Query, Results } from '@/src/types/query';
 import type { QueryHandlerOptions } from '@/src/types/utils';
+import { WRITE_QUERY_TYPES } from '@/src/utils/constants';
 import { runQueriesWithHooks } from '@/src/utils/data-hooks';
 import {
   InvalidQueryError,
@@ -58,7 +59,7 @@ export const runQueries = async <T>(
   options: QueryHandlerOptions = {},
 ): Promise<Results<T>> => {
   const hasWriteQuery = queries.some((query) =>
-    ['add', 'set', 'remove'].includes(Object.keys(query)[0]),
+    WRITE_QUERY_TYPES.includes(Object.keys(query)[0]),
   );
 
   // Runtimes like Cloudflare Workers don't support `cache` yet.
