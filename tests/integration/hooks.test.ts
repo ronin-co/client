@@ -234,6 +234,64 @@ describe('hooks', () => {
     expect(finalMultiple).toBe(false);
   });
 
+  test('run `alter` query through factory containing `after` data hook', async () => {
+    let finalQuery: FilteredHookQuery<CombinedInstructions, QueryType> | undefined;
+    let finalMultiple: boolean | undefined;
+    let finalBeforeResult: unknown;
+    let finalAfterResult: unknown;
+
+    const { alter } = createSyntaxFactory({
+      fetch: async () => {
+        return Response.json({
+          results: [
+            {
+              record: {
+                id: '1',
+                slug: 'account',
+                pluralSlug: 'accounts',
+                name: 'Account',
+                pluralName: 'Accounts',
+              },
+            },
+          ],
+        });
+      },
+      hooks: {
+        model: {
+          afterAlter(query, multiple, beforeResult, afterResult) {
+            finalQuery = query;
+            finalMultiple = multiple;
+            finalBeforeResult = beforeResult;
+            finalAfterResult = afterResult;
+          },
+        },
+      },
+      asyncContext: new AsyncLocalStorage(),
+    });
+
+    const model = await alter({
+      model: 'account',
+      to: {
+        slug: 'user',
+      },
+    });
+
+    // Make sure `finalQuery` matches the initial query payload.
+    expect(finalQuery).toMatch('account');
+
+    // Make sure `finalBeforeResult` is empty, since the record is being
+    // created and didn't exist before.
+    //
+    // We must use `toMatchObject` here, to ensure that the array is really
+    // empty and doesn't contain any `undefined` items.
+    expect(finalBeforeResult).toMatchObject([]);
+
+    // Make sure `finalAfterResult` matches the resolved account.
+    expect(finalAfterResult).toEqual([model]);
+
+    expect(finalMultiple).toBe(false);
+  });
+
   test('run `drop` query through factory containing `after` data hook', async () => {
     let finalBeforeResult: unknown;
     let finalAfterResult: unknown;

@@ -49,86 +49,79 @@ export const getSyntaxProxy = (
   queryType: string,
   queryHandler: (query: Query, options?: Record<string, unknown>) => Promise<any> | any,
 ) => {
-  return new Proxy(
-    {},
-    {
-      get(_target: any, prop: string) {
-        function createProxy(path: Array<string>, targetProps?: BatchDetails) {
-          const proxyTargetFunction = () => {};
+  function createProxy(path: Array<string>, targetProps?: BatchDetails) {
+    const proxyTargetFunction = () => {};
 
-          // This is workaround to avoid "uncalled functions" in the test
-          // coverage report. Test coverage tools fail to recognize that the
-          // function is called when it's called via a Proxy.
-          proxyTargetFunction();
+    // This is workaround to avoid "uncalled functions" in the test
+    // coverage report. Test coverage tools fail to recognize that the
+    // function is called when it's called via a Proxy.
+    proxyTargetFunction();
 
-          // Since the proxy target must always be a function (so that it can be called),
-          // we need to assign properties to the function itself.
-          if (targetProps) Object.assign(proxyTargetFunction, targetProps);
+    // Since the proxy target must always be a function (so that it can be called),
+    // we need to assign properties to the function itself.
+    if (targetProps) Object.assign(proxyTargetFunction, targetProps);
 
-          return new Proxy(proxyTargetFunction, {
-            apply(target: any, _thisArg: any, args: Array<any>) {
-              let value = args[0];
-              const options = args[1];
+    return new Proxy(proxyTargetFunction, {
+      apply(target: any, _thisArg: any, args: Array<any>) {
+        let value = args[0];
+        const options = args[1];
 
-              // If a function is provided as the argument for the query, call it and make
-              // all queries within it think they are running inside a batch transaction,
-              // in order to retrieve their serialized values.
-              if (typeof value === 'function') {
-                // Since `value()` is synchronous, `IN_BATCH_SYNC` should not affect any
-                // other queries somewhere else in the app, even if those are run inside
-                // an asynchronous function, so we don't need to use `IN_BATCH_ASYNC`,
-                // which avoids the need to pass it as an option to the client.
-                IN_BATCH_SYNC = true;
-                value = { [RONIN_SCHEMA_SYMBOLS.QUERY]: value().query };
-                IN_BATCH_SYNC = false;
-              }
-
-              // If the function call is happening after an existing function call in the
-              // same query, the existing query will be available as `target.query`, and
-              // we should extend it. If none is available, we should create a new query.
-              const query = target.query || {};
-              const targetValue = typeof value === 'undefined' ? {} : value;
-
-              setProperty(query, `${queryType}.${path.join('.')}`, targetValue);
-
-              // If the function call is happening inside a batch, return a new proxy, to
-              // allow for continuing to chain `get` accessors and function calls after
-              // existing function calls in the same query.
-              if (IN_BATCH_ASYNC?.getStore() || IN_BATCH_SYNC) {
-                // To ensure that `get` accessor calls are mounted to the same level as
-                // the function after which they are called, we need to remove the last
-                // path segment.
-                const newPath = path.slice(0, -1);
-                const details: BatchDetails = { query };
-
-                // Only add options if any are available, to avoid adding a property that
-                // holds an `undefined` value.
-                if (options) details.options = options;
-
-                return createProxy(newPath, details);
-              }
-
-              return queryHandler(query, options);
-            },
-
-            get(target: any, nextProp: string, receiver: any): any {
-              // If the target object of the proxy has a static property that matches the
-              // provided property name, return its value.
-              if (Object.hasOwn(target, nextProp)) {
-                return Reflect.get(target, nextProp, receiver);
-              }
-
-              // If the target object does not have a matching static property, return a
-              // new proxy, to allow for chaining `get` accessors.
-              return createProxy(path.concat([nextProp]), target);
-            },
-          });
+        // If a function is provided as the argument for the query, call it and make
+        // all queries within it think they are running inside a batch transaction,
+        // in order to retrieve their serialized values.
+        if (typeof value === 'function') {
+          // Since `value()` is synchronous, `IN_BATCH_SYNC` should not affect any
+          // other queries somewhere else in the app, even if those are run inside
+          // an asynchronous function, so we don't need to use `IN_BATCH_ASYNC`,
+          // which avoids the need to pass it as an option to the client.
+          IN_BATCH_SYNC = true;
+          value = { [RONIN_SCHEMA_SYMBOLS.QUERY]: value().query };
+          IN_BATCH_SYNC = false;
         }
 
-        return createProxy([prop]);
+        // If the function call is happening after an existing function call in the
+        // same query, the existing query will be available as `target.query`, and
+        // we should extend it. If none is available, we should create a new query.
+        const query = target.query || {};
+        const targetValue = typeof value === 'undefined' ? {} : value;
+
+        setProperty(query, `${queryType}.${path.join('.')}`, targetValue);
+
+        // If the function call is happening inside a batch, return a new proxy, to
+        // allow for continuing to chain `get` accessors and function calls after
+        // existing function calls in the same query.
+        if (IN_BATCH_ASYNC?.getStore() || IN_BATCH_SYNC) {
+          // To ensure that `get` accessor calls are mounted to the same level as
+          // the function after which they are called, we need to remove the last
+          // path segment.
+          const newPath = path.slice(0, -1);
+          const details: BatchDetails = { query };
+
+          // Only add options if any are available, to avoid adding a property that
+          // holds an `undefined` value.
+          if (options) details.options = options;
+
+          return createProxy(newPath, details);
+        }
+
+        return queryHandler(query, options);
       },
-    },
-  );
+
+      get(target: any, nextProp: string, receiver: any): any {
+        // If the target object of the proxy has a static property that matches the
+        // provided property name, return its value.
+        if (Object.hasOwn(target, nextProp)) {
+          return Reflect.get(target, nextProp, receiver);
+        }
+
+        // If the target object does not have a matching static property, return a
+        // new proxy, to allow for chaining `get` accessors.
+        return createProxy(path.concat([nextProp]), target);
+      },
+    });
+  }
+
+  return createProxy([]);
 };
 
 /**
