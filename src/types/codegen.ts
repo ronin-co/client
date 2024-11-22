@@ -398,6 +398,48 @@ export namespace RONIN {
     with: With<TSchema, TSchema, TOptions>;
   }
 
+  export interface ICreator<
+    TSchema,
+    TOptions = undefined,
+    TModifiedReturn = Replace<TSchema, RONIN.RoninRecord, string>,
+  > extends ReducedFunction {
+    (
+      filter?: {
+        with?: Partial<WithObject<TSchema> | Array<WithObject<TSchema>>>;
+      },
+      options?: TOptions,
+    ): Promise<TModifiedReturn>;
+    with: With<TSchema, TSchema, TOptions>;
+  }
+
+  export interface IAlterer<
+    TSchema,
+    TOptions = undefined,
+    TModifiedReturn = Replace<TSchema, RONIN.RoninRecord, string>,
+  > extends ReducedFunction {
+    (
+      filter?: {
+        with?: Partial<WithObject<TSchema> | Array<WithObject<TSchema>>>;
+      },
+      options?: TOptions,
+    ): Promise<TModifiedReturn>;
+    with: With<TSchema, TSchema, TOptions>;
+  }
+
+  export interface IDropper<
+    TSchema,
+    TOptions = undefined,
+    TModifiedReturn = Replace<TSchema, RONIN.RoninRecord, string>,
+  > extends ReducedFunction {
+    (
+      filter?: {
+        with?: Partial<WithObject<TSchema> | Array<WithObject<TSchema>>>;
+      },
+      options?: TOptions,
+    ): Promise<TModifiedReturn>;
+    with: With<TSchema, TSchema, TOptions>;
+  }
+
   export interface ExtendedAdder<TOptions = undefined>
     extends Record<string, IAdder<Record<string, unknown>, TOptions>> {}
 
@@ -412,6 +454,15 @@ export namespace RONIN {
 
   export interface ExtendedCounter<TOptions = undefined>
     extends Record<string, ICounter<Record<string, unknown>, TOptions>> {}
+
+  export interface ExtendedCreator<TOptions = undefined>
+    extends Record<string, ICreator<Record<string, unknown>, TOptions>> {}
+
+  export interface ExtendedAlterer<TOptions = undefined>
+    extends Record<string, IAlterer<Record<string, unknown>, TOptions>> {}
+
+  export interface ExtendedDropper<TOptions = undefined>
+    extends Record<string, IDropper<Record<string, unknown>, TOptions>> {}
 
   export type Adder<TOptions = undefined> = {
     [K in keyof Schemas]: IAdder<Schemas[K]>;
@@ -434,4 +485,16 @@ export namespace RONIN {
   export type Counter<TOptions = undefined> = {
     [K in keyof Schemas]: ICounter<Schemas[K]>;
   } & RONIN.ExtendedCounter<TOptions>;
+
+  export type Creator<TOptions = undefined> = {
+    [K in keyof Schemas]: ICreator<Schemas[K]>;
+  } & RONIN.ExtendedCreator<TOptions>;
+
+  export type Alterer<TOptions = undefined> = {
+    [K in keyof Schemas]: IAlterer<Schemas[K]>;
+  } & RONIN.ExtendedAlterer<TOptions>;
+
+  export type Dropper<TOptions = undefined> = {
+    [K in keyof Schemas]: IDropper<Schemas[K]>;
+  } & RONIN.ExtendedDropper<TOptions>;
 }

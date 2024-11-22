@@ -11059,6 +11059,10 @@ type Query = {
         };
       }
     | undefined;
+
+  create?: any;
+  alter?: any;
+  drop?: any;
 };
 
 type QuerySchemaType = {
@@ -11678,7 +11682,7 @@ type QuerySchemaType = {
   };
 };
 
-type QueryType = 'get' | 'set' | 'add' | 'remove' | 'count';
+type QueryType = 'get' | 'set' | 'add' | 'remove' | 'count' | 'create' | 'alter' | 'drop';
 
 type SetInstructions = {
   with?:

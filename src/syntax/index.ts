@@ -69,13 +69,13 @@ export const createSyntaxFactory = (
   // Query types for interacting with the database schema.
   create: getSyntaxProxy('create', (query, queryOptions) =>
     queryHandler(query, mergeOptions(options, queryOptions)),
-  ) as RONIN.Getter,
+  ) as RONIN.Creator,
   alter: getSyntaxProxy('alter', (query, queryOptions) =>
     queryHandler(query, mergeOptions(options, queryOptions)),
-  ) as RONIN.Getter,
+  ) as RONIN.Alterer,
   drop: getSyntaxProxy('drop', (query, queryOptions) =>
     queryHandler(query, mergeOptions(options, queryOptions)),
-  ) as RONIN.Getter,
+  ) as RONIN.Dropper,
 
   // Function for executing a transaction containing multiple queries.
   batch: <T extends [Promise<any>, ...Array<Promise<any>>] | Array<Promise<any>>>(
