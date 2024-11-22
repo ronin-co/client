@@ -1,5 +1,5 @@
 export type {
-  // Create Hooks
+  // Add Hooks
   AddHook,
   BeforeAddHook,
   AfterAddHook,
@@ -11,7 +11,7 @@ export type {
   SetHook,
   BeforeSetHook,
   AfterSetHook,
-  // Drop Hooks
+  // Remove Hooks
   RemoveHook,
   BeforeRemoveHook,
   AfterRemoveHook,

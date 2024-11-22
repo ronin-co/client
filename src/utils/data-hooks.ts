@@ -406,7 +406,7 @@ export const runQueriesWithHooks = async <T>(
 
   const hookCallerOptions = { hooks, asyncContext };
 
-  // Invoke `beforeAdd`, `beforeGet`, `beforeSet`, `beforeDrop`, and
+  // Invoke `beforeAdd`, `beforeGet`, `beforeSet`, `beforeRemove`, and
   // also `beforeCount`.
   await Promise.all(
     queryList.map(async ({ definition, diffForIndex }, index) => {
@@ -456,7 +456,7 @@ export const runQueriesWithHooks = async <T>(
     queryList[query.index].result = result;
   }
 
-  // Asynchronously invoke `afterAdd`, `afterSet`, and `afterDrop`.
+  // Asynchronously invoke `afterAdd`, `afterSet`, and `afterRemove`.
   for (let index = 0; index < queryList.length; index++) {
     const query = queryList[index];
     const queryType = Object.keys(query.definition)[0];

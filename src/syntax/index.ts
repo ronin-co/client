@@ -49,6 +49,7 @@ import { mergeOptions } from '@/src/utils/helpers';
 export const createSyntaxFactory = (
   options: QueryHandlerOptions | (() => QueryHandlerOptions),
 ) => ({
+  // Query types for interacting with records.
   get: getSyntaxProxy('get', (query, queryOptions) =>
     queryHandler(query, mergeOptions(options, queryOptions)),
   ) as RONIN.Getter,
@@ -57,14 +58,15 @@ export const createSyntaxFactory = (
   ) as RONIN.Setter,
   add: getSyntaxProxy('add', (query, queryOptions) =>
     queryHandler(query, mergeOptions(options, queryOptions)),
-  ) as RONIN.Creator,
+  ) as RONIN.Adder,
   remove: getSyntaxProxy('remove', (query, queryOptions) =>
     queryHandler(query, mergeOptions(options, queryOptions)),
-  ) as RONIN.Dropper,
+  ) as RONIN.Remover,
   count: getSyntaxProxy('count', (query, queryOptions) =>
     queryHandler(query, mergeOptions(options, queryOptions)),
   ) as RONIN.Counter,
 
+  // Query types for interacting with the database schema.
   create: getSyntaxProxy('create', (query, queryOptions) =>
     queryHandler(query, mergeOptions(options, queryOptions)),
   ) as RONIN.Getter,
@@ -75,6 +77,7 @@ export const createSyntaxFactory = (
     queryHandler(query, mergeOptions(options, queryOptions)),
   ) as RONIN.Getter,
 
+  // Function for executing a transaction containing multiple queries.
   batch: <T extends [Promise<any>, ...Array<Promise<any>>] | Array<Promise<any>>>(
     operations: () => T,
     batchQueryOptions?: Record<string, unknown>,
