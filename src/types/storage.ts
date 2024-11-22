@@ -16,7 +16,7 @@ export type StoredObject = {
 export type StorableObject = {
   query: {
     index: number;
-    type: 'set' | 'create';
+    type: 'set' | 'add';
   };
   name?: string;
   schema: string;

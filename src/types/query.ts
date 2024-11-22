@@ -8902,7 +8902,7 @@ type Query = {
         } | null;
       }
     | undefined;
-  create?:
+  add?:
     | {
         [x: string]: {
           including?: ('all' | string[]) | undefined;
@@ -9217,7 +9217,7 @@ type Query = {
         };
       }
     | undefined;
-  drop?:
+  remove?:
     | {
         [x: string]: {
           with?:
@@ -11678,7 +11678,7 @@ type QuerySchemaType = {
   };
 };
 
-type QueryType = 'get' | 'set' | 'drop' | 'create' | 'count';
+type QueryType = 'get' | 'set' | 'add' | 'remove' | 'count';
 
 type SetInstructions = {
   with?:

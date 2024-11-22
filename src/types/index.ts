@@ -1,8 +1,8 @@
 export type {
   // Create Hooks
-  CreateHook,
-  BeforeCreateHook,
-  AfterCreateHook,
+  AddHook,
+  BeforeAddHook,
+  AfterAddHook,
   // Get Hooks
   GetHook,
   BeforeGetHook,
@@ -12,9 +12,9 @@ export type {
   BeforeSetHook,
   AfterSetHook,
   // Drop Hooks
-  DropHook,
-  BeforeDropHook,
-  AfterDropHook,
+  RemoveHook,
+  BeforeRemoveHook,
+  AfterRemoveHook,
   // Count Hooks
   CountHook,
   BeforeCountHook,

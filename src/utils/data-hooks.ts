@@ -96,22 +96,22 @@ type AfterHook<TType extends QueryType, TSchema = unknown> = Hook<
   TSchema
 >;
 
-export type BeforeCreateHook = BeforeHook<'create'>;
 export type BeforeGetHook = BeforeHook<'get'>;
 export type BeforeSetHook = BeforeHook<'set'>;
-export type BeforeDropHook = BeforeHook<'drop'>;
+export type BeforeAddHook = BeforeHook<'add'>;
+export type BeforeRemoveHook = BeforeHook<'remove'>;
 export type BeforeCountHook = BeforeHook<'count'>;
 
-export type CreateHook<TSchema = unknown> = DuringHook<'create', TSchema>;
 export type GetHook<TSchema = unknown> = DuringHook<'get', TSchema>;
 export type SetHook<TSchema = unknown> = DuringHook<'set', TSchema>;
-export type DropHook<TSchema = unknown> = DuringHook<'drop', TSchema>;
+export type AddHook<TSchema = unknown> = DuringHook<'add', TSchema>;
+export type RemoveHook<TSchema = unknown> = DuringHook<'remove', TSchema>;
 export type CountHook<TSchema = unknown> = DuringHook<'count', TSchema>;
 
-export type AfterCreateHook<TSchema = unknown> = AfterHook<'create', TSchema>;
 export type AfterGetHook<TSchema = unknown> = AfterHook<'get', TSchema>;
 export type AfterSetHook<TSchema = unknown> = AfterHook<'set', TSchema>;
-export type AfterDropHook<TSchema = unknown> = AfterHook<'drop', TSchema>;
+export type AfterAddHook<TSchema = unknown> = AfterHook<'add', TSchema>;
+export type AfterRemoveHook<TSchema = unknown> = AfterHook<'remove', TSchema>;
 export type AfterCountHook<TSchema = unknown> = AfterHook<'count', TSchema>;
 
 const getSchema = (
@@ -260,9 +260,9 @@ const invokeHooks = async (
     hooksForSchema &&
     (hooksForSchema.get ||
       hooksForSchema.count ||
-      hooksForSchema.create ||
+      hooksForSchema.add ||
       hooksForSchema.set ||
-      hooksForSchema.drop) &&
+      hooksForSchema.remove) &&
     parentHook &&
     querySchema !== parentHook.querySchema
       ? false

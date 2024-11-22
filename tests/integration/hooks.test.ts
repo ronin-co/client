@@ -177,13 +177,13 @@ describe('hooks', () => {
     );
   });
 
-  test('run `create` query through factory containing `after` data hook', async () => {
+  test('run `add` query through factory containing `after` data hook', async () => {
     let finalQuery: FilteredHookQuery<CombinedInstructions, QueryType> | undefined;
     let finalMultiple: boolean | undefined;
     let finalBeforeResult: unknown;
     let finalAfterResult: unknown;
 
-    const { create } = createSyntaxFactory({
+    const { add } = createSyntaxFactory({
       fetch: async () => {
         return Response.json({
           results: [
@@ -200,7 +200,7 @@ describe('hooks', () => {
       },
       hooks: {
         account: {
-          afterCreate(query, multiple, beforeResult, afterResult) {
+          afterAdd(query, multiple, beforeResult, afterResult) {
             finalQuery = query;
             finalMultiple = multiple;
             finalBeforeResult = beforeResult;
@@ -211,7 +211,7 @@ describe('hooks', () => {
       asyncContext: new AsyncLocalStorage(),
     });
 
-    const account = await create.account({
+    const account = await add.account({
       with: {
         handle: 'juri',
         firstName: 'Juri',
@@ -241,11 +241,11 @@ describe('hooks', () => {
     expect(finalMultiple).toBe(false);
   });
 
-  test('run `drop` query through factory containing `after` data hook', async () => {
+  test('run `remove` query through factory containing `after` data hook', async () => {
     let finalBeforeResult: unknown;
     let finalAfterResult: unknown;
 
-    const { drop } = createSyntaxFactory({
+    const { remove } = createSyntaxFactory({
       fetch: async () => {
         return Response.json({
           results: [
@@ -262,7 +262,7 @@ describe('hooks', () => {
       },
       hooks: {
         account: {
-          afterDrop(_query, _multiple, beforeResult, afterResult) {
+          afterRemove(_query, _multiple, beforeResult, afterResult) {
             finalBeforeResult = beforeResult;
             finalAfterResult = afterResult;
           },
@@ -271,7 +271,7 @@ describe('hooks', () => {
       asyncContext: new AsyncLocalStorage(),
     });
 
-    const account = await drop.account({
+    const account = await remove.account({
       with: {
         handle: 'juri',
       },
@@ -433,7 +433,7 @@ describe('hooks', () => {
   test('run a query inside a data hook and avoid recursion', async () => {
     let hookInvoked = false;
 
-    const { create } = createSyntaxFactory({
+    const { add } = createSyntaxFactory({
       fetch: async () => {
         return Response.json({
           results: [
@@ -449,7 +449,7 @@ describe('hooks', () => {
       },
       hooks: {
         account: {
-          async create() {
+          async add() {
             // If an infinite recursion is detected, we need to exit
             // immediately instead of performing a test assertion, because the
             // code will otherwise run forever (until memory is exceeded).
@@ -462,7 +462,7 @@ describe('hooks', () => {
 
             hookInvoked = true;
 
-            await create.account.with({
+            await add.account.with({
               handle: 'not-juri',
             });
 
@@ -473,7 +473,7 @@ describe('hooks', () => {
       asyncContext: new AsyncLocalStorage(),
     });
 
-    const result = await create.account.with({
+    const result = await add.account.with({
       handle: 'juri',
     });
 
@@ -489,11 +489,11 @@ test('invoke `ronin` with `hooks` defined, but no `asyncContext` defined', async
       token: 'supertoken',
       hooks: {
         // @ts-expect-error - We are deliberately causing an error.
-        beforeCreate: () => undefined,
+        beforeAdd: () => undefined,
       },
     });
 
-    await factory.create.account({ with: { handle: 'leo' } });
+    await factory.add.account({ with: { handle: 'leo' } });
   } catch (err) {
     error = err as Error;
   }
