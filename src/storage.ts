@@ -19,8 +19,8 @@ export const extractStorableObjects = (queries: Array<Query>): Array<StorableObj
         ...references,
         ...Object.entries(query).reduce(
           (references, [queryType, query]) => {
-            // Abort if the `queryType` is not one of `set` or `create`.
-            if (!['set', 'create'].includes(queryType)) return references;
+            // Abort if the `queryType` is not one of `set` or `add`.
+            if (!['set', 'add'].includes(queryType)) return references;
 
             return [
               // biome-ignore lint/performance/noAccumulatingSpread: This code is too complex to refactor.

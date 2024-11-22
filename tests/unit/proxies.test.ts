@@ -10,16 +10,16 @@ describe('syntax proxy', () => {
   test('using sub query', async () => {
     const getQueryHandler = { callback: () => undefined };
     const getQueryHandlerSpy = spyOn(getQueryHandler, 'callback');
-    const createQueryHandler = { callback: () => undefined };
-    const createQueryHandlerSpy = spyOn(createQueryHandler, 'callback');
+    const addQueryHandler = { callback: () => undefined };
+    const addQueryHandlerSpy = spyOn(addQueryHandler, 'callback');
 
     const getProxy = getSyntaxProxy('get', getQueryHandlerSpy);
-    const createProxy = getSyntaxProxy('create', createQueryHandlerSpy);
+    const addProxy = getSyntaxProxy('add', addQueryHandlerSpy);
 
-    createProxy.accounts.with(() => getProxy.oldAccounts());
+    addProxy.accounts.with(() => getProxy.oldAccounts());
 
     const finalQuery = {
-      create: {
+      add: {
         accounts: {
           with: {
             __RONIN_QUERY: {
@@ -31,7 +31,7 @@ describe('syntax proxy', () => {
     };
 
     expect(getQueryHandlerSpy).not.toHaveBeenCalled();
-    expect(createQueryHandlerSpy).toHaveBeenCalledWith(finalQuery, undefined);
+    expect(addQueryHandlerSpy).toHaveBeenCalledWith(finalQuery, undefined);
   });
 
   test('using async context', async () => {

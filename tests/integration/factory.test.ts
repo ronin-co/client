@@ -24,12 +24,12 @@ const mockFetch = mock(async (request) => {
 global.fetch = mockFetch;
 
 describe('factory', () => {
-  let { get, set, create, drop, count, batch } = {} as ReturnType<
+  let { get, set, add, remove, count, batch } = {} as ReturnType<
     typeof createSyntaxFactory
   >;
 
   beforeEach(() => {
-    ({ get, set, create, drop, count, batch } = createSyntaxFactory({}));
+    ({ get, set, add, remove, count, batch } = createSyntaxFactory({}));
 
     mockFetch.mockClear();
     mockRequestResolvedValue = undefined;
@@ -107,10 +107,10 @@ describe('factory', () => {
     );
 
     // @ts-expect-error `emailVerified` is undefined due not not having the schema types.
-    await drop.accounts.with.emailVerified(false);
+    await remove.accounts.with.emailVerified(false);
 
     expect(mockResolvedRequestText).toEqual(
-      '{"queries":[{"drop":{"accounts":{"with":{"emailVerified":false}}}}]}',
+      '{"queries":[{"remove":{"accounts":{"with":{"emailVerified":false}}}}]}',
     );
 
     // @ts-expect-error `greaterThan` is undefined due not not having the schema types.
@@ -187,14 +187,14 @@ describe('factory', () => {
       count.spaces.with.membersCount.notBeing(0),
       // @ts-expect-error `emailVerified` is undefined due not not having the
       // schema types.
-      drop.accounts.with.emailVerified(false),
-      create.spaces({
+      remove.accounts.with.emailVerified(false),
+      add.spaces({
         with: { handle: 'test-space', members: ['member1', 'member2'] },
       }),
     ]) as Parameters<typeof batch>[0]);
 
     expect(mockResolvedRequestText).toEqual(
-      '{"queries":[{"set":{"members":{"with":{"createdAt":{"lessThan":"2024-04-16T15:02:12.710Z"},"paid":true},"to":{"status":"active","activeFrom":"2024-04-16T15:02:12.710Z"}}}},{"get":{"accounts":{}}},{"count":{"spaces":{"with":{"membersCount":{"notBeing":0}}}}},{"drop":{"accounts":{"with":{"emailVerified":false}}}},{"create":{"spaces":{"with":{"handle":"test-space","members":["member1","member2"]}}}}]}',
+      '{"queries":[{"set":{"members":{"with":{"createdAt":{"lessThan":"2024-04-16T15:02:12.710Z"},"paid":true},"to":{"status":"active","activeFrom":"2024-04-16T15:02:12.710Z"}}}},{"get":{"accounts":{}}},{"count":{"spaces":{"with":{"membersCount":{"notBeing":0}}}}},{"remove":{"accounts":{"with":{"emailVerified":false}}}},{"add":{"spaces":{"with":{"handle":"test-space","members":["member1","member2"]}}}}]}',
     );
   });
 
@@ -217,7 +217,7 @@ describe('factory', () => {
     // processed and that in turn will make the `get` requests act like they
     // are in a batch.
     const res = (await Promise.all([
-      factory.batch(() => [factory.drop.accounts(), factory.drop.spaces()]),
+      factory.batch(() => [factory.remove.accounts(), factory.remove.spaces()]),
       factory.get.members(),
       factory.get.users(),
     ])) as any;
@@ -259,10 +259,10 @@ describe('factory', () => {
     );
 
     // @ts-expect-error `emailVerified` is undefined due not not having the schema types.
-    await drop.accounts.with.emailVerified(false);
+    await remove.accounts.with.emailVerified(false);
 
     expect(mockResolvedRequestText).toEqual(
-      '{"queries":[{"drop":{"accounts":{"with":{"emailVerified":false}}}}]}',
+      '{"queries":[{"remove":{"accounts":{"with":{"emailVerified":false}}}}]}',
     );
 
     // @ts-expect-error `greaterThan` is undefined due not not having the schema types.
@@ -310,14 +310,14 @@ describe('factory', () => {
       count.spaces.with.membersCount.notBeing(0),
       // @ts-expect-error `emailVerified` is undefined due not not having the
       // schema types.
-      drop.accounts.with.emailVerified(false),
-      create.spaces({
+      remove.accounts.with.emailVerified(false),
+      add.spaces({
         with: { handle: 'test-space', members: ['member1', 'member2'] },
       }),
     ]) as Parameters<typeof batch>[0]);
 
     expect(mockResolvedRequestText).toEqual(
-      '{"queries":[{"set":{"members":{"with":{"createdAt":{"lessThan":"2024-04-16T15:02:12.710Z"},"paid":true},"to":{"status":"active","activeFrom":"2024-04-16T15:02:12.710Z"}}}},{"get":{"accounts":{}}},{"count":{"spaces":{"with":{"membersCount":{"notBeing":0}}}}},{"drop":{"accounts":{"with":{"emailVerified":false}}}},{"create":{"spaces":{"with":{"handle":"test-space","members":["member1","member2"]}}}}]}',
+      '{"queries":[{"set":{"members":{"with":{"createdAt":{"lessThan":"2024-04-16T15:02:12.710Z"},"paid":true},"to":{"status":"active","activeFrom":"2024-04-16T15:02:12.710Z"}}}},{"get":{"accounts":{}}},{"count":{"spaces":{"with":{"membersCount":{"notBeing":0}}}}},{"remove":{"accounts":{"with":{"emailVerified":false}}}},{"add":{"spaces":{"with":{"handle":"test-space","members":["member1","member2"]}}}}]}',
     );
   });
 
@@ -392,7 +392,7 @@ describe('factory', () => {
       },
     });
 
-    await factory.create.account({
+    await factory.add.account({
       with: {
         avatar: file,
       },
@@ -412,7 +412,7 @@ describe('factory', () => {
     expect(body).toBe(await file.text());
 
     expect(mockResolvedRequestText).toEqual(
-      '{"queries":[{"create":{"account":{"with":{"avatar":{"key":"test-key","name":"example.jpeg","src":"https://storage.ronin.co/test-key","meta":{"height":100,"width":100,"size":100,"type":"image/jpeg"},"placeholder":{"base64":""}}}}}}]}',
+      '{"queries":[{"add":{"account":{"with":{"avatar":{"key":"test-key","name":"example.jpeg","src":"https://storage.ronin.co/test-key","meta":{"height":100,"width":100,"size":100,"type":"image/jpeg"},"placeholder":{"base64":""}}}}}}]}',
     );
   });
 
@@ -452,7 +452,7 @@ describe('factory', () => {
       },
     });
 
-    await factory.create.account({
+    await factory.add.account({
       with: {
         avatar: file,
       },
@@ -498,7 +498,7 @@ describe('factory', () => {
       },
     });
 
-    await factory.create.account({
+    await factory.add.account({
       with: {
         video: file,
       },
@@ -517,7 +517,7 @@ describe('factory', () => {
     expect(body).toBe(await file.text());
 
     expect(mockResolvedRequestText).toEqual(
-      '{"queries":[{"create":{"account":{"with":{"video":{"key":"test-key","name":"example.mp4","src":"https://storage.ronin.co/test-key","meta":{"size":100,"type":"video/mp4"},"placeholder":null}}}}}]}',
+      '{"queries":[{"add":{"account":{"with":{"video":{"key":"test-key","name":"example.mp4","src":"https://storage.ronin.co/test-key","meta":{"size":100,"type":"video/mp4"},"placeholder":null}}}}}]}',
     );
   });
 
@@ -533,7 +533,7 @@ describe('factory', () => {
       },
     });
 
-    const promise = factory.create.account({
+    const promise = factory.add.account({
       with: {
         avatar: new File([''], 'example.jpeg', { type: 'image/jpeg' }),
       },

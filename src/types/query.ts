@@ -4580,7 +4580,7 @@ type CountQuery = {
   };
 };
 
-type CreateInstructions = {
+type AddInstructions = {
   including?: ('all' | string[]) | undefined;
   excluding?: string[] | undefined;
   orderedBy?:
@@ -4892,8 +4892,8 @@ type CreateInstructions = {
   };
 };
 
-type CreateQuery = {
-  create: {
+type AddQuery = {
+  add: {
     [x: string]: {
       including?: ('all' | string[]) | undefined;
       excluding?: string[] | undefined;
@@ -5208,7 +5208,7 @@ type CreateQuery = {
   };
 };
 
-type DropInstructions = {
+type RemoveInstructions = {
   with?:
     | (
         | {
@@ -5818,7 +5818,7 @@ type DropInstructions = {
   limitedTo?: number | undefined;
 };
 
-type DropQuery = {
+type RemoveQuery = {
   drop: {
     [x: string]: {
       with?:
@@ -13237,10 +13237,10 @@ export type {
   CombinedInstructions,
   CountInstructions,
   CountQuery,
-  CreateInstructions,
-  CreateQuery,
-  DropInstructions,
-  DropQuery,
+  AddInstructions,
+  AddQuery,
+  RemoveInstructions,
+  RemoveQuery,
   GetInstructions,
   GetQuery,
   IncludingInstruction,
