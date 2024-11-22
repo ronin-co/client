@@ -5819,7 +5819,7 @@ type RemoveInstructions = {
 };
 
 type RemoveQuery = {
-  drop: {
+  remove: {
     [x: string]: {
       with?:
         | (
