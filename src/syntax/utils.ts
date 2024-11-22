@@ -50,7 +50,7 @@ export const getSyntaxProxy = (
   queryHandler: (query: Query, options?: Record<string, unknown>) => Promise<any> | any,
 ) => {
   function createProxy(path: Array<string>, targetProps?: BatchDetails) {
-    const proxyTargetFunction = () => {};
+    const proxyTargetFunction = () => undefined;
 
     // This is workaround to avoid "uncalled functions" in the test
     // coverage report. Test coverage tools fail to recognize that the

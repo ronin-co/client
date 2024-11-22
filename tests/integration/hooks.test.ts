@@ -269,7 +269,7 @@ describe('hooks', () => {
       asyncContext: new AsyncLocalStorage(),
     });
 
-    const model = await alter({
+    const model = await (alter as unknown as (details: object) => unknown)({
       model: 'account',
       to: {
         slug: 'user',
@@ -323,7 +323,7 @@ describe('hooks', () => {
       asyncContext: new AsyncLocalStorage(),
     });
 
-    const model = await drop.model('account');
+    const model = await drop.model('account' as Parameters<typeof drop.model>[0]);
 
     // Make sure `finalBeforeResult` is defined and contains the value of the record
     // before it was removed.
