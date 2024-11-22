@@ -19,6 +19,18 @@ export type {
   CountHook,
   BeforeCountHook,
   AfterCountHook,
+  // Create Hooks
+  CreateHook,
+  BeforeCreateHook,
+  AfterCreateHook,
+  // Alter Hooks
+  AlterHook,
+  BeforeAlterHook,
+  AfterAlterHook,
+  // Drop Hooks
+  DropHook,
+  BeforeDropHook,
+  AfterDropHook,
   // Hook Handlers
   BeforeHookHandler,
   AfterHookHandler,

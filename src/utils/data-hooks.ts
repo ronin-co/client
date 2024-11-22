@@ -102,18 +102,27 @@ export type BeforeSetHook = BeforeHook<'set'>;
 export type BeforeAddHook = BeforeHook<'add'>;
 export type BeforeRemoveHook = BeforeHook<'remove'>;
 export type BeforeCountHook = BeforeHook<'count'>;
+export type BeforeCreateHook = BeforeHook<'create'>;
+export type BeforeAlterHook = BeforeHook<'alter'>;
+export type BeforeDropHook = BeforeHook<'drop'>;
 
 export type GetHook<TSchema = unknown> = DuringHook<'get', TSchema>;
 export type SetHook<TSchema = unknown> = DuringHook<'set', TSchema>;
 export type AddHook<TSchema = unknown> = DuringHook<'add', TSchema>;
 export type RemoveHook<TSchema = unknown> = DuringHook<'remove', TSchema>;
 export type CountHook<TSchema = unknown> = DuringHook<'count', TSchema>;
+export type CreateHook<TSchema = unknown> = DuringHook<'create', TSchema>;
+export type AlterHook<TSchema = unknown> = DuringHook<'alter', TSchema>;
+export type DropHook<TSchema = unknown> = DuringHook<'drop', TSchema>;
 
 export type AfterGetHook<TSchema = unknown> = AfterHook<'get', TSchema>;
 export type AfterSetHook<TSchema = unknown> = AfterHook<'set', TSchema>;
 export type AfterAddHook<TSchema = unknown> = AfterHook<'add', TSchema>;
 export type AfterRemoveHook<TSchema = unknown> = AfterHook<'remove', TSchema>;
 export type AfterCountHook<TSchema = unknown> = AfterHook<'count', TSchema>;
+export type AfterCreateHook<TSchema = unknown> = AfterHook<'create', TSchema>;
+export type AfterAlterHook<TSchema = unknown> = AfterHook<'alter', TSchema>;
+export type AfterDropHook<TSchema = unknown> = AfterHook<'drop', TSchema>;
 
 const getSchema = (
   instruction: QuerySchemaType,
@@ -263,7 +272,10 @@ const invokeHooks = async (
       hooksForSchema.count ||
       hooksForSchema.add ||
       hooksForSchema.set ||
-      hooksForSchema.remove) &&
+      hooksForSchema.remove ||
+      hooksForSchema.create ||
+      hooksForSchema.alter ||
+      hooksForSchema.drop) &&
     parentHook &&
     querySchema !== parentHook.querySchema
       ? false
@@ -457,7 +469,8 @@ export const runQueriesWithHooks = async <T>(
     queryList[query.index].result = result;
   }
 
-  // Asynchronously invoke `afterAdd`, `afterSet`, and `afterRemove`.
+  // Asynchronously invoke `afterAdd`, `afterSet`, `afterRemove`, `afterCreate`,
+  // `afterAlter`, and `afterDrop`.
   for (let index = 0; index < queryList.length; index++) {
     const query = queryList[index];
     const queryType = Object.keys(query.definition)[0];
@@ -470,11 +483,11 @@ export const runQueriesWithHooks = async <T>(
     let resultBefore = diffMatch ? diffMatch.result : EMPTY;
     let resultAfter = query.result;
 
-    // For queries of type "remove", we want to set `resultBefore` to the result
-    // of the query (which contains the record), because the record will no
-    // longer exist after the query has been executed, so it wouldn't make sense
-    // to expose the record as `resultAfter` in the data hooks.
-    if (queryType === 'remove') {
+    // For queries of type "remove" and "drop", we want to set `resultBefore` to the
+    // result of the query (which contains the record), because the record will no longer
+    // exist after the query has been executed, so it wouldn't make sense to expose the
+    // record as `resultAfter` in the data hooks.
+    if (queryType === 'remove' || queryType === 'drop') {
       resultBefore = query.result;
       resultAfter = EMPTY;
     }

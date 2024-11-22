@@ -177,7 +177,7 @@ describe('hooks', () => {
     );
   });
 
-  test('run `add` query through factory containing `after` data hook', async () => {
+  test('run `create` query through factory containing `after` data hook', async () => {
     let finalQuery: FilteredHookQuery<CombinedInstructions, QueryType> | undefined;
     let finalMultiple: boolean | undefined;
     let finalBeforeResult: unknown;
@@ -214,7 +214,7 @@ describe('hooks', () => {
 
     const model = await create.model({
       slug: 'account',
-    });
+    } as Parameters<typeof create.model>[0]);
 
     // Make sure `finalQuery` matches the initial query.
     expect(finalQuery).toMatchObject({
@@ -232,6 +232,50 @@ describe('hooks', () => {
     expect(finalAfterResult).toEqual([model]);
 
     expect(finalMultiple).toBe(false);
+  });
+
+  test('run `drop` query through factory containing `after` data hook', async () => {
+    let finalBeforeResult: unknown;
+    let finalAfterResult: unknown;
+
+    const { drop } = createSyntaxFactory({
+      fetch: async () => {
+        return Response.json({
+          results: [
+            {
+              record: {
+                id: '1',
+                slug: 'account',
+                pluralSlug: 'accounts',
+                name: 'Account',
+                pluralName: 'Accounts',
+              },
+            },
+          ],
+        });
+      },
+      hooks: {
+        model: {
+          afterDrop(_query, _multiple, beforeResult, afterResult) {
+            finalBeforeResult = beforeResult;
+            finalAfterResult = afterResult;
+          },
+        },
+      },
+      asyncContext: new AsyncLocalStorage(),
+    });
+
+    const model = await drop.model('account');
+
+    // Make sure `finalBeforeResult` is defined and contains the value of the record
+    // before it was removed.
+    expect(finalBeforeResult).toEqual([model]);
+
+    // Make sure `finalAfterResult` is empty, since the record was removed from the DB.
+    //
+    // We must use `toMatchObject` here, to ensure that the array is really
+    // empty and doesn't contain any `undefined` items.
+    expect(finalAfterResult).toMatchObject([]);
   });
 
   test('run `remove` query through factory containing `after` data hook', async () => {
