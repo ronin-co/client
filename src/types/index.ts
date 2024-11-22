@@ -1,8 +1,8 @@
 export type {
-  // Create Hooks
-  CreateHook,
-  BeforeCreateHook,
-  AfterCreateHook,
+  // Add Hooks
+  AddHook,
+  BeforeAddHook,
+  AfterAddHook,
   // Get Hooks
   GetHook,
   BeforeGetHook,
@@ -11,14 +11,26 @@ export type {
   SetHook,
   BeforeSetHook,
   AfterSetHook,
-  // Drop Hooks
-  DropHook,
-  BeforeDropHook,
-  AfterDropHook,
+  // Remove Hooks
+  RemoveHook,
+  BeforeRemoveHook,
+  AfterRemoveHook,
   // Count Hooks
   CountHook,
   BeforeCountHook,
   AfterCountHook,
+  // Create Hooks
+  CreateHook,
+  BeforeCreateHook,
+  AfterCreateHook,
+  // Alter Hooks
+  AlterHook,
+  BeforeAlterHook,
+  AfterAlterHook,
+  // Drop Hooks
+  DropHook,
+  BeforeDropHook,
+  AfterDropHook,
   // Hook Handlers
   BeforeHookHandler,
   AfterHookHandler,
@@ -40,12 +52,12 @@ export type {
   SetQuery,
   SetInstructions,
   SetInstructions as SetQueryInstructions,
-  CreateQuery,
-  CreateInstructions,
-  CreateInstructions as CreateQueryInstructions,
-  DropQuery,
-  DropInstructions,
-  DropInstructions as DropQueryInstructions,
+  AddQuery,
+  AddInstructions,
+  AddInstructions as AddQueryInstructions,
+  RemoveQuery,
+  RemoveInstructions,
+  RemoveInstructions as RemoveQueryInstructions,
   CountQuery,
   CountInstructions,
   CountInstructions as CountQueryInstructions,

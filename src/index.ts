@@ -1,7 +1,9 @@
 import { createSyntaxFactory } from '@/src/syntax';
 
-const { create, get, set, drop, count, batch } = createSyntaxFactory({});
+const { get, set, add, remove, count, create, alter, drop, batch } = createSyntaxFactory(
+  {},
+);
 
-export { create, get, set, drop, count, batch };
+export { get, set, add, remove, count, create, alter, drop, batch };
 export type { RONIN } from '@/src/types/codegen';
 export default createSyntaxFactory;

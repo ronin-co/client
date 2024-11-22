@@ -190,16 +190,17 @@ describe('hooks', () => {
             {
               record: {
                 id: '1',
-                handle: 'juri',
-                firstName: 'Juri',
-                lastName: 'Adams',
+                slug: 'account',
+                pluralSlug: 'accounts',
+                name: 'Account',
+                pluralName: 'Accounts',
               },
             },
           ],
         });
       },
       hooks: {
-        account: {
+        model: {
           afterCreate(query, multiple, beforeResult, afterResult) {
             finalQuery = query;
             finalMultiple = multiple;
@@ -211,21 +212,13 @@ describe('hooks', () => {
       asyncContext: new AsyncLocalStorage(),
     });
 
-    const account = await create.account({
-      with: {
-        handle: 'juri',
-        firstName: 'Juri',
-        lastName: 'Adams',
-      },
-    });
+    const model = await create.model({
+      slug: 'account',
+    } as Parameters<typeof create.model>[0]);
 
     // Make sure `finalQuery` matches the initial query.
     expect(finalQuery).toMatchObject({
-      with: {
-        handle: 'juri',
-        firstName: 'Juri',
-        lastName: 'Adams',
-      },
+      slug: 'account',
     });
 
     // Make sure `finalBeforeResult` is empty, since the record is being
@@ -236,7 +229,65 @@ describe('hooks', () => {
     expect(finalBeforeResult).toMatchObject([]);
 
     // Make sure `finalAfterResult` matches the resolved account.
-    expect(finalAfterResult).toEqual([account]);
+    expect(finalAfterResult).toEqual([model]);
+
+    expect(finalMultiple).toBe(false);
+  });
+
+  test('run `alter` query through factory containing `after` data hook', async () => {
+    let finalQuery: FilteredHookQuery<CombinedInstructions, QueryType> | undefined;
+    let finalMultiple: boolean | undefined;
+    let finalBeforeResult: unknown;
+    let finalAfterResult: unknown;
+
+    const { alter } = createSyntaxFactory({
+      fetch: async () => {
+        return Response.json({
+          results: [
+            {
+              record: {
+                id: '1',
+                slug: 'account',
+                pluralSlug: 'accounts',
+                name: 'Account',
+                pluralName: 'Accounts',
+              },
+            },
+          ],
+        });
+      },
+      hooks: {
+        model: {
+          afterAlter(query, multiple, beforeResult, afterResult) {
+            finalQuery = query;
+            finalMultiple = multiple;
+            finalBeforeResult = beforeResult;
+            finalAfterResult = afterResult;
+          },
+        },
+      },
+      asyncContext: new AsyncLocalStorage(),
+    });
+
+    const model = await (alter as unknown as (details: object) => unknown)({
+      model: 'account',
+      to: {
+        slug: 'user',
+      },
+    });
+
+    // Make sure `finalQuery` matches the initial query payload.
+    expect(finalQuery).toMatch('account');
+
+    // Make sure `finalBeforeResult` is empty, since the record is being
+    // created and didn't exist before.
+    //
+    // We must use `toMatchObject` here, to ensure that the array is really
+    // empty and doesn't contain any `undefined` items.
+    expect(finalBeforeResult).toMatchObject([]);
+
+    // Make sure `finalAfterResult` matches the resolved account.
+    expect(finalAfterResult).toEqual([model]);
 
     expect(finalMultiple).toBe(false);
   });
@@ -246,6 +297,50 @@ describe('hooks', () => {
     let finalAfterResult: unknown;
 
     const { drop } = createSyntaxFactory({
+      fetch: async () => {
+        return Response.json({
+          results: [
+            {
+              record: {
+                id: '1',
+                slug: 'account',
+                pluralSlug: 'accounts',
+                name: 'Account',
+                pluralName: 'Accounts',
+              },
+            },
+          ],
+        });
+      },
+      hooks: {
+        model: {
+          afterDrop(_query, _multiple, beforeResult, afterResult) {
+            finalBeforeResult = beforeResult;
+            finalAfterResult = afterResult;
+          },
+        },
+      },
+      asyncContext: new AsyncLocalStorage(),
+    });
+
+    const model = await drop.model('account' as Parameters<typeof drop.model>[0]);
+
+    // Make sure `finalBeforeResult` is defined and contains the value of the record
+    // before it was removed.
+    expect(finalBeforeResult).toEqual([model]);
+
+    // Make sure `finalAfterResult` is empty, since the record was removed from the DB.
+    //
+    // We must use `toMatchObject` here, to ensure that the array is really
+    // empty and doesn't contain any `undefined` items.
+    expect(finalAfterResult).toMatchObject([]);
+  });
+
+  test('run `remove` query through factory containing `after` data hook', async () => {
+    let finalBeforeResult: unknown;
+    let finalAfterResult: unknown;
+
+    const { remove } = createSyntaxFactory({
       fetch: async () => {
         return Response.json({
           results: [
@@ -262,7 +357,7 @@ describe('hooks', () => {
       },
       hooks: {
         account: {
-          afterDrop(_query, _multiple, beforeResult, afterResult) {
+          afterRemove(_query, _multiple, beforeResult, afterResult) {
             finalBeforeResult = beforeResult;
             finalAfterResult = afterResult;
           },
@@ -271,18 +366,17 @@ describe('hooks', () => {
       asyncContext: new AsyncLocalStorage(),
     });
 
-    const account = await drop.account({
+    const account = await remove.account({
       with: {
         handle: 'juri',
       },
     });
 
-    // Make sure `finalBeforeResult` is defined and contains the value of the
-    // record before it was deleted.
+    // Make sure `finalBeforeResult` is defined and contains the value of the record
+    // before it was removed.
     expect(finalBeforeResult).toEqual([account]);
 
-    // Make sure `finalAfterResult` is empty, since the record was deleted from
-    // the database.
+    // Make sure `finalAfterResult` is empty, since the record was removed from the DB.
     //
     // We must use `toMatchObject` here, to ensure that the array is really
     // empty and doesn't contain any `undefined` items.
@@ -433,7 +527,7 @@ describe('hooks', () => {
   test('run a query inside a data hook and avoid recursion', async () => {
     let hookInvoked = false;
 
-    const { create } = createSyntaxFactory({
+    const { add } = createSyntaxFactory({
       fetch: async () => {
         return Response.json({
           results: [
@@ -449,7 +543,7 @@ describe('hooks', () => {
       },
       hooks: {
         account: {
-          async create() {
+          async add() {
             // If an infinite recursion is detected, we need to exit
             // immediately instead of performing a test assertion, because the
             // code will otherwise run forever (until memory is exceeded).
@@ -462,7 +556,7 @@ describe('hooks', () => {
 
             hookInvoked = true;
 
-            await create.account.with({
+            await add.account.with({
               handle: 'not-juri',
             });
 
@@ -473,7 +567,7 @@ describe('hooks', () => {
       asyncContext: new AsyncLocalStorage(),
     });
 
-    const result = await create.account.with({
+    const result = await add.account.with({
       handle: 'juri',
     });
 
@@ -489,11 +583,11 @@ test('invoke `ronin` with `hooks` defined, but no `asyncContext` defined', async
       token: 'supertoken',
       hooks: {
         // @ts-expect-error - We are deliberately causing an error.
-        beforeCreate: () => undefined,
+        beforeAdd: () => undefined,
       },
     });
 
-    await factory.create.account({ with: { handle: 'leo' } });
+    await factory.add.account({ with: { handle: 'leo' } });
   } catch (err) {
     error = err as Error;
   }

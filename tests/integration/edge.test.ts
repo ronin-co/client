@@ -41,12 +41,12 @@ describe('edge runtime', () => {
         token: 'supertoken',
         hooks: {
           // @ts-expect-error - We are deliberately causing an error.
-          beforeCreate: () => undefined,
+          beforeAdd: () => undefined,
         },
         asyncContext: new AsyncLocalStorage(),
       });
 
-      await factory.create.account({ with: { handle: 'leo' } });
+      await factory.add.account({ with: { handle: 'leo' } });
     } catch (err) {
       error = err as Error;
     }
@@ -62,7 +62,7 @@ describe('edge runtime', () => {
   test('invoke `ronin` from an edge runtime with `waitUntil` set', async () => {
     const queries = [
       {
-        create: { account: { with: { handle: 'leo' } } },
+        add: { account: { with: { handle: 'leo' } } },
       },
     ];
 
@@ -92,7 +92,7 @@ describe('edge runtime', () => {
       },
       hooks: {
         account: {
-          afterCreate: async () => {
+          afterAdd: async () => {
             // Sleep for 50 milliseconds to simulate an asynchronous action.
             await new Promise((resolve) => setTimeout(resolve, 50));
 
@@ -120,7 +120,7 @@ describe('edge runtime', () => {
   test('invoke `ronin` from an edge runtime with `waitUntil` set and error being thrown', async () => {
     const queries = [
       {
-        create: { account: { with: { handle: 'leo' } } },
+        add: { account: { with: { handle: 'leo' } } },
       },
     ];
 
@@ -148,7 +148,7 @@ describe('edge runtime', () => {
       },
       hooks: {
         account: {
-          afterCreate: () => {
+          afterAdd: () => {
             throw new Error(errorText);
           },
         },
@@ -169,7 +169,7 @@ describe('edge runtime', () => {
   test('invoke `ronin` from an edge runtime with `waitUntil` set and ensure hidden result', async () => {
     const queries = [
       {
-        create: { account: { with: { handle: 'leo' } } },
+        add: { account: { with: { handle: 'leo' } } },
       },
     ];
 
@@ -196,7 +196,7 @@ describe('edge runtime', () => {
       },
       hooks: {
         account: {
-          afterCreate: async () => {
+          afterAdd: async () => {
             // Sleep for 50 milliseconds to simulate an asynchronous action.
             await new Promise((resolve) => setTimeout(resolve, 50));
           },

@@ -18,7 +18,7 @@ import { mergeOptions } from '@/src/utils/helpers';
  *
  * ### Usage
  * ```typescript
- * const { get, set, create, count, drop } = createSyntaxFactory({
+ * const { get, set, add, remove, count } = createSyntaxFactory({
  *   token: '...'
  * });
  *
@@ -33,12 +33,11 @@ import { mergeOptions } from '@/src/utils/helpers';
  *   },
  * });
  *
+ * await add.account({ with: { email: 'mike@gmail.com' } });
  *
- * await create.account({ with: { email: 'mike@gmail.com' } });
+ * await remove.accounts.with.emailVerified.notBeing(true);
  *
  * await count.accounts();
- *
- * await drop.accounts.with.emailVerified.notBeing(true);
  *
  * // Execute a batch of operations
  * const batchResult = await batch(() => [
@@ -50,21 +49,35 @@ import { mergeOptions } from '@/src/utils/helpers';
 export const createSyntaxFactory = (
   options: QueryHandlerOptions | (() => QueryHandlerOptions),
 ) => ({
-  create: getSyntaxProxy('create', (query, queryOptions) =>
-    queryHandler(query, mergeOptions(options, queryOptions)),
-  ) as RONIN.Creator,
+  // Query types for interacting with records.
   get: getSyntaxProxy('get', (query, queryOptions) =>
     queryHandler(query, mergeOptions(options, queryOptions)),
   ) as RONIN.Getter,
   set: getSyntaxProxy('set', (query, queryOptions) =>
     queryHandler(query, mergeOptions(options, queryOptions)),
   ) as RONIN.Setter,
-  drop: getSyntaxProxy('drop', (query, queryOptions) =>
+  add: getSyntaxProxy('add', (query, queryOptions) =>
     queryHandler(query, mergeOptions(options, queryOptions)),
-  ) as RONIN.Dropper,
+  ) as RONIN.Adder,
+  remove: getSyntaxProxy('remove', (query, queryOptions) =>
+    queryHandler(query, mergeOptions(options, queryOptions)),
+  ) as RONIN.Remover,
   count: getSyntaxProxy('count', (query, queryOptions) =>
     queryHandler(query, mergeOptions(options, queryOptions)),
   ) as RONIN.Counter,
+
+  // Query types for interacting with the database schema.
+  create: getSyntaxProxy('create', (query, queryOptions) =>
+    queryHandler(query, mergeOptions(options, queryOptions)),
+  ) as RONIN.Creator,
+  alter: getSyntaxProxy('alter', (query, queryOptions) =>
+    queryHandler(query, mergeOptions(options, queryOptions)),
+  ) as RONIN.Alterer,
+  drop: getSyntaxProxy('drop', (query, queryOptions) =>
+    queryHandler(query, mergeOptions(options, queryOptions)),
+  ) as RONIN.Dropper,
+
+  // Function for executing a transaction containing multiple queries.
   batch: <T extends [Promise<any>, ...Array<Promise<any>>] | Array<Promise<any>>>(
     operations: () => T,
     batchQueryOptions?: Record<string, unknown>,

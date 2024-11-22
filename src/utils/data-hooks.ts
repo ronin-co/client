@@ -7,6 +7,7 @@ import type {
   Results,
 } from '@/src/types/query';
 import type { QueryHandlerOptions, RecursivePartial } from '@/src/types/utils';
+import { WRITE_QUERY_TYPES } from '@/src/utils/constants';
 import { toDashCase } from '@/src/utils/helpers';
 
 const EMPTY = Symbol('empty');
@@ -19,13 +20,13 @@ export type FilteredHookQuery<
     TQuery,
     TType extends 'count'
       ? never
-      : TType extends 'create'
+      : TType extends 'add'
         ? 'with'
         : TType extends 'get'
           ? never
           : TType extends 'set'
             ? 'to'
-            : TType extends 'drop'
+            : TType extends 'remove'
               ? never
               : never
   >;
@@ -96,23 +97,32 @@ type AfterHook<TType extends QueryType, TSchema = unknown> = Hook<
   TSchema
 >;
 
-export type BeforeCreateHook = BeforeHook<'create'>;
 export type BeforeGetHook = BeforeHook<'get'>;
 export type BeforeSetHook = BeforeHook<'set'>;
-export type BeforeDropHook = BeforeHook<'drop'>;
+export type BeforeAddHook = BeforeHook<'add'>;
+export type BeforeRemoveHook = BeforeHook<'remove'>;
 export type BeforeCountHook = BeforeHook<'count'>;
+export type BeforeCreateHook = BeforeHook<'create'>;
+export type BeforeAlterHook = BeforeHook<'alter'>;
+export type BeforeDropHook = BeforeHook<'drop'>;
 
-export type CreateHook<TSchema = unknown> = DuringHook<'create', TSchema>;
 export type GetHook<TSchema = unknown> = DuringHook<'get', TSchema>;
 export type SetHook<TSchema = unknown> = DuringHook<'set', TSchema>;
-export type DropHook<TSchema = unknown> = DuringHook<'drop', TSchema>;
+export type AddHook<TSchema = unknown> = DuringHook<'add', TSchema>;
+export type RemoveHook<TSchema = unknown> = DuringHook<'remove', TSchema>;
 export type CountHook<TSchema = unknown> = DuringHook<'count', TSchema>;
+export type CreateHook<TSchema = unknown> = DuringHook<'create', TSchema>;
+export type AlterHook<TSchema = unknown> = DuringHook<'alter', TSchema>;
+export type DropHook<TSchema = unknown> = DuringHook<'drop', TSchema>;
 
-export type AfterCreateHook<TSchema = unknown> = AfterHook<'create', TSchema>;
 export type AfterGetHook<TSchema = unknown> = AfterHook<'get', TSchema>;
 export type AfterSetHook<TSchema = unknown> = AfterHook<'set', TSchema>;
-export type AfterDropHook<TSchema = unknown> = AfterHook<'drop', TSchema>;
+export type AfterAddHook<TSchema = unknown> = AfterHook<'add', TSchema>;
+export type AfterRemoveHook<TSchema = unknown> = AfterHook<'remove', TSchema>;
 export type AfterCountHook<TSchema = unknown> = AfterHook<'count', TSchema>;
+export type AfterCreateHook<TSchema = unknown> = AfterHook<'create', TSchema>;
+export type AfterAlterHook<TSchema = unknown> = AfterHook<'alter', TSchema>;
+export type AfterDropHook<TSchema = unknown> = AfterHook<'drop', TSchema>;
 
 const getSchema = (
   instruction: QuerySchemaType,
@@ -142,11 +152,11 @@ const getSchema = (
 
 /**
  * Constructs the method name used for a particular type of hook and query.
- * For example, if `hookType` is "after" and `queryType` is "create", the
- * resulting method name would be `afterCreate`.
+ * For example, if `hookType` is "after" and `queryType` is "add", the
+ * resulting method name would be `afterAdd`.
  *
  * @param hookType - The type of hook, so "before", "during", or "after".
- * @param queryType - The type of query. For example: "get", "set", or "drop".
+ * @param queryType - The type of query. For example: "get", "set", or "remove".
  *
  * @returns The method name constructed from the hook and query types.
  */
@@ -183,7 +193,7 @@ export interface HookContext {
 }
 
 /**
- * Invokes a particular hook (such as `afterCreate`) and handles its output.
+ * Invokes a particular hook (such as `afterAdd`) and handles its output.
  * In the case of an "before" hook, a query is returned from the hook, which
  * must replace the original query in the list of queries. For a "during" hook,
  * the results of the query are returned and must therefore be merged into the
@@ -244,12 +254,12 @@ const invokeHooks = async (
   // **EXAMPLES**
   //
   // 1. If a query targeting the `customer` schema is executed in the
-  // `beforeCreate` data hook of the `account` schema, only data hooks after
-  // the "before" lifecycle level (such as `set`, `afterSet`, `create`,
-  // `afterCreate` etc.) will be executed for the `customer` query.
+  // `beforeAdd` data hook of the `account` schema, only data hooks after
+  // the "before" lifecycle level (such as `set`, `afterSet`, `add`,
+  // `afterAdd` etc.) will be executed for the `customer` query.
   //
   // 2. If a query targeting the `customer` schema is executed in the
-  // `beforeCreate` data hook of the `customer` schema, no data hooks will be
+  // `beforeAdd` data hook of the `customer` schema, no data hooks will be
   // executed for the `customer` query.
   //
   // 3. If a query targeting the `customer` schema is executed and that schema
@@ -260,8 +270,11 @@ const invokeHooks = async (
     hooksForSchema &&
     (hooksForSchema.get ||
       hooksForSchema.count ||
-      hooksForSchema.create ||
+      hooksForSchema.add ||
       hooksForSchema.set ||
+      hooksForSchema.remove ||
+      hooksForSchema.create ||
+      hooksForSchema.alter ||
       hooksForSchema.drop) &&
     parentHook &&
     querySchema !== parentHook.querySchema
@@ -281,7 +294,7 @@ const invokeHooks = async (
         querySchema,
       },
       async () => {
-        // For data hooks of type "after" (such as `afterCreate`), we want to
+        // For data hooks of type "after" (such as `afterAdd`), we want to
         // pass special function arguments that contain the value of the
         // affected records before and after the query was executed.
         if (hookType === 'after') {
@@ -322,7 +335,7 @@ const invokeHooks = async (
 };
 
 /**
- * Executes queries and also invokes any potential hooks (such as `afterCreate`)
+ * Executes queries and also invokes any potential hooks (such as `afterAdd`)
  * that might have been provided as part of `options.hooks`.
  *
  * @param queries - A list of queries to execute.
@@ -406,7 +419,7 @@ export const runQueriesWithHooks = async <T>(
 
   const hookCallerOptions = { hooks, asyncContext };
 
-  // Invoke `beforeCreate`, `beforeGet`, `beforeSet`, `beforeDrop`, and
+  // Invoke `beforeAdd`, `beforeGet`, `beforeSet`, `beforeRemove`, and
   // also `beforeCount`.
   await Promise.all(
     queryList.map(async ({ definition, diffForIndex }, index) => {
@@ -422,7 +435,7 @@ export const runQueriesWithHooks = async <T>(
     }),
   );
 
-  // Invoke `create`, `get`, `set`, `drop`, and `count`.
+  // Invoke `get`, `set`, `add`, `remove`, and `count`.
   await Promise.all(
     queryList.map(async ({ definition }, index) => {
       const modifiedQuery = await invokeHooks(
@@ -456,26 +469,25 @@ export const runQueriesWithHooks = async <T>(
     queryList[query.index].result = result;
   }
 
-  // Asynchronously invoke `afterCreate`, `afterSet`, and `afterDrop`.
+  // Asynchronously invoke `afterAdd`, `afterSet`, `afterRemove`, `afterCreate`,
+  // `afterAlter`, and `afterDrop`.
   for (let index = 0; index < queryList.length; index++) {
     const query = queryList[index];
     const queryType = Object.keys(query.definition)[0];
 
     // "after" hooks should only fire for writes — not reads.
-    if (queryType !== 'create' && queryType !== 'set' && queryType !== 'drop') {
-      continue;
-    }
+    if (!WRITE_QUERY_TYPES.includes(queryType)) continue;
 
     const diffMatch = queryList.find((item) => item.diffForIndex === index);
 
     let resultBefore = diffMatch ? diffMatch.result : EMPTY;
     let resultAfter = query.result;
 
-    // For queries of type "drop", we want to set `resultBefore` to the result
-    // of the query (which contains the record), because the record will no
-    // longer exist after the query has been executed, so it wouldn't make sense
-    // to expose the record as `resultAfter` in the data hooks.
-    if (queryType === 'drop') {
+    // For queries of type "remove" and "drop", we want to set `resultBefore` to the
+    // result of the query (which contains the record), because the record will no longer
+    // exist after the query has been executed, so it wouldn't make sense to expose the
+    // record as `resultAfter` in the data hooks.
+    if (queryType === 'remove' || queryType === 'drop') {
       resultBefore = query.result;
       resultAfter = EMPTY;
     }

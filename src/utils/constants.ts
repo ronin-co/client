@@ -11,3 +11,6 @@ export const RONIN_SCHEMA_SYMBOLS = {
   FIELD: '__RONIN_FIELD_',
   VALUE: '__RONIN_VALUE',
 } as const;
+
+/** A list of all query types that update the database. */
+export const WRITE_QUERY_TYPES = ['add', 'set', 'remove', 'create', 'alter', 'drop'];

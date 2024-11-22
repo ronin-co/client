@@ -10,16 +10,16 @@ describe('syntax proxy', () => {
   test('using sub query', async () => {
     const getQueryHandler = { callback: () => undefined };
     const getQueryHandlerSpy = spyOn(getQueryHandler, 'callback');
-    const createQueryHandler = { callback: () => undefined };
-    const createQueryHandlerSpy = spyOn(createQueryHandler, 'callback');
+    const addQueryHandler = { callback: () => undefined };
+    const addQueryHandlerSpy = spyOn(addQueryHandler, 'callback');
 
     const getProxy = getSyntaxProxy('get', getQueryHandlerSpy);
-    const createProxy = getSyntaxProxy('create', createQueryHandlerSpy);
+    const addProxy = getSyntaxProxy('add', addQueryHandlerSpy);
 
-    createProxy.accounts.with(() => getProxy.oldAccounts());
+    addProxy.accounts.with(() => getProxy.oldAccounts());
 
     const finalQuery = {
-      create: {
+      add: {
         accounts: {
           with: {
             __RONIN_QUERY: {
@@ -31,7 +31,7 @@ describe('syntax proxy', () => {
     };
 
     expect(getQueryHandlerSpy).not.toHaveBeenCalled();
-    expect(createQueryHandlerSpy).toHaveBeenCalledWith(finalQuery, undefined);
+    expect(addQueryHandlerSpy).toHaveBeenCalledWith(finalQuery, undefined);
   });
 
   test('using async context', async () => {
@@ -86,10 +86,7 @@ describe('syntax proxy', () => {
   });
 
   test('using function chaining in batch', async () => {
-    const getQueryHandler = { callback: () => undefined };
-    const getQueryHandlerSpy = spyOn(getQueryHandler, 'callback');
-
-    const getProxy = getSyntaxProxy('get', getQueryHandlerSpy);
+    const getProxy = getSyntaxProxy('get', () => undefined);
 
     const queryList: Array<QueryItem> = [];
 
@@ -131,6 +128,94 @@ describe('syntax proxy', () => {
             ascending: ['joinedAt'],
           },
         },
+      },
+    });
+  });
+
+  test('using schema query types', async () => {
+    const callback = () => undefined;
+
+    const createProxy = getSyntaxProxy('create', callback);
+    const alterProxy = getSyntaxProxy('alter', callback);
+    const dropProxy = getSyntaxProxy('drop', callback);
+
+    const queryList: Array<QueryItem> = [];
+
+    getBatchProxy(
+      () => [
+        createProxy.model({
+          slug: 'account',
+        }),
+        alterProxy.model('account').to({
+          slug: 'users',
+        }),
+        alterProxy.model('users').create.field({
+          slug: 'handle',
+        }),
+        alterProxy.model('users').alter.field('handle').to({
+          name: 'User Handle',
+        }),
+        alterProxy.model('users').drop.field('handle'),
+        dropProxy.model('users'),
+      ],
+      {
+        asyncContext: new AsyncLocalStorage(),
+      },
+      (queries) => queryList.push(...queries),
+    );
+
+    expect(queryList[0].query).toMatchObject({
+      create: {
+        model: {
+          slug: 'account',
+        },
+      },
+    });
+
+    expect(queryList[1].query).toMatchObject({
+      alter: {
+        model: 'account',
+        to: {
+          slug: 'users',
+        },
+      },
+    });
+
+    expect(queryList[2].query).toMatchObject({
+      alter: {
+        model: 'users',
+        create: {
+          field: {
+            slug: 'handle',
+          },
+        },
+      },
+    });
+
+    expect(queryList[3].query).toMatchObject({
+      alter: {
+        model: 'users',
+        alter: {
+          field: 'handle',
+          to: {
+            name: 'User Handle',
+          },
+        },
+      },
+    });
+
+    expect(queryList[4].query).toMatchObject({
+      alter: {
+        model: 'users',
+        drop: {
+          field: 'handle',
+        },
+      },
+    });
+
+    expect(queryList[5].query).toMatchObject({
+      drop: {
+        model: 'users',
       },
     });
   });

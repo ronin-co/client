@@ -363,7 +363,7 @@ export namespace RONIN {
     ): Promise<ReturnBasedOnIncluding<TSchema, TIncluding>>;
   }
 
-  export interface ICreator<TSchema, TOptions = undefined> extends ReducedFunction {
+  export interface IAdder<TSchema, TOptions = undefined> extends ReducedFunction {
     <TIncluding extends Including<TSchema> = []>(
       filter?: {
         with: Partial<ReplaceForSetter<TSchema> | Array<ReplaceForSetter<TSchema>>>;
@@ -384,6 +384,48 @@ export namespace RONIN {
     with: With<TSchema, number, TOptions>;
   }
 
+  export interface IRemover<
+    TSchema,
+    TOptions = undefined,
+    TModifiedReturn = Replace<TSchema, RONIN.RoninRecord, string>,
+  > extends ReducedFunction {
+    (
+      filter?: {
+        with?: Partial<WithObject<TSchema> | Array<WithObject<TSchema>>>;
+      },
+      options?: TOptions,
+    ): Promise<TModifiedReturn>;
+    with: With<TSchema, TSchema, TOptions>;
+  }
+
+  export interface ICreator<
+    TSchema,
+    TOptions = undefined,
+    TModifiedReturn = Replace<TSchema, RONIN.RoninRecord, string>,
+  > extends ReducedFunction {
+    (
+      filter?: {
+        with?: Partial<WithObject<TSchema> | Array<WithObject<TSchema>>>;
+      },
+      options?: TOptions,
+    ): Promise<TModifiedReturn>;
+    with: With<TSchema, TSchema, TOptions>;
+  }
+
+  export interface IAlterer<
+    TSchema,
+    TOptions = undefined,
+    TModifiedReturn = Replace<TSchema, RONIN.RoninRecord, string>,
+  > extends ReducedFunction {
+    (
+      filter?: {
+        with?: Partial<WithObject<TSchema> | Array<WithObject<TSchema>>>;
+      },
+      options?: TOptions,
+    ): Promise<TModifiedReturn>;
+    with: With<TSchema, TSchema, TOptions>;
+  }
+
   export interface IDropper<
     TSchema,
     TOptions = undefined,
@@ -398,8 +440,8 @@ export namespace RONIN {
     with: With<TSchema, TSchema, TOptions>;
   }
 
-  export interface ExtendedCreator<TOptions = undefined>
-    extends Record<string, ICreator<Record<string, unknown>, TOptions>> {}
+  export interface ExtendedAdder<TOptions = undefined>
+    extends Record<string, IAdder<Record<string, unknown>, TOptions>> {}
 
   export interface ExtendedGetter<TOptions = undefined>
     extends Record<string, IGetterPlural<Record<string, unknown>, TOptions>> {}
@@ -407,15 +449,24 @@ export namespace RONIN {
   export interface ExtendedSetter<TOptions = undefined>
     extends Record<string, ISetter<Record<string, unknown>, TOptions>> {}
 
-  export interface ExtendedDropper<TOptions = undefined>
-    extends Record<string, IDropper<Record<string, unknown>, TOptions>> {}
+  export interface ExtendedRemover<TOptions = undefined>
+    extends Record<string, IRemover<Record<string, unknown>, TOptions>> {}
 
   export interface ExtendedCounter<TOptions = undefined>
     extends Record<string, ICounter<Record<string, unknown>, TOptions>> {}
 
-  export type Creator<TOptions = undefined> = {
-    [K in keyof Schemas]: ICreator<Schemas[K]>;
-  } & RONIN.ExtendedCreator<TOptions>;
+  export interface ExtendedCreator<TOptions = undefined>
+    extends Record<string, ICreator<Record<string, unknown>, TOptions>> {}
+
+  export interface ExtendedAlterer<TOptions = undefined>
+    extends Record<string, IAlterer<Record<string, unknown>, TOptions>> {}
+
+  export interface ExtendedDropper<TOptions = undefined>
+    extends Record<string, IDropper<Record<string, unknown>, TOptions>> {}
+
+  export type Adder<TOptions = undefined> = {
+    [K in keyof Schemas]: IAdder<Schemas[K]>;
+  } & RONIN.ExtendedAdder<TOptions>;
 
   export type Getter<TOptions = undefined> = {
     [K in keyof Schemas]: Schemas[K] extends Schema.Records<any>
@@ -427,11 +478,23 @@ export namespace RONIN {
     [K in keyof Schemas]: ISetter<Schemas[K]>;
   } & RONIN.ExtendedSetter<TOptions>;
 
-  export type Dropper<TOptions = undefined> = {
-    [K in keyof Schemas]: IDropper<Schemas[K]>;
-  } & RONIN.ExtendedDropper<TOptions>;
+  export type Remover<TOptions = undefined> = {
+    [K in keyof Schemas]: IRemover<Schemas[K]>;
+  } & RONIN.ExtendedRemover<TOptions>;
 
   export type Counter<TOptions = undefined> = {
     [K in keyof Schemas]: ICounter<Schemas[K]>;
   } & RONIN.ExtendedCounter<TOptions>;
+
+  export type Creator<TOptions = undefined> = {
+    [K in keyof Schemas]: ICreator<Schemas[K]>;
+  } & RONIN.ExtendedCreator<TOptions>;
+
+  export type Alterer<TOptions = undefined> = {
+    [K in keyof Schemas]: IAlterer<Schemas[K]>;
+  } & RONIN.ExtendedAlterer<TOptions>;
+
+  export type Dropper<TOptions = undefined> = {
+    [K in keyof Schemas]: IDropper<Schemas[K]>;
+  } & RONIN.ExtendedDropper<TOptions>;
 }

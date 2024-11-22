@@ -4580,7 +4580,7 @@ type CountQuery = {
   };
 };
 
-type CreateInstructions = {
+type AddInstructions = {
   including?: ('all' | string[]) | undefined;
   excluding?: string[] | undefined;
   orderedBy?:
@@ -4892,8 +4892,8 @@ type CreateInstructions = {
   };
 };
 
-type CreateQuery = {
-  create: {
+type AddQuery = {
+  add: {
     [x: string]: {
       including?: ('all' | string[]) | undefined;
       excluding?: string[] | undefined;
@@ -5208,7 +5208,7 @@ type CreateQuery = {
   };
 };
 
-type DropInstructions = {
+type RemoveInstructions = {
   with?:
     | (
         | {
@@ -5818,8 +5818,8 @@ type DropInstructions = {
   limitedTo?: number | undefined;
 };
 
-type DropQuery = {
-  drop: {
+type RemoveQuery = {
+  remove: {
     [x: string]: {
       with?:
         | (
@@ -8902,7 +8902,7 @@ type Query = {
         } | null;
       }
     | undefined;
-  create?:
+  add?:
     | {
         [x: string]: {
           including?: ('all' | string[]) | undefined;
@@ -9217,7 +9217,7 @@ type Query = {
         };
       }
     | undefined;
-  drop?:
+  remove?:
     | {
         [x: string]: {
           with?:
@@ -11059,6 +11059,10 @@ type Query = {
         };
       }
     | undefined;
+
+  create?: any;
+  alter?: any;
+  drop?: any;
 };
 
 type QuerySchemaType = {
@@ -11678,7 +11682,7 @@ type QuerySchemaType = {
   };
 };
 
-type QueryType = 'get' | 'set' | 'drop' | 'create' | 'count';
+type QueryType = 'get' | 'set' | 'add' | 'remove' | 'count' | 'create' | 'alter' | 'drop';
 
 type SetInstructions = {
   with?:
@@ -13237,10 +13241,10 @@ export type {
   CombinedInstructions,
   CountInstructions,
   CountQuery,
-  CreateInstructions,
-  CreateQuery,
-  DropInstructions,
-  DropQuery,
+  AddInstructions,
+  AddQuery,
+  RemoveInstructions,
+  RemoveQuery,
   GetInstructions,
   GetQuery,
   IncludingInstruction,
