@@ -2,7 +2,7 @@ import { AsyncLocalStorage } from 'node:async_hooks';
 
 import { describe, expect, spyOn, test } from 'bun:test';
 
-import { alter, drop, get } from '@/src/index';
+import { get } from '@/src/index';
 import type { QueryItem } from '@/src/types/utils';
 import { getBatchProxy, getSyntaxProxy } from '@/src/utils';
 
