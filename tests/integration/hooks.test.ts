@@ -277,12 +277,11 @@ describe('hooks', () => {
       },
     });
 
-    // Make sure `finalBeforeResult` is defined and contains the value of the
-    // record before it was deleted.
+    // Make sure `finalBeforeResult` is defined and contains the value of the record
+    // before it was removed.
     expect(finalBeforeResult).toEqual([account]);
 
-    // Make sure `finalAfterResult` is empty, since the record was deleted from
-    // the database.
+    // Make sure `finalAfterResult` is empty, since the record was removed from the DB.
     //
     // We must use `toMatchObject` here, to ensure that the array is really
     // empty and doesn't contain any `undefined` items.

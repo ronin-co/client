@@ -58,7 +58,7 @@ export const runQueries = async <T>(
   options: QueryHandlerOptions = {},
 ): Promise<Results<T>> => {
   const hasWriteQuery = queries.some((query) =>
-    ['add', 'set', 'delete'].includes(Object.keys(query)[0]),
+    ['add', 'set', 'remove'].includes(Object.keys(query)[0]),
   );
 
   // Runtimes like Cloudflare Workers don't support `cache` yet.
