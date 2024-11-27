@@ -139,5 +139,5 @@ export type ReplaceForSetter<TValue> = {
  */
 export interface QueryItem {
   query: Query;
-  options: Record<string, unknown>;
+  options?: Record<string, unknown>;
 }

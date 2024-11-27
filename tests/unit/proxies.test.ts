@@ -67,7 +67,7 @@ describe('syntax proxy', () => {
       (queries) => queryList.push(...queries),
     );
 
-    expect(queryList).toMatchObject([
+    expect(queryList).toEqual([
       {
         query: {
           get: {
@@ -107,29 +107,34 @@ describe('syntax proxy', () => {
       (queries) => queryList.push(...queries),
     );
 
-    expect(queryList[0].query).toMatchObject({
-      get: {
-        members: {
-          with: {
-            team: 'red',
-          },
-          excluding: ['name'],
-        },
-      },
-    });
-
-    expect(queryList[1].query).toMatchObject({
-      get: {
-        members: {
-          with: {
-            team: 'blue',
-          },
-          orderedBy: {
-            ascending: ['joinedAt'],
+    expect(queryList).toEqual([
+      {
+        query: {
+          get: {
+            members: {
+              with: {
+                team: 'red',
+              },
+              excluding: ['name'],
+            },
           },
         },
       },
-    });
+      {
+        query: {
+          get: {
+            members: {
+              with: {
+                team: 'blue',
+              },
+              orderedBy: {
+                ascending: ['joinedAt'],
+              },
+            },
+          },
+        },
+      },
+    ]);
   });
 
   test('using schema query types', async () => {
@@ -164,59 +169,68 @@ describe('syntax proxy', () => {
       (queries) => queryList.push(...queries),
     );
 
-    expect(queryList[0].query).toMatchObject({
-      create: {
-        model: {
-          slug: 'account',
-        },
-      },
-    });
-
-    expect(queryList[1].query).toMatchObject({
-      alter: {
-        model: 'account',
-        to: {
-          slug: 'users',
-        },
-      },
-    });
-
-    expect(queryList[2].query).toMatchObject({
-      alter: {
-        model: 'users',
-        create: {
-          field: {
-            slug: 'handle',
+    expect(queryList).toEqual([
+      {
+        query: {
+          create: {
+            model: {
+              slug: 'account',
+            },
           },
         },
       },
-    });
-
-    expect(queryList[3].query).toMatchObject({
-      alter: {
-        model: 'users',
-        alter: {
-          field: 'handle',
-          to: {
-            name: 'User Handle',
+      {
+        query: {
+          alter: {
+            model: 'account',
+            to: {
+              slug: 'users',
+            },
           },
         },
       },
-    });
-
-    expect(queryList[4].query).toMatchObject({
-      alter: {
-        model: 'users',
-        drop: {
-          field: 'handle',
+      {
+        query: {
+          alter: {
+            create: {
+              field: {
+                slug: 'handle',
+              },
+            },
+            model: 'users',
+          },
         },
       },
-    });
-
-    expect(queryList[5].query).toMatchObject({
-      drop: {
-        model: 'users',
+      {
+        query: {
+          alter: {
+            alter: {
+              field: 'handle',
+              to: {
+                name: 'User Handle',
+              },
+            },
+            model: 'users',
+          },
+        },
       },
-    });
+      {
+        query: {
+          alter: {
+            drop: {
+              field: 'handle',
+            },
+            model: 'users',
+          },
+        },
+      },
+      {
+        query: {
+          drop: {
+            model: 'users',
+          },
+        },
+      },
+    ]);
   });
 });
