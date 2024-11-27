@@ -169,5 +169,12 @@ export const getBatchProxy = <
     IN_BATCH_SYNC = false;
   }
 
-  return queriesHandler(queries) as PromiseTuple<T> | T;
+  // Within a batch, every query item is a JavaScript `Proxy`, in order to allow for
+  // function chaining within every query. Returning the query items directly would
+  // therefore return the respective `Proxy` instances, which wouldn't be logged as plain
+  // objects, thereby making development more difficult. To avoid this, we are creating a
+  // plain object containing the same properties as the `Proxy` instances.
+  const cleanQueries = queries.map((details) => ({ ...details }));
+
+  return queriesHandler(cleanQueries) as PromiseTuple<T> | T;
 };
