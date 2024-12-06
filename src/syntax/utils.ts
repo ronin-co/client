@@ -2,8 +2,8 @@ import type { AsyncLocalStorage } from 'node:async_hooks';
 
 import type { Query } from '@/src/types/query';
 import type { PromiseTuple, QueryHandlerOptions, QueryItem } from '@/src/types/utils';
-import { RONIN_SCHEMA_SYMBOLS } from '@/src/utils/constants';
 import { setProperty } from '@/src/utils/helpers';
+import { QUERY_SYMBOLS } from '@ronin/compiler';
 
 interface BatchDetails {
   query: Query;
@@ -75,7 +75,7 @@ export const getSyntaxProxy = (
           // an asynchronous function, so we don't need to use `IN_BATCH_ASYNC`,
           // which avoids the need to pass it as an option to the client.
           IN_BATCH_SYNC = true;
-          value = { [RONIN_SCHEMA_SYMBOLS.QUERY]: value().query };
+          value = { [QUERY_SYMBOLS.QUERY]: value().query };
           IN_BATCH_SYNC = false;
         }
 
