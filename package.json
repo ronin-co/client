@@ -18,12 +18,23 @@
     "prepare": "husky && bun run build",
     "format": "biome format --write"
   },
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "repository": "ronin-co/client",
   "homepage": "https://ronin.co/docs/typescript-client",
-  "keywords": ["ronin", "client", "database", "orm", "edge", "serverless"],
+  "keywords": [
+    "ronin",
+    "client",
+    "database",
+    "orm",
+    "edge",
+    "serverless"
+  ],
   "lint-staged": {
-    "**/*": ["biome check"]
+    "**/*": [
+      "biome check"
+    ]
   },
   "exports": {
     ".": {
@@ -45,10 +56,18 @@
   },
   "typesVersions": {
     "*": {
-      "*": ["dist/index.d.ts"],
-      "types": ["dist/types/index.d.ts"],
-      "schema": ["dist/schema/index.d.ts"],
-      "utils": ["dist/utils/index.d.ts"]
+      "*": [
+        "dist/index.d.ts"
+      ],
+      "types": [
+        "dist/types/index.d.ts"
+      ],
+      "schema": [
+        "dist/schema/index.d.ts"
+      ],
+      "utils": [
+        "dist/utils/index.d.ts"
+      ]
     }
   },
   "engines": {
