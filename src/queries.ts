@@ -76,6 +76,8 @@ export const runQueries = async <T>(
     }));
 
     requestBody.nativeQueries = nativeQueries;
+  } else {
+    requestBody.queries = queries;
   }
 
   // Runtimes like Cloudflare Workers don't support `cache` yet.
