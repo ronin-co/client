@@ -238,7 +238,7 @@ describe('queries handler', () => {
       token: 'takashitoken',
     });
 
-    expect(results).toEqual([
+    expect(results as Array<unknown>).toEqual([
       40,
       [{ handle: 'david' }, { handle: 'elaine' }, { handle: 'john' }],
       {
