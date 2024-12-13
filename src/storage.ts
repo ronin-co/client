@@ -28,9 +28,7 @@ export const extractStorableObjects = (queries: Array<Query>): Array<StorableObj
               ...Object.entries(query).reduce(
                 (references, [schema, instructions]) => {
                   // Access the query instructions according to the query type.
-                  const fields = (instructions as CombinedInstructions)[
-                    queryType === 'set' ? 'to' : 'with'
-                  ];
+                  const fields = (instructions as CombinedInstructions).to;
 
                   return [
                     // biome-ignore lint/performance/noAccumulatingSpread: This code is too complex to refactor.
@@ -158,9 +156,7 @@ export const processStorableObjects = async (
       const reference = storedObjects[index];
 
       // @ts-expect-error It is guaranteed that these keys exist.
-      queries[query.index][query.type][schema][query.type === 'set' ? 'to' : 'with'][
-        field
-      ] = reference;
+      queries[query.index][query.type][schema].to[field] = reference;
     }
   }
 

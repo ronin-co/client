@@ -21,7 +21,7 @@ export type FilteredHookQuery<
     TType extends 'count'
       ? never
       : TType extends 'add'
-        ? 'with'
+        ? 'to'
         : TType extends 'get'
           ? never
           : TType extends 'set'
