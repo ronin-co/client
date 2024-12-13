@@ -95,7 +95,7 @@ describe('syntax proxy', () => {
         // Test queries where the second function is called right after the first one.
         getProxy.members
           .with({ team: 'red' })
-          .excluding(['name']),
+          .selecting(['name']),
         // Test queries where the second function is not called right after the first one.
         getProxy.members
           .with({ team: 'blue' })
@@ -115,7 +115,7 @@ describe('syntax proxy', () => {
               with: {
                 team: 'red',
               },
-              excluding: ['name'],
+              selecting: ['name'],
             },
           },
         },
