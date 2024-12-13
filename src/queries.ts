@@ -102,10 +102,27 @@ export const runQueries = async <T>(
   const fetcher = typeof options?.fetch === 'function' ? options.fetch : fetch;
   const response = await fetcher(request);
 
-  const rawResults = await getResponseBody<QueryResponse<T>>(response);
-  const results = transaction
-    ? transaction.formatResults(rawResults.results)
-    : rawResults.results;
+  const responseResults = await getResponseBody<QueryResponse<T>>(response);
+
+  let results: QueryResponse<T>['results'] = [];
+
+  if (transaction) {
+    const rawResults = responseResults.results.map((result) => {
+      return 'records' in result ? result.records : [];
+    });
+
+    results = transaction.formatResults(rawResults, false).map((result) => {
+      const newResult: Partial<Result<T>> = { ...result };
+
+      if ('record' in newResult || 'records' in newResult) {
+        newResult.schema = {};
+      }
+
+      return newResult as Result<T>;
+    });
+  } else {
+    results = responseResults.results;
+  }
 
   const startFormatting = performance.now();
 
