@@ -9,6 +9,7 @@ import {
   getResponseBody,
 } from '@/src/utils/errors';
 import { formatDateFields, getProperty } from '@/src/utils/helpers';
+import { Transaction } from '@ronin/compiler';
 
 type QueryResponse<T> = {
   results: Array<Result<T>>;
@@ -62,6 +63,13 @@ export const runQueries = async <T>(
     WRITE_QUERY_TYPES.includes(Object.keys(query)[0]),
   );
 
+  const transaction = new Transaction(queries);
+
+  const nativeQueries = transaction.statements.map((statement) => ({
+    query: statement.statement,
+    values: statement.params,
+  }));
+
   // Runtimes like Cloudflare Workers don't support `cache` yet.
   const hasCachingSupport = 'cache' in new Request('https://ronin.co');
 
@@ -71,7 +79,7 @@ export const runQueries = async <T>(
       'Content-Type': 'application/json',
       Authorization: `Bearer ${options.token}`,
     },
-    body: JSON.stringify({ queries }),
+    body: JSON.stringify({ nativeQueries }),
 
     // Disable cache if write queries are performed, as those must be
     // guaranteed to reach RONIN.
