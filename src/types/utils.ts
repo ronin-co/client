@@ -4,6 +4,7 @@ import type { Query } from '@/src/types/query';
 import type { StorableObjectValue } from '@/src/types/storage';
 import type { Hooks } from '@/src/utils/data-hooks';
 
+import type { Model } from '@ronin/compiler';
 import type { RONIN } from './codegen';
 
 export interface QueryHandlerOptions {
@@ -39,6 +40,9 @@ export interface QueryHandlerOptions {
    * option is required.
    */
   asyncContext?: AsyncLocalStorage<any>;
+
+  /** A list of models defined during development. */
+  models?: Array<Model>;
 }
 
 /**

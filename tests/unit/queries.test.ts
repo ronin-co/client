@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, mock, spyOn, test } from 'bun:test';
 
 import { queriesHandler } from '@/src/syntax/handlers';
+import type { Model, Query } from '@ronin/compiler';
 
 let mockRequestResolvedValue: Request | undefined;
 
@@ -172,5 +173,85 @@ describe('queries handler', () => {
 
     // Restore the global console.log() function.
     logSpy.mockRestore();
+  });
+
+  test('pass custom models', async () => {
+    const mockFetchNew = mock((request) => {
+      mockRequestResolvedValue = request;
+
+      return Response.json({
+        results: [
+          { records: [{ 'COUNT(*)': 40 }] },
+          { records: [{ handle: 'david' }, { handle: 'elaine' }, { handle: 'john' }] },
+          {
+            records: [
+              {
+                id: 'acc_39h8fhe98hefah8j',
+                'ronin.locked': null,
+                'ronin.createdAt': '2021-09-29T14:00:00.000Z',
+                'ronin.createdBy': null,
+                'ronin.updatedAt': '2021-09-29T14:00:00.000Z',
+                'ronin.updatedBy': null,
+                handle: 'markus',
+              },
+            ],
+          },
+        ],
+      });
+    });
+
+    const queries: Array<Query> = [
+      {
+        count: {
+          accounts: null,
+        },
+      },
+      {
+        get: {
+          accounts: {
+            selecting: ['handle'],
+          },
+        },
+      },
+      {
+        get: {
+          account: null,
+        },
+      },
+    ];
+
+    const models: Array<Model> = [
+      {
+        slug: 'account',
+        fields: [
+          {
+            slug: 'handle',
+            type: 'string',
+          },
+        ],
+      },
+    ];
+
+    const results = await queriesHandler(queries, {
+      fetch: async (request) => mockFetchNew(request),
+      models,
+      token: 'takashitoken',
+    });
+
+    expect(results as Array<unknown>).toEqual([
+      40,
+      [{ handle: 'david' }, { handle: 'elaine' }, { handle: 'john' }],
+      {
+        id: 'acc_39h8fhe98hefah8j',
+        handle: 'markus',
+        ronin: {
+          locked: false,
+          createdAt: expect.any(Date),
+          createdBy: null,
+          updatedAt: expect.any(Date),
+          updatedBy: null,
+        },
+      },
+    ]);
   });
 });

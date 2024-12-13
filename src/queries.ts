@@ -9,6 +9,7 @@ import {
   getResponseBody,
 } from '@/src/utils/errors';
 import { formatDateFields, getProperty } from '@/src/utils/helpers';
+import { Transaction } from '@ronin/compiler';
 
 type QueryResponse<T> = {
   results: Array<Result<T>>;
@@ -24,7 +25,8 @@ type SchemaFieldType =
   | 'blob'
   | 'boolean'
   | 'number'
-  | 'json';
+  | 'json'
+  | 'link';
 
 type Result<T> =
   | {
@@ -33,8 +35,8 @@ type Result<T> =
     }
   | {
       records: Array<T | any> & { moreBefore?: string; moreAfter?: string };
-      moreBefore: string;
-      moreAfter: string;
+      moreBefore?: string;
+      moreAfter?: string;
       schema: Record<string, SchemaFieldType>;
     }
   | {
@@ -62,6 +64,23 @@ export const runQueries = async <T>(
     WRITE_QUERY_TYPES.includes(Object.keys(query)[0]),
   );
 
+  const requestBody: { [key in 'queries' | 'nativeQueries']?: unknown } = {};
+
+  let transaction: InstanceType<typeof Transaction> | null = null;
+
+  if (options.models) {
+    transaction = new Transaction(queries, { models: options.models });
+
+    const nativeQueries = transaction.statements.map((statement) => ({
+      query: statement.statement,
+      values: statement.params,
+    }));
+
+    requestBody.nativeQueries = nativeQueries;
+  } else {
+    requestBody.queries = queries;
+  }
+
   // Runtimes like Cloudflare Workers don't support `cache` yet.
   const hasCachingSupport = 'cache' in new Request('https://ronin.co');
 
@@ -71,7 +90,7 @@ export const runQueries = async <T>(
       'Content-Type': 'application/json',
       Authorization: `Bearer ${options.token}`,
     },
-    body: JSON.stringify({ queries }),
+    body: JSON.stringify(requestBody),
 
     // Disable cache if write queries are performed, as those must be
     // guaranteed to reach RONIN.
@@ -84,7 +103,31 @@ export const runQueries = async <T>(
   const fetcher = typeof options?.fetch === 'function' ? options.fetch : fetch;
   const response = await fetcher(request);
 
-  const { results } = await getResponseBody<QueryResponse<T>>(response);
+  const responseResults = await getResponseBody<QueryResponse<T>>(response);
+
+  let results: QueryResponse<T>['results'] = [];
+
+  if (transaction) {
+    const rawResults = responseResults.results.map((result) => {
+      return 'records' in result ? result.records : [];
+    });
+
+    results = transaction.formatResults(rawResults, false).map((result) => {
+      if ('record' in result) {
+        const { modelFields, ...rest } = result;
+        return { ...rest, schema: modelFields };
+      }
+
+      if ('records' in result) {
+        const { modelFields, ...rest } = result;
+        return { ...rest, schema: modelFields };
+      }
+
+      return result;
+    });
+  } else {
+    results = responseResults.results;
+  }
 
   const startFormatting = performance.now();
 
