@@ -43,8 +43,7 @@ export type {
   // Queries
   Query,
   QueryType,
-  QueryInstructionType as QueryInstruction,
-  Results,
+  QueryInstruction,
   // Query Types
   GetQuery,
   GetInstructions,
@@ -63,7 +62,9 @@ export type {
   CountInstructions as CountQueryInstructions,
   // Query Instructions
   WithInstruction,
-} from '@/src/types/query';
+} from '@ronin/compiler';
+
+export type { Results } from '@/src/types/utils';
 
 // Storage
 export type { StorableObjectValue, StoredObject } from '@/src/types/storage';

@@ -366,12 +366,12 @@ export namespace RONIN {
   export interface IAdder<TSchema, TOptions = undefined> extends ReducedFunction {
     <TIncluding extends Including<TSchema> = []>(
       filter?: {
-        with: Partial<ReplaceForSetter<TSchema> | Array<ReplaceForSetter<TSchema>>>;
+        to: Partial<ReplaceForSetter<TSchema> | Array<ReplaceForSetter<TSchema>>>;
         including?: TIncluding;
       },
       options?: TOptions,
     ): Promise<ReturnBasedOnIncluding<TSchema, TIncluding>>;
-    with: (
+    to: (
       values: Partial<ReplaceForSetter<TSchema>>,
       options?: TOptions,
     ) => Promise<Replace<TSchema, RONIN.RoninRecord, string>>;

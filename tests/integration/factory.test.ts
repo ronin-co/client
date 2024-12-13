@@ -189,12 +189,12 @@ describe('factory', () => {
       // schema types.
       remove.accounts.with.emailVerified(false),
       add.spaces({
-        with: { handle: 'test-space', members: ['member1', 'member2'] },
+        to: { handle: 'test-space', members: ['member1', 'member2'] },
       }),
     ]) as Parameters<typeof batch>[0]);
 
     expect(mockResolvedRequestText).toEqual(
-      '{"queries":[{"set":{"members":{"with":{"createdAt":{"lessThan":"2024-04-16T15:02:12.710Z"},"paid":true},"to":{"status":"active","activeFrom":"2024-04-16T15:02:12.710Z"}}}},{"get":{"accounts":{}}},{"count":{"spaces":{"with":{"membersCount":{"notBeing":0}}}}},{"remove":{"accounts":{"with":{"emailVerified":false}}}},{"add":{"spaces":{"with":{"handle":"test-space","members":["member1","member2"]}}}}]}',
+      '{"queries":[{"set":{"members":{"with":{"createdAt":{"lessThan":"2024-04-16T15:02:12.710Z"},"paid":true},"to":{"status":"active","activeFrom":"2024-04-16T15:02:12.710Z"}}}},{"get":{"accounts":{}}},{"count":{"spaces":{"with":{"membersCount":{"notBeing":0}}}}},{"remove":{"accounts":{"with":{"emailVerified":false}}}},{"add":{"spaces":{"to":{"handle":"test-space","members":["member1","member2"]}}}}]}',
     );
   });
 
@@ -312,12 +312,12 @@ describe('factory', () => {
       // schema types.
       remove.accounts.with.emailVerified(false),
       add.spaces({
-        with: { handle: 'test-space', members: ['member1', 'member2'] },
+        to: { handle: 'test-space', members: ['member1', 'member2'] },
       }),
     ]) as Parameters<typeof batch>[0]);
 
     expect(mockResolvedRequestText).toEqual(
-      '{"queries":[{"set":{"members":{"with":{"createdAt":{"lessThan":"2024-04-16T15:02:12.710Z"},"paid":true},"to":{"status":"active","activeFrom":"2024-04-16T15:02:12.710Z"}}}},{"get":{"accounts":{}}},{"count":{"spaces":{"with":{"membersCount":{"notBeing":0}}}}},{"remove":{"accounts":{"with":{"emailVerified":false}}}},{"add":{"spaces":{"with":{"handle":"test-space","members":["member1","member2"]}}}}]}',
+      '{"queries":[{"set":{"members":{"with":{"createdAt":{"lessThan":"2024-04-16T15:02:12.710Z"},"paid":true},"to":{"status":"active","activeFrom":"2024-04-16T15:02:12.710Z"}}}},{"get":{"accounts":{}}},{"count":{"spaces":{"with":{"membersCount":{"notBeing":0}}}}},{"remove":{"accounts":{"with":{"emailVerified":false}}}},{"add":{"spaces":{"to":{"handle":"test-space","members":["member1","member2"]}}}}]}',
     );
   });
 
@@ -393,7 +393,7 @@ describe('factory', () => {
     });
 
     await factory.add.account({
-      with: {
+      to: {
         avatar: file,
       },
     });
@@ -412,7 +412,7 @@ describe('factory', () => {
     expect(body).toBe(await file.text());
 
     expect(mockResolvedRequestText).toEqual(
-      '{"queries":[{"add":{"account":{"with":{"avatar":{"key":"test-key","name":"example.jpeg","src":"https://storage.ronin.co/test-key","meta":{"height":100,"width":100,"size":100,"type":"image/jpeg"},"placeholder":{"base64":""}}}}}}]}',
+      '{"queries":[{"add":{"account":{"to":{"avatar":{"key":"test-key","name":"example.jpeg","src":"https://storage.ronin.co/test-key","meta":{"height":100,"width":100,"size":100,"type":"image/jpeg"},"placeholder":{"base64":""}}}}}}]}',
     );
   });
 
@@ -453,7 +453,7 @@ describe('factory', () => {
     });
 
     await factory.add.account({
-      with: {
+      to: {
         avatar: file,
       },
     });
@@ -499,7 +499,7 @@ describe('factory', () => {
     });
 
     await factory.add.account({
-      with: {
+      to: {
         video: file,
       },
     });
@@ -517,7 +517,7 @@ describe('factory', () => {
     expect(body).toBe(await file.text());
 
     expect(mockResolvedRequestText).toEqual(
-      '{"queries":[{"add":{"account":{"with":{"video":{"key":"test-key","name":"example.mp4","src":"https://storage.ronin.co/test-key","meta":{"size":100,"type":"video/mp4"},"placeholder":null}}}}}]}',
+      '{"queries":[{"add":{"account":{"to":{"video":{"key":"test-key","name":"example.mp4","src":"https://storage.ronin.co/test-key","meta":{"size":100,"type":"video/mp4"},"placeholder":null}}}}}]}',
     );
   });
 
@@ -534,7 +534,7 @@ describe('factory', () => {
     });
 
     const promise = factory.add.account({
-      with: {
+      to: {
         avatar: new File([''], 'example.jpeg', { type: 'image/jpeg' }),
       },
     });

@@ -1,7 +1,7 @@
-import type { CombinedInstructions, Query } from '@/src/types/query';
 import type { StorableObject, StoredObject } from '@/src/types/storage';
 import type { QueryHandlerOptions } from '@/src/types/utils';
 import { getResponseBody } from '@/src/utils/errors';
+import type { CombinedInstructions, Query } from '@ronin/compiler';
 
 /**
  * Extract `StorableObject`s from queries. These will be uploaded separately
@@ -25,12 +25,10 @@ export const extractStorableObjects = (queries: Array<Query>): Array<StorableObj
             return [
               // biome-ignore lint/performance/noAccumulatingSpread: This code is too complex to refactor.
               ...references,
-              ...Object.entries(query).reduce(
+              ...Object.entries(query as Query).reduce(
                 (references, [schema, instructions]) => {
                   // Access the query instructions according to the query type.
-                  const fields = (instructions as CombinedInstructions)[
-                    queryType === 'set' ? 'to' : 'with'
-                  ];
+                  const fields = (instructions as CombinedInstructions).to;
 
                   return [
                     // biome-ignore lint/performance/noAccumulatingSpread: This code is too complex to refactor.
@@ -158,9 +156,7 @@ export const processStorableObjects = async (
       const reference = storedObjects[index];
 
       // @ts-expect-error It is guaranteed that these keys exist.
-      queries[query.index][query.type][schema][query.type === 'set' ? 'to' : 'with'][
-        field
-      ] = reference;
+      queries[query.index][query.type][schema].to[field] = reference;
     }
   }
 

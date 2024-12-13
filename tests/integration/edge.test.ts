@@ -46,7 +46,7 @@ describe('edge runtime', () => {
         asyncContext: new AsyncLocalStorage(),
       });
 
-      await factory.add.account({ with: { handle: 'leo' } });
+      await factory.add.account({ to: { handle: 'leo' } });
     } catch (err) {
       error = err as Error;
     }
@@ -62,7 +62,7 @@ describe('edge runtime', () => {
   test('invoke `ronin` from an edge runtime with `waitUntil` set', async () => {
     const queries = [
       {
-        add: { account: { with: { handle: 'leo' } } },
+        add: { account: { to: { handle: 'leo' } } },
       },
     ];
 
@@ -120,7 +120,7 @@ describe('edge runtime', () => {
   test('invoke `ronin` from an edge runtime with `waitUntil` set and error being thrown', async () => {
     const queries = [
       {
-        add: { account: { with: { handle: 'leo' } } },
+        add: { account: { to: { handle: 'leo' } } },
       },
     ];
 
@@ -169,7 +169,7 @@ describe('edge runtime', () => {
   test('invoke `ronin` from an edge runtime with `waitUntil` set and ensure hidden result', async () => {
     const queries = [
       {
-        add: { account: { with: { handle: 'leo' } } },
+        add: { account: { to: { handle: 'leo' } } },
       },
     ];
 

@@ -1,6 +1,6 @@
 import { runQueriesWithStorageAndHooks } from '@/src/queries';
-import type { Query } from '@/src/types/query';
 import type { QueryHandlerOptions } from '@/src/types/utils';
+import type { Query } from '@ronin/compiler';
 
 /**
  * Executes an array of queries and handles their results. It is used to execute
