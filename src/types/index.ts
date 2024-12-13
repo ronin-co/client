@@ -43,7 +43,7 @@ export type {
   // Queries
   Query,
   QueryType,
-  QueryInstructionType as QueryInstruction,
+  QueryInstruction,
   // Query Types
   GetQuery,
   GetInstructions,
@@ -62,7 +62,7 @@ export type {
   CountInstructions as CountQueryInstructions,
   // Query Instructions
   WithInstruction,
-} from '@/src/types/query';
+} from '@ronin/compiler';
 
 export type { Results } from '@/src/types/utils';
 

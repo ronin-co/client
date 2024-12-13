@@ -3,8 +3,8 @@ import { AsyncLocalStorage } from 'node:async_hooks';
 import { beforeEach, describe, expect, mock, test } from 'bun:test';
 
 import { createSyntaxFactory } from '@/src/syntax';
-import type { CombinedInstructions, QueryType } from '@/src/types/query';
 import { type FilteredHookQuery, runQueriesWithHooks } from '@/src/utils/data-hooks';
+import type { CombinedInstructions, QueryType } from '@ronin/compiler';
 
 let mockResolvedRequestText: any;
 

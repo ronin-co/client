@@ -1,13 +1,13 @@
 import { runQueries } from '@/src/queries';
+import type { QueryHandlerOptions, RecursivePartial, Results } from '@/src/types/utils';
+import { WRITE_QUERY_TYPES } from '@/src/utils/constants';
+import { toDashCase } from '@/src/utils/helpers';
 import type {
   CombinedInstructions,
   Query,
   QuerySchemaType,
   QueryType,
-} from '@/src/types/query';
-import type { QueryHandlerOptions, RecursivePartial, Results } from '@/src/types/utils';
-import { WRITE_QUERY_TYPES } from '@/src/utils/constants';
-import { toDashCase } from '@/src/utils/helpers';
+} from '@ronin/compiler';
 
 const EMPTY = Symbol('empty');
 

@@ -1,5 +1,4 @@
 import { processStorableObjects, uploadStorableObjects } from '@/src/storage';
-import type { Query } from '@/src/types/query';
 import type { QueryHandlerOptions, Results } from '@/src/types/utils';
 import { WRITE_QUERY_TYPES } from '@/src/utils/constants';
 import { runQueriesWithHooks } from '@/src/utils/data-hooks';
@@ -9,7 +8,7 @@ import {
   getResponseBody,
 } from '@/src/utils/errors';
 import { formatDateFields, getProperty } from '@/src/utils/helpers';
-import { Transaction } from '@ronin/compiler';
+import { type Query, Transaction } from '@ronin/compiler';
 
 type QueryResponse<T> = {
   results: Array<Result<T>>;
