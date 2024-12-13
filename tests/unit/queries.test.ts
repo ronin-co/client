@@ -1,6 +1,8 @@
 import { beforeEach, describe, expect, mock, spyOn, test } from 'bun:test';
 
 import { queriesHandler } from '@/src/syntax/handlers';
+import type { Query } from '@/src/types';
+import type { Model } from '@ronin/compiler';
 
 let mockRequestResolvedValue: Request | undefined;
 
@@ -172,5 +174,35 @@ describe('queries handler', () => {
 
     // Restore the global console.log() function.
     logSpy.mockRestore();
+  });
+
+  test('pass custom models', async () => {
+    const mockFetchNew = mock((request) => {
+      mockRequestResolvedValue = request;
+
+      return Response.json({ results: [{ records: [{ 'COUNT(*)': 40 }] }] });
+    });
+
+    const queries: Array<Query> = [
+      {
+        count: {
+          accounts: null,
+        },
+      },
+    ];
+
+    const models: Array<Model> = [
+      {
+        slug: 'account',
+      },
+    ];
+
+    const results = await queriesHandler(queries, {
+      fetch: async (request) => mockFetchNew(request),
+      models,
+      token: 'takashitoken',
+    });
+
+    expect(results[0]).toBe(40);
   });
 });
