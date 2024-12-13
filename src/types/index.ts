@@ -44,7 +44,6 @@ export type {
   Query,
   QueryType,
   QueryInstructionType as QueryInstruction,
-  Results,
   // Query Types
   GetQuery,
   GetInstructions,
@@ -64,6 +63,8 @@ export type {
   // Query Instructions
   WithInstruction,
 } from '@/src/types/query';
+
+export type { Results } from '@/src/types/utils';
 
 // Storage
 export type { StorableObjectValue, StoredObject } from '@/src/types/storage';

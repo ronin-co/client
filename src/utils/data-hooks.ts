@@ -4,9 +4,8 @@ import type {
   Query,
   QuerySchemaType,
   QueryType,
-  Results,
 } from '@/src/types/query';
-import type { QueryHandlerOptions, RecursivePartial } from '@/src/types/utils';
+import type { QueryHandlerOptions, RecursivePartial, Results } from '@/src/types/utils';
 import { WRITE_QUERY_TYPES } from '@/src/utils/constants';
 import { toDashCase } from '@/src/utils/helpers';
 

@@ -1,9 +1,8 @@
 import type { AsyncLocalStorage } from 'node:async_hooks';
 
-import type { Query } from '@/src/types/query';
 import type { PromiseTuple, QueryHandlerOptions, QueryItem } from '@/src/types/utils';
 import { setProperty } from '@/src/utils/helpers';
-import { QUERY_SYMBOLS } from '@ronin/compiler';
+import { QUERY_SYMBOLS, type Query } from '@ronin/compiler';
 
 interface BatchDetails {
   query: Query;

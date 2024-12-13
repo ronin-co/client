@@ -8276,18 +8276,6 @@ type CombinedInstructions = {
   limitedTo: number;
 };
 
-type OrderedByInstruction =
-  | {
-      ascending?: string[] | undefined;
-      descending?: string[] | undefined;
-    }
-  | undefined;
-
-type QueryPaginationOptions = {
-  moreBefore?: (string | null) | undefined;
-  moreAfter?: (string | null) | undefined;
-};
-
 type Query = {
   count?:
     | {
@@ -13209,34 +13197,6 @@ type WithInstruction = {
       };
 };
 
-/**
- * Utility type that merges extra properties `R` into each element of array-type
- * properties in a type `T`; non-array properties are left unchanged.
- */
-type BindToArray<T, R> = {
-  [K in keyof T]: T[K] extends Array<infer U> ? Array<U> & R : T[K];
-};
-/**
- * Utility type used to type the results of a query.
- *
- * It unwraps the promised type if `T` is an array of Promises, adds `moreBefore?`
- * and `moreAfter?` fields to an array's items if `T` is an array. Otherwise it
- * wraps non-array and non-Promise types in an array.
- */
-type Results<T> = T extends never | Array<never>
-  ? T
-  : T extends []
-    ? []
-    : T extends [infer First, ...infer Rest]
-      ? Rest extends unknown
-        ? First extends Promise<infer U>
-          ? [U]
-          : BindToArray<[First, ...Rest], QueryPaginationOptions>
-        : Array<First>
-      : T extends Promise<infer U>
-        ? [U]
-        : [T];
-
 export type {
   CombinedInstructions,
   CountInstructions,
@@ -13250,15 +13210,11 @@ export type {
   IncludingInstruction,
   Instruction,
   Instructions,
-  OrderedByInstruction,
   Query,
   QueryInstructionType,
-  QueryPaginationOptions,
   QuerySchemaType,
   QueryType,
   SetInstructions,
   SetQuery,
   WithInstruction,
-  BindToArray,
-  Results,
 };
