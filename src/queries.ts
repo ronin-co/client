@@ -25,7 +25,8 @@ type SchemaFieldType =
   | 'blob'
   | 'boolean'
   | 'number'
-  | 'json';
+  | 'json'
+  | 'link';
 
 type Result<T> =
   | {
@@ -34,8 +35,8 @@ type Result<T> =
     }
   | {
       records: Array<T | any> & { moreBefore?: string; moreAfter?: string };
-      moreBefore: string;
-      moreAfter: string;
+      moreBefore?: string;
+      moreAfter?: string;
       schema: Record<string, SchemaFieldType>;
     }
   | {
@@ -112,13 +113,17 @@ export const runQueries = async <T>(
     });
 
     results = transaction.formatResults(rawResults, false).map((result) => {
-      const newResult: Partial<Result<T>> = { ...result };
-
-      if ('record' in newResult || 'records' in newResult) {
-        newResult.schema = {};
+      if ('record' in result) {
+        const { modelFields, ...rest } = result;
+        return { ...rest, schema: modelFields };
       }
 
-      return newResult as Result<T>;
+      if ('records' in result) {
+        const { modelFields, ...rest } = result;
+        return { ...rest, schema: modelFields };
+      }
+
+      return result;
     });
   } else {
     results = responseResults.results;
