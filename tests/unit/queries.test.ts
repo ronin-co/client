@@ -183,6 +183,19 @@ describe('queries handler', () => {
         results: [
           { records: [{ 'COUNT(*)': 40 }] },
           { records: [{ handle: 'david' }, { handle: 'elaine' }, { handle: 'john' }] },
+          {
+            records: [
+              {
+                id: 'acc_39h8fhe98hefah8j',
+                'ronin.locked': null,
+                'ronin.createdAt': '2021-09-29T14:00:00.000Z',
+                'ronin.createdBy': null,
+                'ronin.updatedAt': '2021-09-29T14:00:00.000Z',
+                'ronin.updatedBy': null,
+                handle: 'markus',
+              },
+            ],
+          },
         ],
       });
     });
@@ -198,6 +211,11 @@ describe('queries handler', () => {
           accounts: {
             selecting: ['handle'],
           },
+        },
+      },
+      {
+        get: {
+          account: null,
         },
       },
     ];
@@ -220,6 +238,20 @@ describe('queries handler', () => {
       token: 'takashitoken',
     });
 
-    expect(results[0]).toBe(40);
+    expect(results).toEqual([
+      40,
+      [{ handle: 'david' }, { handle: 'elaine' }, { handle: 'john' }],
+      {
+        id: 'acc_39h8fhe98hefah8j',
+        handle: 'markus',
+        ronin: {
+          locked: false,
+          createdAt: expect.any(Date),
+          createdBy: null,
+          updatedAt: expect.any(Date),
+          updatedBy: null,
+        },
+      },
+    ]);
   });
 });

@@ -98,10 +98,9 @@ export const setProperty = <T extends object, K>(obj: T, path: string, value: K)
  * console.log(getProperty(exampleObject, ['user', 'age'])); // Output: 30
  * console.log(getProperty(exampleObject, ['user', 'non', 'existing'])); // Output: undefined
  */
-const getPropertyViaPathSegments = (
-  obj: object,
-  pathSegments: Array<string>,
-): unknown => {
+export const getProperty = (obj: object, path: string): unknown => {
+  const pathSegments = getPathSegments(path);
+
   let current = obj as Record<string, object>;
 
   for (const key of pathSegments) {
@@ -111,9 +110,6 @@ const getPropertyViaPathSegments = (
 
   return current;
 };
-
-export const getProperty = (obj: object, path: string) =>
-  getPropertyViaPathSegments(obj, getPathSegments(path));
 
 /**
  * Turn the given string into "dash-case", which we use for slugs.
@@ -150,9 +146,10 @@ export const toDashCase = (string?: string | null): string => {
  */
 export const formatDateFields = (record: object, dateFields: Array<string>) => {
   for (const field of dateFields) {
-    setProperty(record, field, (value: string | null) =>
-      value !== null ? new Date(value) : null,
-    );
+    const value = getProperty(record, field);
+    if (typeof value === 'undefined' || value === null) continue;
+
+    setProperty(record, field, new Date(value as string));
   }
 };
 
