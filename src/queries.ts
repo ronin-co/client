@@ -63,12 +63,20 @@ export const runQueries = async <T>(
     WRITE_QUERY_TYPES.includes(Object.keys(query)[0]),
   );
 
-  const transaction = new Transaction(queries);
+  const requestBody: { [key in 'queries' | 'nativeQueries']?: unknown } = {};
 
-  const nativeQueries = transaction.statements.map((statement) => ({
-    query: statement.statement,
-    values: statement.params,
-  }));
+  let transaction: InstanceType<typeof Transaction> | null = null;
+
+  if (options.models) {
+    transaction = new Transaction(queries, { models: options.models });
+
+    const nativeQueries = transaction.statements.map((statement) => ({
+      query: statement.statement,
+      values: statement.params,
+    }));
+
+    requestBody.nativeQueries = nativeQueries;
+  }
 
   // Runtimes like Cloudflare Workers don't support `cache` yet.
   const hasCachingSupport = 'cache' in new Request('https://ronin.co');
@@ -79,7 +87,7 @@ export const runQueries = async <T>(
       'Content-Type': 'application/json',
       Authorization: `Bearer ${options.token}`,
     },
-    body: JSON.stringify({ nativeQueries }),
+    body: JSON.stringify(requestBody),
 
     // Disable cache if write queries are performed, as those must be
     // guaranteed to reach RONIN.
@@ -92,7 +100,10 @@ export const runQueries = async <T>(
   const fetcher = typeof options?.fetch === 'function' ? options.fetch : fetch;
   const response = await fetcher(request);
 
-  const { results } = await getResponseBody<QueryResponse<T>>(response);
+  const rawResults = await getResponseBody<QueryResponse<T>>(response);
+  const results = transaction
+    ? transaction.formatResults(rawResults.results)
+    : rawResults.results;
 
   const startFormatting = performance.now();
 
