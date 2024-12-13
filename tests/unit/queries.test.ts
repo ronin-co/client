@@ -180,7 +180,12 @@ describe('queries handler', () => {
     const mockFetchNew = mock((request) => {
       mockRequestResolvedValue = request;
 
-      return Response.json({ results: [{ records: [{ 'COUNT(*)': 40 }] }] });
+      return Response.json({
+        results: [
+          { records: [{ 'COUNT(*)': 40 }] },
+          { records: [{ handle: 'david' }, { handle: 'elaine' }, { handle: 'john' }] },
+        ],
+      });
     });
 
     const queries: Array<Query> = [
@@ -189,11 +194,24 @@ describe('queries handler', () => {
           accounts: null,
         },
       },
+      {
+        get: {
+          accounts: {
+            selecting: ['handle'],
+          },
+        },
+      },
     ];
 
     const models: Array<Model> = [
       {
         slug: 'account',
+        fields: [
+          {
+            slug: 'handle',
+            type: 'string',
+          },
+        ],
       },
     ];
 
