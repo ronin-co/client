@@ -8,7 +8,7 @@ import {
   getResponseBody,
 } from '@/src/utils/errors';
 import { formatDateFields, getProperty } from '@/src/utils/helpers';
-import { type Model, type ModelField, type Query, Transaction } from '@ronin/compiler';
+import { type Model, type Query, Transaction } from '@ronin/compiler';
 
 type QueryResponse<T> = {
   results: Array<Result<T>>;
@@ -74,18 +74,7 @@ export const runQueries = async <T>(
     // to convert it to an array before passing it to the compiler.
     const models = Array.isArray(options.models)
       ? options.models
-      : Object.values(options.models).map((model): Model => {
-          const { fields, ...rest } = model;
-          const newModel: Model = { ...rest };
-          newModel.fields = Object.entries(fields).map(
-            ([slug, details]) =>
-              ({
-                ...details,
-                slug,
-              }) as ModelField,
-          );
-          return newModel;
-        });
+      : (Object.values(options.models) as unknown as Array<Model>);
 
     transaction = new Transaction(queries, { models });
 
