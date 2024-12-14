@@ -8,7 +8,7 @@ import {
   getResponseBody,
 } from '@/src/utils/errors';
 import { formatDateFields, getProperty } from '@/src/utils/helpers';
-import { type Query, Transaction } from '@ronin/compiler';
+import { type Model, type ModelField, type Query, Transaction } from '@ronin/compiler';
 
 type QueryResponse<T> = {
   results: Array<Result<T>>;
@@ -68,7 +68,26 @@ export const runQueries = async <T>(
   let transaction: InstanceType<typeof Transaction> | null = null;
 
   if (options.models) {
-    transaction = new Transaction(queries, { models: options.models });
+    // If a list of models was provided to the client and the list is an array, we can
+    // pass it to the compiler directly. If it's an object instead, that means a list of
+    // models defined in code (in a dedicated TypeScript file) was provided, so we need
+    // to convert it to an array before passing it to the compiler.
+    const models = Array.isArray(options.models)
+      ? options.models
+      : Object.values(options.models).map((model): Model => {
+          const { fields, ...rest } = model;
+          const newModel: Model = { ...rest };
+          newModel.fields = Object.entries(fields).map(
+            ([slug, details]) =>
+              ({
+                ...details,
+                slug,
+              }) as ModelField,
+          );
+          return newModel;
+        });
+
+    transaction = new Transaction(queries, { models });
 
     const nativeQueries = transaction.statements.map((statement) => ({
       query: statement.statement,
