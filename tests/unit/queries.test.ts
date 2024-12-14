@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, mock, spyOn, test } from 'bun:test';
 
 import { queriesHandler } from '@/src/syntax/handlers';
+import type { ObjectModel } from '@/src/types/utils';
 import type { Model, Query } from '@ronin/compiler';
 
 let mockRequestResolvedValue: Request | undefined;
@@ -175,7 +176,7 @@ describe('queries handler', () => {
     logSpy.mockRestore();
   });
 
-  test('pass custom models', async () => {
+  test('pass custom models as object', async () => {
     const mockFetchNew = mock((request) => {
       mockRequestResolvedValue = request;
 
@@ -220,17 +221,16 @@ describe('queries handler', () => {
       },
     ];
 
-    const models: Array<Model> = [
-      {
+    const models: Record<string, ObjectModel> = {
+      Account: {
         slug: 'account',
-        fields: [
-          {
-            slug: 'handle',
+        fields: {
+          handle: {
             type: 'string',
           },
-        ],
+        },
       },
-    ];
+    };
 
     const results = await queriesHandler(queries, {
       fetch: async (request) => mockFetchNew(request),
@@ -252,6 +252,50 @@ describe('queries handler', () => {
           updatedBy: null,
         },
       },
+    ]);
+  });
+
+  test('pass custom models as array', async () => {
+    const mockFetchNew = mock((request) => {
+      mockRequestResolvedValue = request;
+
+      return Response.json({
+        results: [
+          { records: [{ handle: 'david' }, { handle: 'elaine' }, { handle: 'john' }] },
+        ],
+      });
+    });
+
+    const queries: Array<Query> = [
+      {
+        get: {
+          accounts: {
+            selecting: ['handle'],
+          },
+        },
+      },
+    ];
+
+    const models: Array<Model> = [
+      {
+        slug: 'account',
+        fields: [
+          {
+            slug: 'handle',
+            type: 'string',
+          },
+        ],
+      },
+    ];
+
+    const results = await queriesHandler(queries, {
+      fetch: async (request) => mockFetchNew(request),
+      models,
+      token: 'takashitoken',
+    });
+
+    expect(results as Array<unknown>).toEqual([
+      [{ handle: 'david' }, { handle: 'elaine' }, { handle: 'john' }],
     ]);
   });
 });
