@@ -1,8 +1,8 @@
 import { beforeEach, describe, expect, mock, spyOn, test } from 'bun:test';
 
 import { queriesHandler } from '@/src/syntax/handlers';
-import type { ObjectModel } from '@/src/types/utils';
 import type { Model, Query } from '@ronin/compiler';
+import { model, string } from '@ronin/schemas';
 
 let mockRequestResolvedValue: Request | undefined;
 
@@ -221,15 +221,13 @@ describe('queries handler', () => {
       },
     ];
 
-    const models: Record<string, ObjectModel> = {
-      Account: {
+    const models = {
+      Account: model({
         slug: 'account',
         fields: {
-          handle: {
-            type: 'string',
-          },
+          handle: string(),
         },
-      },
+      }),
     };
 
     const results = await queriesHandler(queries, {

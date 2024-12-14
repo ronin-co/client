@@ -3,7 +3,7 @@ import type { AsyncLocalStorage } from 'node:async_hooks';
 import type { StorableObjectValue } from '@/src/types/storage';
 import type { Hooks } from '@/src/utils/data-hooks';
 
-import type { Model, ModelField, Query } from '@ronin/compiler';
+import type { Model, Query } from '@ronin/compiler';
 import type { RONIN } from './codegen';
 
 export interface QueryHandlerOptions {
@@ -41,12 +41,8 @@ export interface QueryHandlerOptions {
   asyncContext?: AsyncLocalStorage<any>;
 
   /** A list of models defined during development. */
-  models?: Record<string, ObjectModel> | Array<Model>;
+  models?: Record<string, Record<string, unknown>> | Array<Model>;
 }
-
-export type ObjectModel = Omit<Model, 'fields'> & {
-  fields: Record<string, Partial<ModelField>>;
-};
 
 /**
  * Utility type to make all properties of an object optional.
