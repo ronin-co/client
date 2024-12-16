@@ -74,7 +74,7 @@ export const storeTokenForNPM = async (token: string) => {
 
   // Remove the old registry config, since it causes a conflict with the `@ronin` scope
   // available on npm, which the RONIN team uses to publish packages.
-  npmConfigContents['@ronin:registry'] = undefined;
+  delete npmConfigContents['@ronin:registry'];
 
   await writeConfigFile(npmConfigFile, ini.stringify(npmConfigContents));
 };
@@ -94,7 +94,7 @@ export const storeTokenForBun = async (token: string) => {
 
   // Remove the old registry config, since it causes a conflict with the `@ronin` scope
   // available on npm, which the RONIN team uses to publish packages.
-  bunConfigContents.install.scopes.ronin = undefined;
+  delete bunConfigContents.install.scopes.ronin;
 
   await writeConfigFile(bunConfigFile, toml.stringify(bunConfigContents));
 };
