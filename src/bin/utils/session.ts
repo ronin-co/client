@@ -69,7 +69,7 @@ export const storeTokenForNPM = async (token: string) => {
     process.env.npm_config_userconfig || path.join(os.homedir(), '.npmrc');
   const npmConfigContents = await readConfigFile(npmConfigFile, 'npm', ini.parse);
 
-  npmConfigContents['@ronin:registry'] = 'https://ronin.supply';
+  npmConfigContents['@ronin-types:registry'] = 'https://ronin.supply';
   npmConfigContents['//ronin.supply/:_authToken'] = token;
 
   await writeConfigFile(npmConfigFile, ini.stringify(npmConfigContents));
@@ -82,11 +82,11 @@ export const storeTokenForBun = async (token: string) => {
   // Safely initialize potentially missing keys.
   if (!bunConfigContents.install) bunConfigContents.install = {};
   if (!bunConfigContents.install.scopes) bunConfigContents.install.scopes = {};
-  if (!bunConfigContents.install.scopes.ronin)
-    bunConfigContents.install.scopes.ronin = {};
+  if (!bunConfigContents.install.scopes['ronin-types'])
+    bunConfigContents.install.scopes['ronin-types'] = {};
 
-  bunConfigContents.install.scopes.ronin.url = 'https://ronin.supply';
-  bunConfigContents.install.scopes.ronin.token = token;
+  bunConfigContents.install.scopes['ronin-types'].url = 'https://ronin.supply';
+  bunConfigContents.install.scopes['ronin-types'].token = token;
 
   await writeConfigFile(bunConfigFile, toml.stringify(bunConfigContents));
 };

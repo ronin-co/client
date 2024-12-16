@@ -46,9 +46,9 @@ export default async (positionals: Array<string>) => {
 
     // Install the types package using the preferred package manager
     if (packageManager === 'bun') {
-      await exec(`bun add @ronin/${spaceHandle} --dev`);
+      await exec(`bun add @ronin-types/${spaceHandle} --dev`);
     } else {
-      await exec(`npm install @ronin/${spaceHandle} --save-dev`);
+      await exec(`npm install @ronin-types/${spaceHandle} --save-dev`);
     }
 
     // Add the types package to the project's TypeScript config if one exists
@@ -60,9 +60,9 @@ export default async (positionals: Array<string>) => {
     const contents = await fs.readFile(tsConfigPath, 'utf-8');
     const tsConfig = json5.parse(contents);
 
-    if (!tsConfig.compilerOptions.types?.includes(`@ronin/${spaceHandle}`))
+    if (!tsConfig.compilerOptions.types?.includes(`@ronin-types/${spaceHandle}`))
       Object.assign(tsConfig.compilerOptions, {
-        types: [...(tsConfig.compilerOptions.types || []), `@ronin/${spaceHandle}`],
+        types: [...(tsConfig.compilerOptions.types || []), `@ronin-types/${spaceHandle}`],
       });
 
     await fs.writeFile(tsConfigPath, JSON.stringify(tsConfig, null, 2));
