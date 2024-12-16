@@ -72,6 +72,10 @@ export const storeTokenForNPM = async (token: string) => {
   npmConfigContents['@ronin-types:registry'] = 'https://ronin.supply';
   npmConfigContents['//ronin.supply/:_authToken'] = token;
 
+  // Remove the old registry config, since it causes a conflict with the `@ronin` scope
+  // available on npm, which the RONIN team uses to publish packages.
+  delete npmConfigContents['@ronin:registry'];
+
   await writeConfigFile(npmConfigFile, ini.stringify(npmConfigContents));
 };
 
@@ -87,6 +91,10 @@ export const storeTokenForBun = async (token: string) => {
 
   bunConfigContents.install.scopes['ronin-types'].url = 'https://ronin.supply';
   bunConfigContents.install.scopes['ronin-types'].token = token;
+
+  // Remove the old registry config, since it causes a conflict with the `@ronin` scope
+  // available on npm, which the RONIN team uses to publish packages.
+  delete bunConfigContents.install.scopes.ronin;
 
   await writeConfigFile(bunConfigFile, toml.stringify(bunConfigContents));
 };
