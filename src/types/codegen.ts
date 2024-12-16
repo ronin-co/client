@@ -1,6 +1,6 @@
 import type { Schemas } from 'ronin';
 
-import type * as Schema from '@/src/schema';
+import type * as Schema from '@/src/types/schema';
 import type { StoredObject } from '@/src/types/storage';
 import type { ReducedFunction, Replace, ReplaceForSetter } from '@/src/types/utils';
 

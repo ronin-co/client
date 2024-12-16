@@ -1,8 +1,8 @@
 import { beforeEach, describe, expect, mock, spyOn, test } from 'bun:test';
 
+import { model, string } from '@/src/schema';
 import { queriesHandler } from '@/src/syntax/handlers';
 import type { Model, Query } from '@ronin/compiler';
-import { model, string } from '@ronin/schemas';
 
 let mockRequestResolvedValue: Request | undefined;
 

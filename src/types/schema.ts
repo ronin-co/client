@@ -1,64 +1,21 @@
-export type BasicSchemaField = {
-  id: string;
-  slug: string;
-  name: string;
-  description?: string | undefined;
-  type: 'group' | 'date' | 'blob' | 'boolean' | 'number';
-  required?: boolean | undefined;
-  unique?: boolean | undefined;
-};
+import type { RONIN } from '@/src/types/codegen';
 
-export type StringSchemaField = Omit<BasicSchemaField, 'type'> & {
-  type: 'string';
-  displayAs?: 'single-line' | 'multi-line' | 'secret';
-};
+type ValidJSON =
+  | string
+  | number
+  | boolean
+  | null
+  | Array<ValidJSON>
+  | { [key: string]: ValidJSON };
 
-export type ListSchemaField = Omit<BasicSchemaField, 'type'> & {
-  type: 'list';
-  shape: Array<
-    BasicSchemaField | StringSchemaField | ReferenceSchemaField | JSONSchemaField
-  >;
-};
+type Blob = RONIN.Blob;
+type JSONField<T extends ValidJSON | undefined = undefined> = T extends undefined
+  ? ValidJSON
+  : T;
 
-export type ReferenceSchemaField = Omit<BasicSchemaField, 'type'> & {
-  type: 'reference';
-  schema: string | null;
-  space?: string | undefined;
-  action?:
-    | {
-        onDelete: ('cascade' | 'clear' | 'restrict' | 'reset') | null;
-        onUpdate: ('cascade' | 'clear' | 'restrict' | 'reset') | null;
-      }
-    | undefined;
-};
+type SchemaRecord<TSchema extends Record<string, any>> = Required<TSchema> &
+  RONIN.RoninRecord;
 
-export type JSONSchemaField = Omit<BasicSchemaField, 'type'> & {
-  type: 'json';
-  displayAs?: 'rich-text' | undefined;
-};
+type SchemaRecords<TSchema extends SchemaRecord<TSchema>> = RONIN.RoninRecords<TSchema>;
 
-export type SchemaField =
-  | BasicSchemaField
-  | StringSchemaField
-  | ListSchemaField
-  | ReferenceSchemaField
-  | JSONSchemaField;
-
-export type Schema = {
-  id: string;
-  summary: string;
-  fields: Array<SchemaField> | null;
-  identifiers: {
-    title: string | null;
-    slug: string | null;
-  } | null;
-  idPrefix: string | null;
-  name: string;
-  pluralName: string;
-  slug: string;
-  pluralSlug: string;
-  preview: string | null;
-  space?: string | any;
-  description: string | null;
-  version: number | null;
-};
+export type { SchemaRecord as Record, SchemaRecords as Records, Blob, JSONField as JSON };
