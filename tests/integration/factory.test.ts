@@ -359,7 +359,7 @@ describe('factory', () => {
 
   test('upload image', async () => {
     const bunFile = Bun.file('tests/assets/example.jpeg');
-    const file = new File([Buffer.from(await bunFile.arrayBuffer())], 'example.jpeg', {
+    const file = new File([new Uint8Array(await bunFile.arrayBuffer())], 'example.jpeg', {
       type: 'image/jpeg',
     });
 
@@ -419,9 +419,13 @@ describe('factory', () => {
   test('upload image with non-latin file name', async () => {
     const bunFile = Bun.file('tests/assets/example.jpeg');
 
-    const file = new File([Buffer.from(await bunFile.arrayBuffer())], 'тестування.jpeg', {
-      type: 'image/jpeg',
-    });
+    const file = new File(
+      [new Uint8Array(await bunFile.arrayBuffer())],
+      'тестування.jpeg',
+      {
+        type: 'image/jpeg',
+      },
+    );
 
     let mockResolvedStorageRequest: Request | undefined;
 
@@ -469,7 +473,7 @@ describe('factory', () => {
 
   test('upload video', async () => {
     const bunFile = Bun.file('tests/assets/example.mp4');
-    const file = new File([Buffer.from(await bunFile.arrayBuffer())], 'example.mp4', {
+    const file = new File([new Uint8Array(await bunFile.arrayBuffer())], 'example.mp4', {
       type: 'video/mp4',
     });
 
