@@ -60,6 +60,9 @@ export const getSyntaxProxy = (
     // we need to assign properties to the function itself.
     if (targetProps) Object.assign(proxyTargetFunction, targetProps);
 
+    // @ts-expect-error Deleting this property is required for fields called `name`.
+    delete proxyTargetFunction.name;
+
     return new Proxy(proxyTargetFunction, {
       apply(target: any, _thisArg: any, args: Array<any>) {
         let value = args[0];

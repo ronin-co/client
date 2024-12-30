@@ -34,6 +34,27 @@ describe('syntax proxy', () => {
     expect(addQueryHandlerSpy).toHaveBeenCalledWith(finalQuery, undefined);
   });
 
+  test('using expressions', async () => {
+    const setQueryHandler = { callback: () => undefined };
+    const setQueryHandlerSpy = spyOn(setQueryHandler, 'callback');
+
+    const setProxy = getSyntaxProxy('set', setQueryHandlerSpy);
+
+    setProxy.accounts.to.name('test');
+
+    const finalQuery = {
+      set: {
+        accounts: {
+          to: {
+            name: 'test',
+          },
+        },
+      },
+    };
+
+    expect(setQueryHandlerSpy).toHaveBeenCalledWith(finalQuery, undefined);
+  });
+
   test('using async context', async () => {
     const details = getBatchProxy(
       () => [get.account()],
