@@ -214,10 +214,25 @@ type NestedObject = {
   [key: string]: unknown | NestedObject;
 };
 
+/**
+ * Checks whether a given value is a query expression.
+ *
+ * @param value - The value to check.
+ *
+ * @returns A boolean indicating whether or not the provided value is an expression.
+ */
 const isExpression = (value: unknown): boolean => {
   return typeof value === 'string' && value.includes(RONIN_EXPRESSION_SEPARATOR);
 };
 
+/**
+ * Wraps an expression string into a query symbol that allows the compiler to easily
+ * detect and process it.
+ *
+ * @param value - The expression to wrap.
+ *
+ * @returns The provided expression wrapped in a query symbol.
+ */
 const wrapExpression = (
   value: string,
 ): Record<typeof QUERY_SYMBOLS.EXPRESSION, string> => {
@@ -232,6 +247,14 @@ const wrapExpression = (
   return { [QUERY_SYMBOLS.EXPRESSION]: components };
 };
 
+/**
+ * Recursively checks an object for query expressions and, if they are found, wraps them
+ * in a query symbol that allows the compiler to easily detect and process them.
+ *
+ * @param obj - The object containing potential expressions.
+ *
+ * @returns The updated object.
+ */
 const wrapExpressions = (obj: NestedObject): NestedObject =>
   Object.fromEntries(
     Object.entries(obj).map(([key, value]) => {
