@@ -30,13 +30,13 @@ type SchemaFieldType =
 type Result<T> =
   | {
       record: T | any;
-      schema: Record<string, SchemaFieldType>;
+      schema: Record<string, SchemaFieldType | undefined>;
     }
   | {
       records: Array<T | any> & { moreBefore?: string; moreAfter?: string };
       moreBefore?: string;
       moreAfter?: string;
-      schema: Record<string, SchemaFieldType>;
+      schema: Record<string, SchemaFieldType | undefined>;
     }
   | {
       amount: number;
