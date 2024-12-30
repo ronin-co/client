@@ -81,6 +81,35 @@ describe('syntax proxy', () => {
     expect(getQueryHandlerSpy).toHaveBeenCalledWith(finalQuery, undefined);
   });
 
+  test('using multiple fields with expressions', async () => {
+    const setQueryHandler = { callback: () => undefined };
+    const setQueryHandlerSpy = spyOn(setQueryHandler, 'callback');
+
+    const setProxy = getSyntaxProxy('set', setQueryHandlerSpy);
+
+    setProxy.accounts.to((f) => ({
+      name: `${f.firstName} ${f.lastName}`,
+      email: `${f.handle}@site.co`,
+    }));
+
+    const finalQuery = {
+      set: {
+        accounts: {
+          to: {
+            name: {
+              [QUERY_SYMBOLS.EXPRESSION]: `${QUERY_SYMBOLS.FIELD}firstName || ' ' || ${QUERY_SYMBOLS.FIELD}lastName`,
+            },
+            email: {
+              [QUERY_SYMBOLS.EXPRESSION]: `${QUERY_SYMBOLS.FIELD}handle || '@site.co'`,
+            },
+          },
+        },
+      },
+    };
+
+    expect(setQueryHandlerSpy).toHaveBeenCalledWith(finalQuery, undefined);
+  });
+
   test('using async context', async () => {
     const details = getBatchProxy(
       () => [get.account()],

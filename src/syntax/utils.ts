@@ -85,8 +85,10 @@ export const getSyntaxProxy = (
             {},
             {
               get(_target, property) {
-                const propertyName = property.toString();
-                return `${RONIN_EXPRESSION_SEPARATOR}${QUERY_SYMBOLS.FIELD}${propertyName}${RONIN_EXPRESSION_SEPARATOR}`;
+                const name = property.toString();
+                const split = RONIN_EXPRESSION_SEPARATOR;
+
+                return `${split}${QUERY_SYMBOLS.FIELD}${name}${split}`;
               },
             },
           );
@@ -101,11 +103,14 @@ export const getSyntaxProxy = (
               .filter((part) => part.length > 0)
               .map((part) => {
                 return part.startsWith(QUERY_SYMBOLS.FIELD) ? part : `'${part}'`;
-              });
+              })
+              .join(' || ');
 
             value = {
-              [QUERY_SYMBOLS.EXPRESSION]: components.join(' || '),
+              [QUERY_SYMBOLS.EXPRESSION]: components,
             };
+          } else if (typeof instructions === 'object') {
+            value = wrapExpressions(instructions);
           }
 
           IN_BATCH_SYNC = false;
@@ -210,3 +215,31 @@ export const getBatchProxy = <
 
   return queriesHandler(cleanQueries) as PromiseTuple<T> | T;
 };
+
+type NestedObject = {
+  [key: string]: unknown | NestedObject;
+};
+
+const wrapExpressions = (obj: NestedObject): NestedObject =>
+  Object.fromEntries(
+    Object.entries(obj).map(([key, value]) => {
+      if (typeof value === 'string' && value.includes(RONIN_EXPRESSION_SEPARATOR)) {
+        const components = value
+          .split(RONIN_EXPRESSION_SEPARATOR)
+          .filter((part) => part.length > 0)
+          .map((part) => {
+            return part.startsWith(QUERY_SYMBOLS.FIELD) ? part : `'${part}'`;
+          })
+          .join(' || ');
+
+        return [key, { [QUERY_SYMBOLS.EXPRESSION]: components }];
+      }
+
+      return [
+        key,
+        value && typeof value === 'object'
+          ? wrapExpressions(value as NestedObject)
+          : value,
+      ];
+    }),
+  );
