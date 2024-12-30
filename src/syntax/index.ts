@@ -33,7 +33,7 @@ import { mergeOptions } from '@/src/utils/helpers';
  *   },
  * });
  *
- * await add.account({ with: { email: 'mike@gmail.com' } });
+ * await add.account({ to: { email: 'mike@gmail.com' } });
  *
  * await remove.accounts.with.emailVerified.notBeing(true);
  *

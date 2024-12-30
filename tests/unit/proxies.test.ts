@@ -16,12 +16,12 @@ describe('syntax proxy', () => {
     const getProxy = getSyntaxProxy('get', getQueryHandlerSpy);
     const addProxy = getSyntaxProxy('add', addQueryHandlerSpy);
 
-    addProxy.accounts.with(() => getProxy.oldAccounts());
+    addProxy.accounts.to(() => getProxy.oldAccounts());
 
     const finalQuery = {
       add: {
         accounts: {
-          with: {
+          to: {
             __RONIN_QUERY: {
               get: { oldAccounts: {} },
             },
