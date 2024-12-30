@@ -41,7 +41,9 @@ describe('syntax proxy', () => {
 
     const setProxy = getSyntaxProxy('set', setQueryHandlerSpy);
 
-    setProxy.accounts.to.name((f) => `${f.firstName} ${f.lastName}`);
+    setProxy.accounts.to.name(
+      (f: Record<string, unknown>) => `${f.firstName} ${f.lastName}`,
+    );
 
     const finalQuery = {
       set: {
@@ -87,7 +89,7 @@ describe('syntax proxy', () => {
 
     const setProxy = getSyntaxProxy('set', setQueryHandlerSpy);
 
-    setProxy.accounts.to((f) => ({
+    setProxy.accounts.to((f: Record<string, unknown>) => ({
       name: `${f.firstName} ${f.lastName}`,
       email: `${f.handle}@site.co`,
     }));
