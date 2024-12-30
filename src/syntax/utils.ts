@@ -97,20 +97,14 @@ export const getSyntaxProxy = (
 
           if (instructions.query) {
             value = { [QUERY_SYMBOLS.QUERY]: instructions.query };
-          } else if (typeof instructions === 'string') {
-            const components = instructions
-              .split(RONIN_EXPRESSION_SEPARATOR)
-              .filter((part) => part.length > 0)
-              .map((part) => {
-                return part.startsWith(QUERY_SYMBOLS.FIELD) ? part : `'${part}'`;
-              })
-              .join(' || ');
+          } else {
+            value = instructions;
+          }
 
-            value = {
-              [QUERY_SYMBOLS.EXPRESSION]: components,
-            };
-          } else if (typeof instructions === 'object') {
-            value = wrapExpressions(instructions);
+          if (isExpression(value)) {
+            value = wrapExpression(value as string);
+          } else if (typeof value === 'object') {
+            value = wrapExpressions(value);
           }
 
           IN_BATCH_SYNC = false;
@@ -220,20 +214,28 @@ type NestedObject = {
   [key: string]: unknown | NestedObject;
 };
 
+const isExpression = (value: unknown): boolean => {
+  return typeof value === 'string' && value.includes(RONIN_EXPRESSION_SEPARATOR);
+};
+
+const wrapExpression = (
+  value: string,
+): Record<typeof QUERY_SYMBOLS.EXPRESSION, string> => {
+  const components = value
+    .split(RONIN_EXPRESSION_SEPARATOR)
+    .filter((part) => part.length > 0)
+    .map((part) => {
+      return part.startsWith(QUERY_SYMBOLS.FIELD) ? part : `'${part}'`;
+    })
+    .join(' || ');
+
+  return { [QUERY_SYMBOLS.EXPRESSION]: components };
+};
+
 const wrapExpressions = (obj: NestedObject): NestedObject =>
   Object.fromEntries(
     Object.entries(obj).map(([key, value]) => {
-      if (typeof value === 'string' && value.includes(RONIN_EXPRESSION_SEPARATOR)) {
-        const components = value
-          .split(RONIN_EXPRESSION_SEPARATOR)
-          .filter((part) => part.length > 0)
-          .map((part) => {
-            return part.startsWith(QUERY_SYMBOLS.FIELD) ? part : `'${part}'`;
-          })
-          .join(' || ');
-
-        return [key, { [QUERY_SYMBOLS.EXPRESSION]: components }];
-      }
+      if (isExpression(value)) return [key, wrapExpression(value as string)];
 
       return [
         key,
