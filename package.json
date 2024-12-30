@@ -75,7 +75,7 @@
   "dependencies": {
     "@paralleldrive/cuid2": "2.2.2",
     "@ronin/cli": "0.2.3",
-    "@ronin/compiler": "0.12.11",
+    "@ronin/compiler": "0.12.10",
     "@ronin/schema": "0.1.2"
   },
   "devDependencies": {
