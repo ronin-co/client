@@ -34,25 +34,27 @@ describe('syntax proxy', () => {
     expect(addQueryHandlerSpy).toHaveBeenCalledWith(finalQuery, undefined);
   });
 
-  test('using expressions', async () => {
-    const setQueryHandler = { callback: () => undefined };
-    const setQueryHandlerSpy = spyOn(setQueryHandler, 'callback');
+  // Since `name` is a native property of functions and queries contain function calls,
+  // we have to explicitly assert whether it can be used as a field slug.
+  test('using field with slug `name`', async () => {
+    const getQueryHandler = { callback: () => undefined };
+    const getQueryHandlerSpy = spyOn(getQueryHandler, 'callback');
 
-    const setProxy = getSyntaxProxy('set', setQueryHandlerSpy);
+    const getProxy = getSyntaxProxy('get', getQueryHandlerSpy);
 
-    setProxy.accounts.to.name('test');
+    getProxy.accounts.with.name('test');
 
     const finalQuery = {
-      set: {
+      get: {
         accounts: {
-          to: {
+          with: {
             name: 'test',
           },
         },
       },
     };
 
-    expect(setQueryHandlerSpy).toHaveBeenCalledWith(finalQuery, undefined);
+    expect(getQueryHandlerSpy).toHaveBeenCalledWith(finalQuery, undefined);
   });
 
   test('using async context', async () => {
