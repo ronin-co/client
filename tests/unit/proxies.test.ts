@@ -5,6 +5,7 @@ import { describe, expect, spyOn, test } from 'bun:test';
 import { get } from '@/src/index';
 import type { QueryItem } from '@/src/types/utils';
 import { getBatchProxy, getSyntaxProxy } from '@/src/utils';
+import { QUERY_SYMBOLS } from '@ronin/compiler';
 
 describe('syntax proxy', () => {
   test('using sub query', async () => {
@@ -34,6 +35,31 @@ describe('syntax proxy', () => {
     expect(addQueryHandlerSpy).toHaveBeenCalledWith(finalQuery, undefined);
   });
 
+  test('using field with expression', async () => {
+    const setQueryHandler = { callback: () => undefined };
+    const setQueryHandlerSpy = spyOn(setQueryHandler, 'callback');
+
+    const setProxy = getSyntaxProxy('set', setQueryHandlerSpy);
+
+    setProxy.accounts.to.name(
+      (f: Record<string, unknown>) => `${f.firstName} ${f.lastName}`,
+    );
+
+    const finalQuery = {
+      set: {
+        accounts: {
+          to: {
+            name: {
+              [QUERY_SYMBOLS.EXPRESSION]: `${QUERY_SYMBOLS.FIELD}firstName || ' ' || ${QUERY_SYMBOLS.FIELD}lastName`,
+            },
+          },
+        },
+      },
+    };
+
+    expect(setQueryHandlerSpy).toHaveBeenCalledWith(finalQuery, undefined);
+  });
+
   // Since `name` is a native property of functions and queries contain function calls,
   // we have to explicitly assert whether it can be used as a field slug.
   test('using field with slug `name`', async () => {
@@ -55,6 +81,35 @@ describe('syntax proxy', () => {
     };
 
     expect(getQueryHandlerSpy).toHaveBeenCalledWith(finalQuery, undefined);
+  });
+
+  test('using multiple fields with expressions', async () => {
+    const setQueryHandler = { callback: () => undefined };
+    const setQueryHandlerSpy = spyOn(setQueryHandler, 'callback');
+
+    const setProxy = getSyntaxProxy('set', setQueryHandlerSpy);
+
+    setProxy.accounts.to((f: Record<string, unknown>) => ({
+      name: `${f.firstName} ${f.lastName}`,
+      email: `${f.handle}@site.co`,
+    }));
+
+    const finalQuery = {
+      set: {
+        accounts: {
+          to: {
+            name: {
+              [QUERY_SYMBOLS.EXPRESSION]: `${QUERY_SYMBOLS.FIELD}firstName || ' ' || ${QUERY_SYMBOLS.FIELD}lastName`,
+            },
+            email: {
+              [QUERY_SYMBOLS.EXPRESSION]: `${QUERY_SYMBOLS.FIELD}handle || '@site.co'`,
+            },
+          },
+        },
+      },
+    };
+
+    expect(setQueryHandlerSpy).toHaveBeenCalledWith(finalQuery, undefined);
   });
 
   test('using async context', async () => {

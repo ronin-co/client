@@ -1,6 +1,7 @@
 import type { AsyncLocalStorage } from 'node:async_hooks';
 
 import type { PromiseTuple, QueryHandlerOptions, QueryItem } from '@/src/types/utils';
+import { RONIN_EXPRESSION_SEPARATOR } from '@/src/utils/constants';
 import { setProperty } from '@/src/utils/helpers';
 import { QUERY_SYMBOLS, type Query } from '@ronin/compiler';
 
@@ -77,7 +78,35 @@ export const getSyntaxProxy = (
           // an asynchronous function, so we don't need to use `IN_BATCH_ASYNC`,
           // which avoids the need to pass it as an option to the client.
           IN_BATCH_SYNC = true;
-          value = { [QUERY_SYMBOLS.QUERY]: value().query };
+
+          // A proxy object providing a property for every field of the model. It allows
+          // for referencing fields inside of an expression.
+          const fieldProxy = new Proxy(
+            {},
+            {
+              get(_target, property) {
+                const name = property.toString();
+                const split = RONIN_EXPRESSION_SEPARATOR;
+
+                return `${split}${QUERY_SYMBOLS.FIELD}${name}${split}`;
+              },
+            },
+          );
+
+          const instructions = value(fieldProxy);
+
+          if (instructions.query) {
+            value = { [QUERY_SYMBOLS.QUERY]: instructions.query };
+          } else {
+            value = instructions;
+          }
+
+          if (isExpression(value)) {
+            value = wrapExpression(value as string);
+          } else if (typeof value === 'object') {
+            value = wrapExpressions(value);
+          }
+
           IN_BATCH_SYNC = false;
         }
 
@@ -180,3 +209,62 @@ export const getBatchProxy = <
 
   return queriesHandler(cleanQueries) as PromiseTuple<T> | T;
 };
+
+type NestedObject = {
+  [key: string]: unknown | NestedObject;
+};
+
+/**
+ * Checks whether a given value is a query expression.
+ *
+ * @param value - The value to check.
+ *
+ * @returns A boolean indicating whether or not the provided value is an expression.
+ */
+const isExpression = (value: unknown): boolean => {
+  return typeof value === 'string' && value.includes(RONIN_EXPRESSION_SEPARATOR);
+};
+
+/**
+ * Wraps an expression string into a query symbol that allows the compiler to easily
+ * detect and process it.
+ *
+ * @param value - The expression to wrap.
+ *
+ * @returns The provided expression wrapped in a query symbol.
+ */
+const wrapExpression = (
+  value: string,
+): Record<typeof QUERY_SYMBOLS.EXPRESSION, string> => {
+  const components = value
+    .split(RONIN_EXPRESSION_SEPARATOR)
+    .filter((part) => part.length > 0)
+    .map((part) => {
+      return part.startsWith(QUERY_SYMBOLS.FIELD) ? part : `'${part}'`;
+    })
+    .join(' || ');
+
+  return { [QUERY_SYMBOLS.EXPRESSION]: components };
+};
+
+/**
+ * Recursively checks an object for query expressions and, if they are found, wraps them
+ * in a query symbol that allows the compiler to easily detect and process them.
+ *
+ * @param obj - The object containing potential expressions.
+ *
+ * @returns The updated object.
+ */
+const wrapExpressions = (obj: NestedObject): NestedObject =>
+  Object.fromEntries(
+    Object.entries(obj).map(([key, value]) => {
+      if (isExpression(value)) return [key, wrapExpression(value as string)];
+
+      return [
+        key,
+        value && typeof value === 'object'
+          ? wrapExpressions(value as NestedObject)
+          : value,
+      ];
+    }),
+  );
