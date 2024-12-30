@@ -39,16 +39,16 @@ describe('syntax proxy', () => {
     const setQueryHandler = { callback: () => undefined };
     const setQueryHandlerSpy = spyOn(setQueryHandler, 'callback');
 
-    const setPropxy = getSyntaxProxy('set', setQueryHandlerSpy);
+    const setProxy = getSyntaxProxy('set', setQueryHandlerSpy);
 
-    setPropxy.accounts.to.name((f) => f.oldName);
+    setProxy.accounts.to.name((f) => `${f.firstName} || ' ' || ${f.lastName}`);
 
     const finalQuery = {
       set: {
         accounts: {
           to: {
             name: {
-              [QUERY_SYMBOLS.EXPRESSION]: `${QUERY_SYMBOLS.FIELD}oldName`,
+              [QUERY_SYMBOLS.EXPRESSION]: `${QUERY_SYMBOLS.FIELD}firstName || ' ' || ${QUERY_SYMBOLS.FIELD}lastName`,
             },
           },
         },
