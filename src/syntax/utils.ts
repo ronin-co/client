@@ -93,7 +93,7 @@ export const getSyntaxProxy = (
           if (instructions.query) {
             value = { [QUERY_SYMBOLS.QUERY]: instructions.query };
           } else {
-            value = instructions;
+            value = { [QUERY_SYMBOLS.EXPRESSION]: instructions };
           }
 
           IN_BATCH_SYNC = false;

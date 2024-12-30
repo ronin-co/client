@@ -47,7 +47,9 @@ describe('syntax proxy', () => {
       set: {
         accounts: {
           to: {
-            name: `${QUERY_SYMBOLS.FIELD}oldName`,
+            name: {
+              [QUERY_SYMBOLS.EXPRESSION]: `${QUERY_SYMBOLS.FIELD}oldName`,
+            },
           },
         },
       },
