@@ -41,7 +41,7 @@ describe('syntax proxy', () => {
 
     const setProxy = getSyntaxProxy('set', setQueryHandlerSpy);
 
-    setProxy.accounts.to.name((f) => `${f.firstName} || ' ' || ${f.lastName}`);
+    setProxy.accounts.to.name((f) => `${f.firstName} ${f.lastName}`);
 
     const finalQuery = {
       set: {

@@ -1,6 +1,7 @@
 import type { AsyncLocalStorage } from 'node:async_hooks';
 
 import type { PromiseTuple, QueryHandlerOptions, QueryItem } from '@/src/types/utils';
+import { RONIN_EXPRESSION_SEPARATOR } from '@/src/utils/constants';
 import { setProperty } from '@/src/utils/helpers';
 import { QUERY_SYMBOLS, type Query } from '@ronin/compiler';
 
@@ -78,22 +79,33 @@ export const getSyntaxProxy = (
           // which avoids the need to pass it as an option to the client.
           IN_BATCH_SYNC = true;
 
-          const instructions = value(
-            new Proxy(
-              {},
-              {
-                get(_target, property) {
-                  const propertyName = property.toString();
-                  return `${QUERY_SYMBOLS.FIELD}${propertyName}`;
-                },
+          // A proxy object providing a property for every field of the model. It allows
+          // for referencing fields inside of an expression.
+          const fieldProxy = new Proxy(
+            {},
+            {
+              get(_target, property) {
+                const propertyName = property.toString();
+                return `${RONIN_EXPRESSION_SEPARATOR}${QUERY_SYMBOLS.FIELD}${propertyName}${RONIN_EXPRESSION_SEPARATOR}`;
               },
-            ),
+            },
           );
+
+          const instructions = value(fieldProxy);
 
           if (instructions.query) {
             value = { [QUERY_SYMBOLS.QUERY]: instructions.query };
-          } else {
-            value = { [QUERY_SYMBOLS.EXPRESSION]: instructions };
+          } else if (typeof instructions === 'string') {
+            const components = instructions
+              .split(RONIN_EXPRESSION_SEPARATOR)
+              .filter((part) => part.length > 0)
+              .map((part) => {
+                return part.startsWith(QUERY_SYMBOLS.FIELD) ? part : `'${part}'`;
+              });
+
+            value = {
+              [QUERY_SYMBOLS.EXPRESSION]: components.join(' || '),
+            };
           }
 
           IN_BATCH_SYNC = false;
