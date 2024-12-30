@@ -77,7 +77,25 @@ export const getSyntaxProxy = (
           // an asynchronous function, so we don't need to use `IN_BATCH_ASYNC`,
           // which avoids the need to pass it as an option to the client.
           IN_BATCH_SYNC = true;
-          value = { [QUERY_SYMBOLS.QUERY]: value().query };
+
+          const instructions = value(
+            new Proxy(
+              {},
+              {
+                get(_target, property) {
+                  const propertyName = property.toString();
+                  return `${QUERY_SYMBOLS.FIELD}${propertyName}`;
+                },
+              },
+            ),
+          );
+
+          if (instructions.query) {
+            value = { [QUERY_SYMBOLS.QUERY]: instructions.query };
+          } else {
+            value = instructions;
+          }
+
           IN_BATCH_SYNC = false;
         }
 

@@ -5,6 +5,7 @@ import { describe, expect, spyOn, test } from 'bun:test';
 import { get } from '@/src/index';
 import type { QueryItem } from '@/src/types/utils';
 import { getBatchProxy, getSyntaxProxy } from '@/src/utils';
+import { QUERY_SYMBOLS } from '@ronin/compiler';
 
 describe('syntax proxy', () => {
   test('using sub query', async () => {
@@ -32,6 +33,27 @@ describe('syntax proxy', () => {
 
     expect(getQueryHandlerSpy).not.toHaveBeenCalled();
     expect(addQueryHandlerSpy).toHaveBeenCalledWith(finalQuery, undefined);
+  });
+
+  test('using field with expression', async () => {
+    const setQueryHandler = { callback: () => undefined };
+    const setQueryHandlerSpy = spyOn(setQueryHandler, 'callback');
+
+    const setPropxy = getSyntaxProxy('set', setQueryHandlerSpy);
+
+    setPropxy.accounts.to.name((f) => f.oldName);
+
+    const finalQuery = {
+      set: {
+        accounts: {
+          to: {
+            name: `${QUERY_SYMBOLS.FIELD}oldName`,
+          },
+        },
+      },
+    };
+
+    expect(setQueryHandlerSpy).toHaveBeenCalledWith(finalQuery, undefined);
   });
 
   // Since `name` is a native property of functions and queries contain function calls,
