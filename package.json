@@ -6,7 +6,7 @@
   "main": "./dist/index.js",
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
-  "description": "Access the RONIN data platform via TypeScript.",
+  "description": "Access your RONIN database via TypeScript.",
   "scripts": {
     "dev": "bun run build -- --watch",
     "build": "tsup",
@@ -73,16 +73,15 @@
     "node": ">=18.17.0"
   },
   "dependencies": {
-    "@paralleldrive/cuid2": "2.2.2",
-    "@ronin/cli": "0.2.3",
-    "@ronin/compiler": "0.12.10",
-    "@ronin/schema": "0.1.2"
+    "@ronin/cli": "0.2.6",
+    "@ronin/compiler": "0.13.1",
+    "@ronin/schema": "0.1.4"
   },
   "devDependencies": {
     "@biomejs/biome": "1.9.4",
-    "@types/bun": "1.1.12",
-    "husky": "9.1.6",
-    "lint-staged": "15.2.10",
+    "@types/bun": "1.1.14",
+    "husky": "9.1.7",
+    "lint-staged": "15.3.0",
     "tsup": "8.3.5",
     "typescript": "5.7.2"
   }
