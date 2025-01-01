@@ -6,7 +6,7 @@
   "main": "./dist/index.js",
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
-  "description": "Query your RONIN database via TypeScript.",
+  "description": "Access your RONIN database via TypeScript.",
   "scripts": {
     "dev": "bun run build -- --watch",
     "build": "tsup",
