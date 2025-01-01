@@ -2,7 +2,7 @@
 
 [![tests](https://img.shields.io/github/actions/workflow/status/ronin-co/client/validate.yml?label=tests)](https://github.com/ronin-co/client/actions/workflows/validate.yml)
 [![code coverage](https://img.shields.io/codecov/c/github/ronin-co/client)](https://codecov.io/github/ronin-co/client)
-[![install size](https://packagephobia.com/badge?p=@ronin/client)](https://packagephobia.com/result?p=@ronin/client)
+[![install size](https://packagephobia.com/badge?p=ronin)](https://packagephobia.com/result?p=ronin)
 
 This package allows for querying data from [RONIN](https://ronin.co) with ease.
 
