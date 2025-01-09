@@ -1,0 +1,81 @@
+{
+  "name": "ronin",
+  "version": "0.0.0",
+  "type": "module",
+  "license": "Apache-2.0",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "description": "Access your RONIN database via TypeScript.",
+  "scripts": {
+    "dev": "bun run build -- --watch",
+    "build": "tsup",
+    "test": "bun test",
+    "lint": "bun run --bun lint:tsc && bun run --bun lint:biome",
+    "lint:biome": "biome check",
+    "lint:tsc": "tsc --pretty",
+    "prepare": "bun run build",
+    "format": "biome format --write"
+  },
+  "files": [
+    "dist"
+  ],
+  "repository": "ronin-co/client",
+  "homepage": "https://ronin.co/docs/typescript-client",
+  "keywords": [
+    "ronin",
+    "client",
+    "database",
+    "orm",
+    "edge",
+    "serverless"
+  ],
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./types": {
+      "import": "./dist/types/index.js",
+      "types": "./dist/types/index.d.ts"
+    },
+    "./schema": {
+      "import": "./dist/schema/index.js",
+      "types": "./dist/schema/index.d.ts"
+    },
+    "./utils": {
+      "import": "./dist/utils/index.js",
+      "types": "./dist/utils/index.d.ts"
+    }
+  },
+  "typesVersions": {
+    "*": {
+      "*": [
+        "dist/index.d.ts"
+      ],
+      "types": [
+        "dist/types/index.d.ts"
+      ],
+      "schema": [
+        "dist/schema/index.d.ts"
+      ],
+      "utils": [
+        "dist/utils/index.d.ts"
+      ]
+    }
+  },
+  "engines": {
+    "node": ">=18.17.0"
+  },
+  "dependencies": {
+    "@ronin/cli": "0.2.12",
+    "@ronin/compiler": "0.13.9",
+    "@ronin/syntax": "0.1.11"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "1.9.4",
+    "@types/bun": "1.1.15",
+    "tsup": "8.3.5",
+    "typescript": "5.7.2"
+  }
+}
