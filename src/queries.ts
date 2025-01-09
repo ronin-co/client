@@ -74,7 +74,7 @@ export const runQueries = async <T>(
       ? options.models
       : (Object.values(options.models) as unknown as Array<Model>);
 
-    transaction = new Transaction(queries, { models });
+    transaction = new Transaction(queries, { models, expandColumns: true });
 
     const nativeQueries = transaction.statements.map((statement) => ({
       query: statement.statement,
