@@ -1,6 +1,6 @@
 {
   "name": "ronin",
-  "version": "6.0.2",
+  "version": "6.0.3",
   "type": "module",
   "license": "Apache-2.0",
   "main": "./dist/index.js",
