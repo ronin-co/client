@@ -3,7 +3,7 @@ import type { RONIN } from '@/src/types/codegen';
 import type { PromiseTuple, QueryHandlerOptions } from '@/src/types/utils';
 import { mergeOptions } from '@/src/utils/helpers';
 import type { Query } from '@ronin/compiler';
-import { getBatchProxy, getSyntaxProxy } from '@ronin/syntax/queries';
+import { type SyntaxItem, getBatchProxy, getSyntaxProxy } from '@ronin/syntax/queries';
 
 /**
  * Creates a syntax factory for generating and executing queries.
@@ -69,13 +69,13 @@ export const createSyntaxFactory = (
     // Function for executing a transaction containing multiple queries.
     batch: <T extends [Promise<any>, ...Array<Promise<any>>] | Array<Promise<any>>>(
       operations: () => T,
-      batchQueryOptions?: Record<string, unknown>,
-    ) =>
-      getBatchProxy<T>(operations, batchQueryOptions, (queries, queryOptions) =>
-        queriesHandler(
-          queries.map(({ structure }) => structure),
-          mergeOptions(options, batchQueryOptions, queryOptions),
-        ),
-      ) as Promise<PromiseTuple<T>>,
+      queryOptions?: Record<string, unknown>,
+    ): Promise<PromiseTuple<T>> => {
+      const batchOperations = operations as unknown as () => Array<SyntaxItem<Query>>;
+      const queries = getBatchProxy(batchOperations).map(({ structure }) => structure);
+      const finalOptions = mergeOptions(options, queryOptions);
+
+      return queriesHandler(queries, finalOptions) as Promise<PromiseTuple<T>>;
+    },
   };
 };
