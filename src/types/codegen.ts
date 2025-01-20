@@ -316,6 +316,7 @@ export namespace RONIN {
         with?: Partial<WithObject<TSchema> | Array<WithObject<TSchema>>>;
         including?: TIncluding;
         selecting?: Array<string>;
+        for?: Array<string>;
       },
       options?: TOptions,
     ): Promise<ReturnBasedOnIncluding<TSchema, TIncluding> | null>;
@@ -325,6 +326,7 @@ export namespace RONIN {
       options?: TOptions,
     ) => Promise<ReturnBasedOnIncluding<TSchema, TIncluding> | null>;
     selecting: Array<string>;
+    for: Array<string>;
   }
 
   export interface IGetterPlural<
@@ -341,6 +343,7 @@ export namespace RONIN {
         after?: string;
         before?: string;
         selecting?: Array<string>;
+        for?: Array<string>;
       },
       options?: TOptions,
     ): Promise<RoninRecords<ReturnBasedOnIncluding<TSchema, TIncluding>>>;
@@ -354,6 +357,7 @@ export namespace RONIN {
     after: (cursor: string, options?: TOptions) => Promise<TModifiedReturn>;
     before: (cursor: string, options?: TOptions) => Promise<TModifiedReturn>;
     selecting: Array<string>;
+    for: Array<string>;
   }
 
   export interface ISetter<TSchema, TOptions = undefined> extends ReducedFunction {
