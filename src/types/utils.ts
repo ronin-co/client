@@ -62,53 +62,6 @@ export type PromiseTuple<
   [P in keyof T]: Awaited<T[P]>;
 };
 
-/**
- * Utility type to mark all Function.prototype methods as "deprecated" which
- * deranks them in the IDE suggestion popup.
- */
-export interface ReducedFunction {
-  /**
-   * @deprecated
-   */
-  name: never;
-  /**
-   * @deprecated
-   */
-  length: never;
-  /**
-   * @deprecated
-   */
-  apply: never;
-  /**
-   * @deprecated
-   */
-  call: never;
-  /**
-   * @deprecated
-   */
-  bind: never;
-  /**
-   * @deprecated
-   */
-  toString: never;
-  /**
-   * @deprecated
-   */
-  caller: never;
-  /**
-   * @deprecated
-   */
-  prototype: never;
-  /**
-   * @deprecated
-   */
-  arguments: never;
-  /**
-   * @deprecated
-   */
-  unify: never;
-}
-
 type QueryPaginationOptions = {
   moreBefore?: (string | null) | undefined;
   moreAfter?: (string | null) | undefined;
