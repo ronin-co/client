@@ -506,3 +506,35 @@ export namespace RONIN {
     [K in keyof Schemas]: IDropper<Schemas[K]>;
   } & RONIN.ExtendedDropper<TOptions>;
 }
+
+/**
+ * DeepCallable<T>:
+ *
+ * - If T (minus null/undefined) is an object:
+ *    - We treat it like an object.
+ *      The call signature is (arg?: Partial<NonNullable<T>>),
+ *      returning Promise<string> & DeepCallable<T>.
+ *    - Also, each key of T is another DeepCallable.
+ *
+ * - Otherwise (primitives, etc.):
+ *    - The call signature is (arg?: T) => Promise<string> & DeepCallable<T>.
+ *
+ * This setup avoids the "Argument not assignable to parameter of type 'undefined'" error
+ * when T can be `object | null`.
+ */
+export type DeepCallable<T> =
+  // 1) Non-distributive check for object types (including "object | null"):
+  [NonNullable<T>] extends [object]
+    ? {
+        // Calling the "object" with an optional partial:
+        (arg?: Partial<NonNullable<T>>): Promise<string> & DeepCallable<T>;
+      } & {
+        // For each key in T, *exclude* null and undefined so TS won't complain:
+        [K in keyof NonNullable<T>]-?: DeepCallable<
+          Exclude<NonNullable<T>[K], null | undefined>
+        >;
+      }
+    : {
+        // 2) If it's not an object, allow calling with an optional T:
+        (arg?: T): Promise<string> & DeepCallable<T>;
+      };

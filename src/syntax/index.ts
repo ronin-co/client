@@ -1,8 +1,18 @@
 import { queriesHandler, queryHandler } from '@/src/syntax/handlers';
-import type { RONIN } from '@/src/types/codegen';
+import type { DeepCallable } from '@/src/types/codegen';
 import type { PromiseTuple, QueryHandlerOptions } from '@/src/types/utils';
 import { mergeOptions } from '@/src/utils/helpers';
-import type { Query } from '@ronin/compiler';
+import type {
+  AddQuery,
+  AlterQuery,
+  CountQuery,
+  CreateQuery,
+  DropQuery,
+  GetQuery,
+  Query,
+  RemoveQuery,
+  SetQuery,
+} from '@ronin/compiler';
 import { type SyntaxItem, getBatchProxy, getSyntaxProxy } from '@ronin/syntax/queries';
 
 /**
@@ -55,16 +65,28 @@ export const createSyntaxFactory = (
 
   return {
     // Query types for interacting with records.
-    get: getSyntaxProxy({ rootProperty: 'get', callback }) as RONIN.Getter,
-    set: getSyntaxProxy({ rootProperty: 'set', callback }) as RONIN.Setter,
-    add: getSyntaxProxy({ rootProperty: 'add', callback }) as RONIN.Adder,
-    remove: getSyntaxProxy({ rootProperty: 'remove', callback }) as RONIN.Remover,
-    count: getSyntaxProxy({ rootProperty: 'count', callback }) as RONIN.Counter,
+    get: getSyntaxProxy({ rootProperty: 'get', callback }) as DeepCallable<GetQuery>,
+    set: getSyntaxProxy({ rootProperty: 'set', callback }) as DeepCallable<SetQuery>,
+    add: getSyntaxProxy({ rootProperty: 'add', callback }) as DeepCallable<AddQuery>,
+    remove: getSyntaxProxy({
+      rootProperty: 'remove',
+      callback,
+    }) as DeepCallable<RemoveQuery>,
+    count: getSyntaxProxy({
+      rootProperty: 'count',
+      callback,
+    }) as DeepCallable<CountQuery>,
 
     // Query types for interacting with the database schema.
-    create: getSyntaxProxy({ rootProperty: 'create', callback }) as RONIN.Creator,
-    alter: getSyntaxProxy({ rootProperty: 'alter', callback }) as RONIN.Alterer,
-    drop: getSyntaxProxy({ rootProperty: 'drop', callback }) as RONIN.Dropper,
+    create: getSyntaxProxy({
+      rootProperty: 'create',
+      callback,
+    }) as DeepCallable<CreateQuery>,
+    alter: getSyntaxProxy({
+      rootProperty: 'alter',
+      callback,
+    }) as DeepCallable<AlterQuery>,
+    drop: getSyntaxProxy({ rootProperty: 'drop', callback }) as DeepCallable<DropQuery>,
 
     // Function for executing a transaction containing multiple queries.
     batch: <T extends [Promise<any>, ...Array<Promise<any>>] | Array<Promise<any>>>(
