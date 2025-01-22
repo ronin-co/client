@@ -29,15 +29,11 @@ export type DeepCallable<Query, Result = NativeRecord> = [NonNullable<Query>] ex
   // Non-distributive check to see if Query is object-like (including Query|null).
   object,
 ]
-  ? {
-      /**
-       * Calls the object with an optional partial argument, returning a promise that
-       * resolves to `Result` and also remains a DeepCallable for further nested calls.
-       */
-      <FinalResult = Result>(
-        arg?: Partial<NonNullable<Query>>,
-      ): Promise<FinalResult> & DeepCallable<Query, FinalResult>;
-    } & {
+  ? /**
+     * Calls the object with an optional partial argument, returning a promise that
+     * resolves to `Result` and also remains a DeepCallable for further nested calls.
+     */
+    ObjectCall<Query, Result, Partial<NonNullable<Query>>> & {
       /**
        * For each key in Query, exclude null/undefined so we can call it without TS
        * complaining about it possibly being undefined.
@@ -47,12 +43,23 @@ export type DeepCallable<Query, Result = NativeRecord> = [NonNullable<Query>] ex
         Result
       >;
     }
-  : {
-      /**
-       * Calls this primitive (or null/undefined) with an optional argument, returning
-       * a promise that resolves to `Result` and remains chainable as DeepCallable.
-       */
-      <FinalResult = Result>(
-        arg?: Query,
-      ): Promise<FinalResult> & DeepCallable<Query, FinalResult>;
-    };
+  : /**
+     * Calls this primitive (or null/undefined) with an optional argument, returning
+     * a promise that resolves to `Result` and remains chainable as DeepCallable.
+     */
+    ObjectCall<Query, Result, Query>;
+
+/**
+ * A helper function type used by `DeepCallable`.
+ *
+ * @typeParam Query - The `Query` type for recursion.
+ * @typeParam DefaultResult - The default result if no generic is specified.
+ * @typeParam Arg - The type of the call's optional argument.
+ *
+ * The call returns a `Promise<FinalResult>`, with `FinalResult` defaulting to
+ * `DefaultResult` if no generic is provided. It also remains chainable by returning
+ * `DeepCallable<Query, FinalResult>`.
+ */
+type ObjectCall<Query, DefaultResult, Arg> = <FinalResult = DefaultResult>(
+  arg?: Arg,
+) => Promise<FinalResult> & DeepCallable<Query, FinalResult>;
