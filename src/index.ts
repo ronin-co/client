@@ -70,34 +70,16 @@ export const createSyntaxFactory = (
 
   return {
     // Query types for interacting with records.
-    get: getSyntaxProxy({ rootProperty: 'get', callback }) as DeepCallable<GetQuery>,
-    set: getSyntaxProxy({ rootProperty: 'set', callback }) as DeepCallable<SetQuery>,
-    add: getSyntaxProxy({ rootProperty: 'add', callback }) as DeepCallable<AddQuery>,
-    remove: getSyntaxProxy({
-      rootProperty: 'remove',
-      callback,
-    }) as DeepCallable<RemoveQuery>,
-    count: getSyntaxProxy({
-      rootProperty: 'count',
-      callback,
-    }) as DeepCallable<CountQuery, number>,
+    get: getSyntaxProxy({ rootProperty: 'get', callback }),
+    set: getSyntaxProxy({ rootProperty: 'set', callback }),
+    add: getSyntaxProxy({ rootProperty: 'add', callback }),
+    remove: getSyntaxProxy({ rootProperty: 'remove', callback }),
+    count: getSyntaxProxy({ rootProperty: 'count', callback }),
 
     // Query types for interacting with the database schema.
-    create: getSyntaxProxy({
-      rootProperty: 'create',
-      callback,
-    }) as DeepCallable<CreateQuery, Model>,
-    alter: getSyntaxProxy({
-      rootProperty: 'alter',
-      callback,
-    }) as DeepCallable<
-      AlterQuery,
-      Model | ModelField | ModelIndex | ModelTrigger | ModelPreset
-    >,
-    drop: getSyntaxProxy({ rootProperty: 'drop', callback }) as DeepCallable<
-      DropQuery,
-      Model
-    >,
+    create: getSyntaxProxy({ rootProperty: 'create', callback }),
+    alter: getSyntaxProxy({ rootProperty: 'alter', callback }),
+    drop: getSyntaxProxy({ rootProperty: 'drop', callback }),
 
     // Function for executing a transaction containing multiple queries.
     batch: <T extends [Promise<any>, ...Array<Promise<any>>] | Array<Promise<any>>>(
