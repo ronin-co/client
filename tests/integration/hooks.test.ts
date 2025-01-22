@@ -2,7 +2,7 @@ import { AsyncLocalStorage } from 'node:async_hooks';
 
 import { beforeEach, describe, expect, mock, test } from 'bun:test';
 
-import { createSyntaxFactory } from '@/src/syntax';
+import { createSyntaxFactory } from '@/src/index';
 import { type FilteredHookQuery, runQueriesWithHooks } from '@/src/utils/data-hooks';
 import type { CombinedInstructions, QueryType } from '@ronin/compiler';
 
@@ -166,7 +166,7 @@ describe('hooks', () => {
     // Make sure a single schema is resolved.
     expect(schema.id).toBe('1');
 
-    const schemas = (await get.schemas()) as Array<object>;
+    const schemas = await get.schemas();
     // Make sure multiple schemas are resolved.
     expect(schemas.length).toBe(2);
 

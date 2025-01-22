@@ -1,7 +1,8 @@
 import { beforeEach, describe, expect, mock, test } from 'bun:test';
 
-import { createSyntaxFactory } from '@/src/syntax';
-import type { StoredObject } from '@/src/types/storage';
+import { createSyntaxFactory } from '@/src/index';
+import type { ResultRecord } from '@/src/types/codegen';
+import type { StoredObject } from '@ronin/compiler';
 
 let mockRequestResolvedValue: Request | undefined;
 let mockResolvedRequestText: any;
@@ -95,15 +96,14 @@ describe('factory', () => {
           lessThan: new Date('2024-04-16T15:02:12.710Z'),
         },
       },
-      // @ts-expect-error `including` is `never[]` due not not having the schema types.
-      including: ['members'],
+      for: ['members'],
       orderedBy: {
         ascending: ['createdAt'],
       },
     });
 
     expect(mockResolvedRequestText).toEqual(
-      '{"queries":[{"get":{"spaces":{"with":{"createdAt":{"lessThan":"2024-04-16T15:02:12.710Z"}},"including":["members"],"orderedBy":{"ascending":["createdAt"]}}}}]}',
+      '{"queries":[{"get":{"spaces":{"with":{"createdAt":{"lessThan":"2024-04-16T15:02:12.710Z"}},"for":["members"],"orderedBy":{"ascending":["createdAt"]}}}}]}',
     );
 
     // @ts-expect-error `emailVerified` is undefined due not not having the schema types.
@@ -150,8 +150,7 @@ describe('factory', () => {
             lessThan: new Date('2024-04-16T15:02:12.710Z'),
           },
         },
-        // @ts-expect-error `including` is `never[]` due not not having the schema types.
-        including: ['members'],
+        for: ['members'],
         orderedBy: {
           ascending: ['createdAt'],
         },
@@ -163,7 +162,7 @@ describe('factory', () => {
     ]) as Parameters<typeof batch>[0]);
 
     expect(mockResolvedRequestText).toEqual(
-      '{"queries":[{"get":{"accounts":{}}},{"get":{"members":{"with":{"handle":{"startingWith":"ronin"}}}}},{"get":{"spaces":{"with":{"createdAt":{"lessThan":"2024-04-16T15:02:12.710Z"}},"including":["members"],"orderedBy":{"ascending":["createdAt"]}}}},{"get":{"members":{"limitedTo":100}}},{"get":{"spaces":{"orderedBy":{"descending":["handle"]}}}},{"get":{"member":{"with":{"id":"123"}}}}]}',
+      '{"queries":[{"get":{"accounts":{}}},{"get":{"members":{"with":{"handle":{"startingWith":"ronin"}}}}},{"get":{"spaces":{"with":{"createdAt":{"lessThan":"2024-04-16T15:02:12.710Z"}},"for":["members"],"orderedBy":{"ascending":["createdAt"]}}}},{"get":{"members":{"limitedTo":100}}},{"get":{"spaces":{"orderedBy":{"descending":["handle"]}}}},{"get":{"member":{"with":{"id":"123"}}}}]}',
     );
   });
 
@@ -247,15 +246,14 @@ describe('factory', () => {
           lessThan: new Date('2024-04-16T15:02:12.710Z'),
         },
       },
-      // @ts-expect-error `including` is `never[]` due not not having the schema types.
-      including: ['members'],
+      for: ['members'],
       orderedBy: {
         ascending: ['createdAt'],
       },
     });
 
     expect(mockResolvedRequestText).toEqual(
-      '{"queries":[{"get":{"spaces":{"with":{"createdAt":{"lessThan":"2024-04-16T15:02:12.710Z"}},"including":["members"],"orderedBy":{"ascending":["createdAt"]}}}}]}',
+      '{"queries":[{"get":{"spaces":{"with":{"createdAt":{"lessThan":"2024-04-16T15:02:12.710Z"}},"for":["members"],"orderedBy":{"ascending":["createdAt"]}}}}]}',
     );
 
     // @ts-expect-error `emailVerified` is undefined due not not having the schema types.
@@ -599,10 +597,14 @@ describe('factory', () => {
       fetch: async (request) => mockFetchNew(request),
     });
 
-    const [account, accounts] = (await factory.batch(() => [
-      factory.get.account(),
+    const [account, accounts] = await factory.batch(() => [
+      factory.get.account<{
+        name: string;
+        createdAt: Date;
+        ronin: ResultRecord['ronin'];
+      }>(),
       factory.get.accounts(),
-    ])) as [Record<string, any>, Record<string, any>[]];
+    ]);
 
     expect(account.createdAt).toBeInstanceOf(Date);
     expect(account.ronin.updatedAt).toBeInstanceOf(Date);

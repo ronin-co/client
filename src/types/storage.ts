@@ -1,17 +1,4 @@
-export type StoredObject = {
-  key: string;
-  src: string;
-  name: string | null;
-  placeholder: {
-    base64: string | null;
-  } | null;
-  meta: {
-    size: number;
-    type: string;
-    width?: number;
-    height?: number;
-  };
-};
+import type { StoredObject } from '@ronin/compiler';
 
 export type StorableObject = {
   query: {

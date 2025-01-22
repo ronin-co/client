@@ -1,7 +1,7 @@
-import type { StorableObject, StoredObject } from '@/src/types/storage';
+import type { StorableObject } from '@/src/types/storage';
 import type { QueryHandlerOptions } from '@/src/types/utils';
 import { getResponseBody } from '@/src/utils/errors';
-import type { Query, SetInstructions } from '@ronin/compiler';
+import type { Query, SetInstructions, StoredObject } from '@ronin/compiler';
 
 /**
  * Extract `StorableObject`s from queries. These will be uploaded separately
