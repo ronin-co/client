@@ -534,17 +534,18 @@ export type NativeRecord = Record<string, unknown> & {
  * without TS complaining about `descending` being possibly undefined, and every call
  * remains `await`able (returning `Result`) as well as chainable.
  */
-export type DeepCallable<
-  Query,
-  Result = NativeRecord,
-> = // Non-distributive check to see if Query is object-like (including Query|null).
-[NonNullable<Query>] extends [object]
+export type DeepCallable<Query, Result = NativeRecord> = [NonNullable<Query>] extends [
+  // Non-distributive check to see if Query is object-like (including Query|null).
+  object,
+]
   ? {
       /**
        * Calls the object with an optional partial argument, returning a promise that
        * resolves to `Result` and also remains a DeepCallable for further nested calls.
        */
-      (arg?: Partial<NonNullable<Query>>): Promise<Result> & DeepCallable<Query, Result>;
+      <FinalResult = Result>(
+        arg?: Partial<NonNullable<Query>>,
+      ): Promise<FinalResult> & DeepCallable<Query, FinalResult>;
     } & {
       /**
        * For each key in Query, exclude null/undefined so we can call it without TS
@@ -560,5 +561,7 @@ export type DeepCallable<
        * Calls this primitive (or null/undefined) with an optional argument, returning
        * a promise that resolves to `Result` and remains chainable as DeepCallable.
        */
-      (arg?: Query): Promise<Result> & DeepCallable<Query, Result>;
+      <FinalResult = Result>(
+        arg?: Query,
+      ): Promise<FinalResult> & DeepCallable<Query, FinalResult>;
     };

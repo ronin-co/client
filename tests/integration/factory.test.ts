@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, mock, test } from 'bun:test';
 
 import { createSyntaxFactory } from '@/src/syntax';
+import type { NativeRecord } from '@/src/types/codegen';
 import type { StoredObject } from '@ronin/compiler';
 
 let mockRequestResolvedValue: Request | undefined;
@@ -599,7 +600,11 @@ describe('factory', () => {
     });
 
     const [account, accounts] = await factory.batch(() => [
-      factory.get.account(),
+      factory.get.account<{
+        name: string;
+        createdAt: Date;
+        ronin: NativeRecord['ronin'];
+      }>(),
       factory.get.accounts(),
     ]);
 
