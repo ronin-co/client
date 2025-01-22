@@ -5,5 +5,4 @@ const { get, set, add, remove, count, create, alter, drop, batch } = createSynta
 );
 
 export { get, set, add, remove, count, create, alter, drop, batch };
-export type { RONIN } from '@/src/types/codegen';
 export default createSyntaxFactory;

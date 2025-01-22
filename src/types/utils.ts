@@ -1,10 +1,8 @@
 import type { AsyncLocalStorage } from 'node:async_hooks';
 
-import type { StorableObjectValue } from '@/src/types/storage';
 import type { Hooks } from '@/src/utils/data-hooks';
 
 import type { Model } from '@ronin/compiler';
-import type { RONIN } from './codegen';
 
 export interface QueryHandlerOptions {
   /**
@@ -63,78 +61,6 @@ export type PromiseTuple<
 > = {
   [P in keyof T]: Awaited<T[P]>;
 };
-
-/**
- * Utility type to mark all Function.prototype methods as "deprecated" which
- * deranks them in the IDE suggestion popup.
- */
-export interface ReducedFunction {
-  /**
-   * @deprecated
-   */
-  name: never;
-  /**
-   * @deprecated
-   */
-  length: never;
-  /**
-   * @deprecated
-   */
-  apply: never;
-  /**
-   * @deprecated
-   */
-  call: never;
-  /**
-   * @deprecated
-   */
-  bind: never;
-  /**
-   * @deprecated
-   */
-  toString: never;
-  /**
-   * @deprecated
-   */
-  caller: never;
-  /**
-   * @deprecated
-   */
-  prototype: never;
-  /**
-   * @deprecated
-   */
-  arguments: never;
-  /**
-   * @deprecated
-   */
-  unify: never;
-}
-
-/**
- * Utility type to replace all instances of a type within a given object.
- */
-export type Replace<TValue, TType, TReplacement> = {
-  [K in keyof TValue]: TValue[K] extends TType ? TReplacement : TValue[K];
-  // `NonNullable<unknown>` is needed here in order to "flatten" the output type.
-} & NonNullable<unknown>;
-
-/**
- * Utility type that takes a given schema type and adjusts it to
- * be used when updating a record.
- */
-export type ReplaceForSetter<TValue> = {
-  // Replace `RoninRecord` with `string`.
-  [K in keyof TValue]: TValue[K] extends RONIN.RoninRecord
-    ? string | Partial<TValue[K]>
-    : K extends 'ronin'
-      ? Partial<TValue[K]>
-      : // Replace `Blob` with `StorableObjectValue`.
-        TValue[K] extends RONIN.Blob
-        ? StorableObjectValue
-        : TValue[K];
-  // `NonNullable<unknown>` is needed here in order to "flatten" the output type.
-} & NonNullable<unknown>;
 
 type QueryPaginationOptions = {
   moreBefore?: (string | null) | undefined;
