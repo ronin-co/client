@@ -507,44 +507,58 @@ export namespace RONIN {
   } & RONIN.ExtendedDropper<TOptions>;
 }
 
+export type NativeRecord = Record<string, unknown> & {
+  id: string;
+  ronin: {
+    locked: boolean;
+    createdAt: string;
+    createdBy: string | null;
+    updatedAt: string;
+    updatedBy: string | null;
+  };
+};
+
 /**
  * A recursive type making every property callable and chainable.
  *
  * - If `Query` (minus null/undefined) is an object:
- * -- The call signature is `(arg?: Partial<NonNullable<Query>>) => Promise<string> & DeepCallable<Query>`.
+ * -- The call signature is `(arg?: Partial<NonNullable<Query>>) => Promise<Result> & DeepCallable<Query>`.
  * -- Each key in `Query` is also a `DeepCallable`, excluding null/undefined from the
  * sub-type so that calls to optional properties do not raise "possibly undefined" errors.
  *
  * - Otherwise (if it's a primitive like string/number/etc, or strictly null/undefined):
- * -- The call signature is `(arg?: Query) => Promise<string> & DeepCallable<Query>`.
+ * -- The call signature is `(arg?: Query) => Promise<Result> & DeepCallable<Query>`.
  * -- Can call it with an optional argument, and it returns a promise & chainable methods.
  *
  * This approach means you can do e.g. `get.spaces.orderedBy.descending(['handle'])`
  * without TS complaining about `descending` being possibly undefined, and every call
- * remains `await`able (returning `string`) as well as chainable.
+ * remains `await`able (returning `Result`) as well as chainable.
  */
-export type DeepCallable<Query> =
-  // Non-distributive check to see if Query is object-like (including Query|null).
-  [NonNullable<Query>] extends [object]
-    ? {
-        /**
-         * Calls the object with an optional partial argument, returning a promise that
-         * resolves to `string` and also remains a DeepCallable for further nested calls.
-         */
-        (arg?: Partial<NonNullable<Query>>): Promise<string> & DeepCallable<Query>;
-      } & {
-        /**
-         * For each key in Query, exclude null/undefined so we can call it without TS
-         * complaining about it possibly being undefined.
-         */
-        [K in keyof NonNullable<Query>]-?: DeepCallable<
-          Exclude<NonNullable<Query>[K], null | undefined>
-        >;
-      }
-    : {
-        /**
-         * Calls this primitive (or null/undefined) with an optional argument, returning
-         * a promise that resolves to `string` and remains chainable as DeepCallable.
-         */
-        (arg?: Query): Promise<string> & DeepCallable<Query>;
-      };
+export type DeepCallable<
+  Query,
+  Result = NativeRecord,
+> = // Non-distributive check to see if Query is object-like (including Query|null).
+[NonNullable<Query>] extends [object]
+  ? {
+      /**
+       * Calls the object with an optional partial argument, returning a promise that
+       * resolves to `Result` and also remains a DeepCallable for further nested calls.
+       */
+      (arg?: Partial<NonNullable<Query>>): Promise<Result> & DeepCallable<Query, Result>;
+    } & {
+      /**
+       * For each key in Query, exclude null/undefined so we can call it without TS
+       * complaining about it possibly being undefined.
+       */
+      [K in keyof NonNullable<Query>]-?: DeepCallable<
+        Exclude<NonNullable<Query>[K], null | undefined>,
+        Result
+      >;
+    }
+  : {
+      /**
+       * Calls this primitive (or null/undefined) with an optional argument, returning
+       * a promise that resolves to `Result` and remains chainable as DeepCallable.
+       */
+      (arg?: Query): Promise<Result> & DeepCallable<Query, Result>;
+    };

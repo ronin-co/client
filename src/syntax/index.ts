@@ -75,7 +75,7 @@ export const createSyntaxFactory = (
     count: getSyntaxProxy({
       rootProperty: 'count',
       callback,
-    }) as DeepCallable<CountQuery>,
+    }) as DeepCallable<CountQuery, number>,
 
     // Query types for interacting with the database schema.
     create: getSyntaxProxy({
