@@ -1,3 +1,5 @@
+import type { ReducedFunction } from '@/src/types/utils';
+
 export type NativeRecord = Record<string, unknown> & {
   id: string;
   ronin: {
@@ -60,6 +62,7 @@ export type DeepCallable<Query, Result = NativeRecord> = [NonNullable<Query>] ex
  * `DefaultResult` if no generic is provided. It also remains chainable by returning
  * `DeepCallable<Query, FinalResult>`.
  */
-type ObjectCall<Query, DefaultResult, Arg> = <FinalResult = DefaultResult>(
+type ObjectCall<Query, DefaultResult, Arg> = (<FinalResult = DefaultResult>(
   arg?: Arg,
-) => Promise<FinalResult> & DeepCallable<Query, FinalResult>;
+) => Promise<FinalResult> & DeepCallable<Query, FinalResult>) &
+  ReducedFunction;

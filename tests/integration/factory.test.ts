@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, mock, test } from 'bun:test';
 
-import { createSyntaxFactory } from '@/src/syntax';
+import { createSyntaxFactory } from '@/src/index';
 import type { NativeRecord } from '@/src/types/codegen';
 import type { StoredObject } from '@ronin/compiler';
 
