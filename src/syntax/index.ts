@@ -9,6 +9,11 @@ import type {
   CreateQuery,
   DropQuery,
   GetQuery,
+  Model,
+  ModelField,
+  ModelIndex,
+  ModelPreset,
+  ModelTrigger,
   Query,
   RemoveQuery,
   SetQuery,
@@ -81,12 +86,18 @@ export const createSyntaxFactory = (
     create: getSyntaxProxy({
       rootProperty: 'create',
       callback,
-    }) as DeepCallable<CreateQuery>,
+    }) as DeepCallable<CreateQuery, Model>,
     alter: getSyntaxProxy({
       rootProperty: 'alter',
       callback,
-    }) as DeepCallable<AlterQuery>,
-    drop: getSyntaxProxy({ rootProperty: 'drop', callback }) as DeepCallable<DropQuery>,
+    }) as DeepCallable<
+      AlterQuery,
+      Model | ModelField | ModelIndex | ModelTrigger | ModelPreset
+    >,
+    drop: getSyntaxProxy({ rootProperty: 'drop', callback }) as DeepCallable<
+      DropQuery,
+      Model
+    >,
 
     // Function for executing a transaction containing multiple queries.
     batch: <T extends [Promise<any>, ...Array<Promise<any>>] | Array<Promise<any>>>(
