@@ -62,12 +62,14 @@ export type {
   CountInstructions as CountQueryInstructions,
   // Query Instructions
   WithInstruction,
+  // Miscellaneous
+  StoredObject,
 } from '@ronin/compiler';
 
 export type { Results } from '@/src/types/utils';
 
 // Storage
-export type { StorableObjectValue, StoredObject } from '@/src/types/storage';
+export type { StorableObjectValue } from '@/src/types/storage';
 
 // Other
 export type { PromiseTuple, QueryHandlerOptions } from '@/src/types/utils';
