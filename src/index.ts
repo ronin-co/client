@@ -64,24 +64,7 @@ import { type SyntaxItem, getBatchProxy, getSyntaxProxy } from '@ronin/syntax/qu
  */
 export const createSyntaxFactory = (
   options: QueryHandlerOptions | (() => QueryHandlerOptions),
-): {
-  get: DeepCallable<GetQuery>;
-  set: DeepCallable<SetQuery>;
-  add: DeepCallable<AddQuery>;
-  remove: DeepCallable<RemoveQuery>;
-  count: DeepCallable<CountQuery, number>;
-
-  create: DeepCallable<CreateQuery, Model>;
-  alter: DeepCallable<
-    AlterQuery,
-    Model | ModelField | ModelIndex | ModelTrigger | ModelPreset
-  >;
-  drop: DeepCallable<DropQuery, Model>;
-  batch: <T extends [Promise<any>, ...Array<Promise<any>>] | Array<Promise<any>>>(
-    operations: () => T,
-    queryOptions?: Record<string, unknown>,
-  ) => Promise<PromiseTuple<T>>;
-} => {
+) => {
   const callback = (query: Query, queryOptions?: QueryHandlerOptions) =>
     queryHandler(query, mergeOptions(options, queryOptions));
 
@@ -127,29 +110,22 @@ export const createSyntaxFactory = (
 
       return queriesHandler(queries, finalOptions) as Promise<PromiseTuple<T>>;
     },
-  } as {
-    get: DeepCallable<GetQuery>;
-    set: DeepCallable<SetQuery>;
-    add: DeepCallable<AddQuery>;
-    remove: DeepCallable<RemoveQuery>;
-    count: DeepCallable<CountQuery, number>;
-
-    create: DeepCallable<CreateQuery, Model>;
-    alter: DeepCallable<
-      AlterQuery,
-      Model | ModelField | ModelIndex | ModelTrigger | ModelPreset
-    >;
-    drop: DeepCallable<DropQuery, Model>;
-    batch: <T extends [Promise<any>, ...Array<Promise<any>>] | Array<Promise<any>>>(
-      operations: () => T,
-      queryOptions?: Record<string, unknown>,
-    ) => Promise<PromiseTuple<T>>;
   };
 };
 
-const { get, set, add, remove, count, create, alter, drop, batch } = createSyntaxFactory(
-  {},
-);
+const factory = createSyntaxFactory({});
 
-export { get, set, add, remove, count, create, alter, drop, batch };
+export const get = factory.get as DeepCallable<GetQuery>;
+export const set = factory.set as DeepCallable<SetQuery>;
+export const add = factory.add as DeepCallable<AddQuery>;
+export const remove = factory.remove as DeepCallable<RemoveQuery>;
+export const count = factory.count as DeepCallable<CountQuery, number>;
+
+export const create = factory.create as DeepCallable<CreateQuery, Model>;
+export const alter = factory.alter as DeepCallable<
+  AlterQuery,
+  Model | ModelField | ModelIndex | ModelTrigger | ModelPreset
+>;
+export const drop = factory.drop as DeepCallable<DropQuery, Model>;
+
 export default createSyntaxFactory;
