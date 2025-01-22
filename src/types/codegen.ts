@@ -1,13 +1,10 @@
 import type { ReducedFunction } from '@/src/types/utils';
+import type { ResultRecord as OriginalRecord } from '@ronin/compiler';
 
-export type NativeRecord = Record<string, unknown> & {
-  id: string;
-  ronin: {
-    locked: boolean;
+export type ResultRecord = Omit<OriginalRecord, 'ronin'> & {
+  ronin: Omit<OriginalRecord['ronin'], 'createdAt' | 'updatedAt'> & {
     createdAt: Date;
-    createdBy: string | null;
     updatedAt: Date;
-    updatedBy: string | null;
   };
 };
 
@@ -27,7 +24,7 @@ export type NativeRecord = Record<string, unknown> & {
  * without TS complaining about `descending` being possibly undefined, and every call
  * remains `await`able (returning `Result`) as well as chainable.
  */
-export type DeepCallable<Query, Result = NativeRecord> = [NonNullable<Query>] extends [
+export type DeepCallable<Query, Result = ResultRecord> = [NonNullable<Query>] extends [
   // Non-distributive check to see if Query is object-like (including Query|null).
   object,
 ]

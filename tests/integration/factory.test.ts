@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, mock, test } from 'bun:test';
 
 import { createSyntaxFactory } from '@/src/index';
-import type { NativeRecord } from '@/src/types/codegen';
+import type { ResultRecord } from '@/src/types/codegen';
 import type { StoredObject } from '@ronin/compiler';
 
 let mockRequestResolvedValue: Request | undefined;
@@ -603,7 +603,7 @@ describe('factory', () => {
       factory.get.account<{
         name: string;
         createdAt: Date;
-        ronin: NativeRecord['ronin'];
+        ronin: ResultRecord['ronin'];
       }>(),
       factory.get.accounts(),
     ]);
