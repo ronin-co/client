@@ -1,8 +1,8 @@
 import { beforeEach, describe, expect, mock, test } from 'bun:test';
 
 import { createSyntaxFactory } from '@/src/index';
-import type { ResultRecord } from '@/src/types/codegen';
 import type { StoredObject } from '@ronin/compiler';
+import type { ResultRecord } from '@ronin/syntax/queries';
 
 let mockRequestResolvedValue: Request | undefined;
 let mockResolvedRequestText: any;

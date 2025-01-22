@@ -99,7 +99,10 @@ export const createSyntaxFactory = (
     count: getSyntaxProxy({ rootProperty: 'count', callback }),
 
     // Query types for interacting with the database schema.
-    create: getSyntaxProxy({ rootProperty: 'create', callback }) as DeepCallable<CreateQuery, Model>,
+    create: getSyntaxProxy({ rootProperty: 'create', callback }) as DeepCallable<
+      CreateQuery,
+      Model
+    >,
     alter: getSyntaxProxy({ rootProperty: 'alter', callback }),
     drop: getSyntaxProxy({ rootProperty: 'drop', callback }),
 
