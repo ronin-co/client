@@ -182,7 +182,7 @@ describe('queries handler', () => {
 
       return Response.json({
         results: [
-          { records: [{ 'COUNT(*)': 40 }] },
+          { records: [{ amount: 40 }] },
           { records: [{ handle: 'david' }, { handle: 'elaine' }, { handle: 'john' }] },
           {
             records: [
