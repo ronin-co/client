@@ -2,11 +2,16 @@
   "name": "ronin",
   "version": "6.0.23",
   "type": "module",
-  "license": "Apache-2.0",
+  "description": "Access your RONIN database via TypeScript.",
   "main": "./dist/index.js",
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
-  "description": "Access your RONIN database via TypeScript.",
+  "bin": {
+    "ronin": "./dist/bin/index.js"
+  },
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "dev": "bun run build -- --watch",
     "build": "tsup",
@@ -17,9 +22,6 @@
     "prepare": "bun run build",
     "format": "biome format --write"
   },
-  "files": [
-    "dist"
-  ],
   "repository": "ronin-co/client",
   "homepage": "https://ronin.co/docs/typescript-client",
   "keywords": [
@@ -67,8 +69,10 @@
   "engines": {
     "node": ">=18.17.0"
   },
+  "author": "ronin",
+  "license": "Apache-2.0",
   "dependencies": {
-    "@ronin/cli": "0.2.25",
+    "@ronin/cli": "0.2.27",
     "@ronin/compiler": "0.14.11",
     "@ronin/syntax": "0.2.6"
   },
