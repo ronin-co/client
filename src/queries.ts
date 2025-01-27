@@ -89,7 +89,7 @@ export const runQueries = async <T>(
   // Runtimes like Cloudflare Workers don't support `cache` yet.
   const hasCachingSupport = 'cache' in new Request('https://ronin.co');
 
-  const request = new Request('https://data.ronin.co/', {
+  const request = new Request('https://data.ronin.co/?latest=true', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
