@@ -560,7 +560,7 @@ describe('factory', () => {
                 updatedAt: '2024-05-16T15:02:12.710Z',
               },
             },
-            schema: {
+            modelFields: {
               name: 'string',
               createdAt: 'date',
               'ronin.updatedAt': 'date',
@@ -583,7 +583,7 @@ describe('factory', () => {
                 },
               },
             ],
-            schema: {
+            modelFields: {
               createdAt: 'date',
               'ronin.updatedAt': 'date',
               name: 'string',
