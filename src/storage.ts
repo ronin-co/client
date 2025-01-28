@@ -4,6 +4,20 @@ import { getResponseBody } from '@/src/utils/errors';
 import type { Query, SetInstructions, StoredObject } from '@ronin/compiler';
 
 /**
+ * Determines whether the provided value is storable as a binary object, or not.
+ *
+ * @param value - The value to check.
+ *
+ * @returns A boolean indicating whether the provided value is storable, or not.
+ */
+export const isStorableObject = (value: unknown): boolean =>
+  (typeof File !== 'undefined' && value instanceof File) ||
+  (typeof ReadableStream !== 'undefined' && value instanceof ReadableStream) ||
+  (typeof Blob !== 'undefined' && value instanceof Blob) ||
+  (typeof ArrayBuffer !== 'undefined' && value instanceof ArrayBuffer) ||
+  (typeof Buffer !== 'undefined' && Buffer.isBuffer(value));
+
+/**
  * Extract `StorableObject`s from queries. These will be uploaded separately
  * before being added back to the queries and then finally stored.
  *
@@ -39,16 +53,9 @@ export const extractStorableObjects = (queries: Array<Query>): Array<StorableObj
                       (references, [name, value]) => {
                         // Values such as `File`, `ReadableStream` and `Buffer` will be
                         // uploaded and stored before being processed further.
-                        const isStorableObject =
-                          (typeof File !== 'undefined' && value instanceof File) ||
-                          (typeof ReadableStream !== 'undefined' &&
-                            value instanceof ReadableStream) ||
-                          (typeof Blob !== 'undefined' && value instanceof Blob) ||
-                          (typeof ArrayBuffer !== 'undefined' &&
-                            value instanceof ArrayBuffer) ||
-                          (typeof Buffer !== 'undefined' && Buffer.isBuffer(value));
+                        if (!isStorableObject(value)) return references;
 
-                        if (!isStorableObject) return references;
+                        const blobValue = value as Blob;
 
                         const storarableObject = {
                           query: {
@@ -57,15 +64,15 @@ export const extractStorableObjects = (queries: Array<Query>): Array<StorableObj
                           },
                           schema,
                           field: name,
-                          value,
+                          value: blobValue,
                         } as StorableObject;
 
-                        if ('type' in value) {
-                          storarableObject.contentType = value.type;
+                        if ('type' in blobValue) {
+                          storarableObject.contentType = blobValue.type;
                         }
 
-                        if ('name' in value) {
-                          storarableObject.name = value.name as string;
+                        if ('name' in blobValue) {
+                          storarableObject.name = blobValue.name as string;
                         }
                         // biome-ignore lint/performance/noAccumulatingSpread: This code is too complex to refactor.
                         return [...references, storarableObject];
