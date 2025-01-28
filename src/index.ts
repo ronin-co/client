@@ -141,4 +141,11 @@ export const alter = factory.alter as DeepCallable<
 >;
 export const drop = factory.drop as DeepCallable<DropQuery, Model>;
 
+export const batch = factory.batch as <
+  T extends [Promise<any>, ...Array<Promise<any>>] | Array<Promise<any>>,
+>(
+  operations: () => T,
+  queryOptions?: Record<string, unknown>,
+) => Promise<PromiseTuple<T>>;
+
 export default createSyntaxFactory;
