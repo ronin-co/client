@@ -96,14 +96,14 @@ describe('factory', () => {
           lessThan: new Date('2024-04-16T15:02:12.710Z'),
         },
       },
-      for: ['members'],
+      using: ['members'],
       orderedBy: {
         ascending: ['createdAt'],
       },
     });
 
     expect(mockResolvedRequestText).toEqual(
-      '{"queries":[{"get":{"spaces":{"with":{"createdAt":{"lessThan":"2024-04-16T15:02:12.710Z"}},"for":["members"],"orderedBy":{"ascending":["createdAt"]}}}}]}',
+      '{"queries":[{"get":{"spaces":{"with":{"createdAt":{"lessThan":"2024-04-16T15:02:12.710Z"}},"using":["members"],"orderedBy":{"ascending":["createdAt"]}}}}]}',
     );
 
     // @ts-expect-error `emailVerified` is undefined due not not having the schema types.
@@ -150,7 +150,7 @@ describe('factory', () => {
             lessThan: new Date('2024-04-16T15:02:12.710Z'),
           },
         },
-        for: ['members'],
+        using: ['members'],
         orderedBy: {
           ascending: ['createdAt'],
         },
@@ -162,7 +162,7 @@ describe('factory', () => {
     ]) as Parameters<typeof batch>[0]);
 
     expect(mockResolvedRequestText).toEqual(
-      '{"queries":[{"get":{"accounts":{}}},{"get":{"members":{"with":{"handle":{"startingWith":"ronin"}}}}},{"get":{"spaces":{"with":{"createdAt":{"lessThan":"2024-04-16T15:02:12.710Z"}},"for":["members"],"orderedBy":{"ascending":["createdAt"]}}}},{"get":{"members":{"limitedTo":100}}},{"get":{"spaces":{"orderedBy":{"descending":["handle"]}}}},{"get":{"member":{"with":{"id":"123"}}}}]}',
+      '{"queries":[{"get":{"accounts":{}}},{"get":{"members":{"with":{"handle":{"startingWith":"ronin"}}}}},{"get":{"spaces":{"with":{"createdAt":{"lessThan":"2024-04-16T15:02:12.710Z"}},"using":["members"],"orderedBy":{"ascending":["createdAt"]}}}},{"get":{"members":{"limitedTo":100}}},{"get":{"spaces":{"orderedBy":{"descending":["handle"]}}}},{"get":{"member":{"with":{"id":"123"}}}}]}',
     );
   });
 
@@ -246,14 +246,14 @@ describe('factory', () => {
           lessThan: new Date('2024-04-16T15:02:12.710Z'),
         },
       },
-      for: ['members'],
+      using: ['members'],
       orderedBy: {
         ascending: ['createdAt'],
       },
     });
 
     expect(mockResolvedRequestText).toEqual(
-      '{"queries":[{"get":{"spaces":{"with":{"createdAt":{"lessThan":"2024-04-16T15:02:12.710Z"}},"for":["members"],"orderedBy":{"ascending":["createdAt"]}}}}]}',
+      '{"queries":[{"get":{"spaces":{"with":{"createdAt":{"lessThan":"2024-04-16T15:02:12.710Z"}},"using":["members"],"orderedBy":{"ascending":["createdAt"]}}}}]}',
     );
 
     // @ts-expect-error `emailVerified` is undefined due not not having the schema types.
