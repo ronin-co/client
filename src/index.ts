@@ -1,3 +1,4 @@
+import { isStorableObject } from '@/src/storage';
 import type { PromiseTuple, QueryHandlerOptions } from '@/src/types/utils';
 import { queriesHandler, queryHandler } from '@/src/utils/handlers';
 import { mergeOptions } from '@/src/utils/helpers';
@@ -90,21 +91,26 @@ export const createSyntaxFactory = (
   const callback = (query: Query, queryOptions?: QueryHandlerOptions) =>
     queryHandler(query, mergeOptions(options, queryOptions));
 
+  const replacer = (value: unknown) => {
+    return isStorableObject(value) ? value : JSON.parse(JSON.stringify(value));
+  };
+
   return {
     // Query types for interacting with records.
-    get: getSyntaxProxy({ rootProperty: 'get', callback }),
-    set: getSyntaxProxy({ rootProperty: 'set', callback }),
-    add: getSyntaxProxy({ rootProperty: 'add', callback }),
-    remove: getSyntaxProxy({ rootProperty: 'remove', callback }),
-    count: getSyntaxProxy({ rootProperty: 'count', callback }),
+    get: getSyntaxProxy({ rootProperty: 'get', callback, replacer }),
+    set: getSyntaxProxy({ rootProperty: 'set', callback, replacer }),
+    add: getSyntaxProxy({ rootProperty: 'add', callback, replacer }),
+    remove: getSyntaxProxy({ rootProperty: 'remove', callback, replacer }),
+    count: getSyntaxProxy({ rootProperty: 'count', callback, replacer }),
 
     // Query types for interacting with the database schema.
-    create: getSyntaxProxy({ rootProperty: 'create', callback }) as DeepCallable<
-      CreateQuery,
-      Model
-    >,
-    alter: getSyntaxProxy({ rootProperty: 'alter', callback }),
-    drop: getSyntaxProxy({ rootProperty: 'drop', callback }),
+    create: getSyntaxProxy({
+      rootProperty: 'create',
+      callback,
+      replacer,
+    }) as DeepCallable<CreateQuery, Model>,
+    alter: getSyntaxProxy({ rootProperty: 'alter', callback, replacer }),
+    drop: getSyntaxProxy({ rootProperty: 'drop', callback, replacer }),
 
     // Function for executing a transaction containing multiple queries.
     batch: <T extends [Promise<any>, ...Array<Promise<any>>] | Array<Promise<any>>>(
