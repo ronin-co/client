@@ -8,7 +8,7 @@ import {
   getResponseBody,
 } from '@/src/utils/errors';
 import { formatDateFields } from '@/src/utils/helpers';
-import { type Model, type Query, Transaction } from '@ronin/compiler';
+import { type Model, type ModelField, type Query, Transaction } from '@ronin/compiler';
 import { getProperty } from '@ronin/syntax/queries';
 
 type QueryResponse<T> = {
@@ -16,25 +16,16 @@ type QueryResponse<T> = {
   error?: any;
 };
 
-type SchemaFieldType =
-  | 'string'
-  | 'date'
-  | 'blob'
-  | 'boolean'
-  | 'number'
-  | 'json'
-  | 'link';
-
 type Result<T> =
   | {
       record: T | any;
-      schema: Record<string, SchemaFieldType | undefined>;
+      modelFields: Record<string, ModelField['type'] | undefined>;
     }
   | {
       records: Array<T | any> & { moreBefore?: string; moreAfter?: string };
       moreBefore?: string;
       moreAfter?: string;
-      schema: Record<string, SchemaFieldType | undefined>;
+      modelFields: Record<string, ModelField['type'] | undefined>;
     }
   | {
       amount: number;
@@ -117,19 +108,7 @@ export const runQueries = async <T>(
       return 'records' in result ? result.records : [];
     });
 
-    results = transaction.formatResults(rawResults, false).map((result) => {
-      if ('record' in result) {
-        const { modelFields, ...rest } = result;
-        return { ...rest, schema: modelFields };
-      }
-
-      if ('records' in result) {
-        const { modelFields, ...rest } = result;
-        return { ...rest, schema: modelFields };
-      }
-
-      return result;
-    });
+    results = transaction.formatResults(rawResults, false);
   } else {
     results = responseResults.results;
   }
@@ -188,10 +167,10 @@ export const runQueries = async <T>(
     }
 
     const dateFields =
-      'schema' in result
-        ? Object.entries(result.schema)
+      'modelFields' in result
+        ? Object.entries(result.modelFields)
             .filter(([, type]) => type === 'date')
-            .map(([name]) => name)
+            .map(([slug]) => slug)
         : [];
 
     // Handle single record result.
