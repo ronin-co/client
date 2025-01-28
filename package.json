@@ -73,8 +73,8 @@
   "license": "Apache-2.0",
   "dependencies": {
     "@ronin/cli": "0.2.28",
-    "@ronin/compiler": "0.14.13",
-    "@ronin/syntax": "0.2.11"
+    "@ronin/compiler": "0.14.14",
+    "@ronin/syntax": "0.2.12"
   },
   "devDependencies": {
     "@biomejs/biome": "1.9.4",
