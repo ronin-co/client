@@ -344,7 +344,7 @@ const invokeHooks = async (
  * @returns The results of the queries that were passed.
  */
 export const runQueriesWithHooks = async <T>(
-  queries: Query[],
+  queries: Array<Query>,
   options: QueryHandlerOptions = {},
 ): Promise<Results<T>> => {
   const { hooks, waitUntil, asyncContext } = options;
@@ -380,11 +380,11 @@ export const runQueriesWithHooks = async <T>(
     throw new Error(message);
   }
 
-  const queryList: {
+  const queryList: Array<{
     definition: Query;
     result: unknown;
     diffForIndex?: number;
-  }[] = queries.flatMap((query, index) => {
+  }> = queries.flatMap((query, index) => {
     const details = { definition: query, result: EMPTY };
 
     // If data hooks are enabled, we want to send a separate `get` query for

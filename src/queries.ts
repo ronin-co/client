@@ -8,7 +8,13 @@ import {
   getResponseBody,
 } from '@/src/utils/errors';
 import { formatDateFields } from '@/src/utils/helpers';
-import { type Model, type ModelField, type Query, Transaction } from '@ronin/compiler';
+import {
+  type Model,
+  type ModelField,
+  type Query,
+  type Statement,
+  Transaction,
+} from '@ronin/compiler';
 import { getProperty } from '@ronin/syntax/queries';
 
 type QueryResponse<T> = {
@@ -37,44 +43,53 @@ type Result<T> =
 /**
  * Run a set of given queries.
  *
- * @param queries - `Query` array containing the queries to run. These may
- * contain objects to be stored inside object storage.
+ * @param queries - A list of RONIN queries or SQL statements to execute.
  * @param options - `QueryHandlerOptions` object containing options passed to
  * the internal `fetch` function.
  *
  * @returns Promise resolving the queried data.
  */
 export const runQueries = async <T>(
-  queries: Array<Query>,
+  queries: Array<Query> | { statements: Array<Statement> },
   options: QueryHandlerOptions = {},
 ): Promise<Results<T>> => {
-  const hasWriteQuery = queries.some((query) =>
-    WRITE_QUERY_TYPES.includes(Object.keys(query)[0]),
-  );
+  let hasWriteQuery: boolean | null = null;
 
-  const requestBody: { [key in 'queries' | 'nativeQueries']?: unknown } = {};
+  const requestBody: {
+    queries?: Array<Query>;
+    nativeQueries?: Array<{ query: string; values: Array<unknown> }>;
+  } = {};
 
   let transaction: InstanceType<typeof Transaction> | null = null;
 
-  if (options.models) {
-    // If a list of models was provided to the client and the list is an array, we can
-    // pass it to the compiler directly. If it's an object instead, that means a list of
-    // models defined in code (in a dedicated TypeScript file) was provided, so we need
-    // to convert it to an array before passing it to the compiler.
-    const models = Array.isArray(options.models)
-      ? options.models
-      : (Object.values(options.models) as unknown as Array<Model>);
-
-    transaction = new Transaction(queries, { models });
-
-    const nativeQueries = transaction.statements.map((statement) => ({
+  if ('statements' in queries) {
+    requestBody.nativeQueries = queries.statements.map((statement) => ({
       query: statement.statement,
       values: statement.params,
     }));
-
-    requestBody.nativeQueries = nativeQueries;
   } else {
-    requestBody.queries = queries;
+    hasWriteQuery = queries.some((query) =>
+      WRITE_QUERY_TYPES.includes(Object.keys(query)[0]),
+    );
+
+    if (options.models) {
+      // If a list of models was provided to the client and the list is an array, we can
+      // pass it to the compiler directly. If it's an object instead, that means a list of
+      // models defined in code (in a dedicated TypeScript file) was provided, so we need
+      // to convert it to an array before passing it to the compiler.
+      const models = Array.isArray(options.models)
+        ? options.models
+        : (Object.values(options.models) as unknown as Array<Model>);
+
+      transaction = new Transaction(queries, { models });
+
+      requestBody.nativeQueries = transaction.statements.map((statement) => ({
+        query: statement.statement,
+        values: statement.params,
+      }));
+    } else {
+      requestBody.queries = queries;
+    }
   }
 
   // Runtimes like Cloudflare Workers don't support `cache` yet.
@@ -132,7 +147,7 @@ export const runQueries = async <T>(
       // If a path is given, try resolving the query that caused the error.
       const query =
         path && typeof result.error.issues[0].path[1] === 'number'
-          ? queries[result.error.issues[0].path[1]]
+          ? requestBody?.queries?.[result.error.issues[0].path[1]]
           : null;
 
       // Get the last part of the instruction that is invalid.
@@ -227,7 +242,7 @@ export const runQueries = async <T>(
 /**
  * Runs a list of `Query`s.
  *
- * @param queries - A list of queries to execute.
+ * @param queries - A list of RONIN queries to execute.
  * @param options - A list of options to change how the queries are executed.
  *
  * @returns The results of the queries that were passed.

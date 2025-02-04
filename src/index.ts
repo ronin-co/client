@@ -87,6 +87,8 @@ export const createSyntaxFactory = (
     operations: () => T,
     queryOptions?: Record<string, unknown>,
   ) => Promise<PromiseTuple<T>>;
+
+  sql: (strings: TemplateStringsArray, ...values: Array<unknown>) => unknown;
 } => {
   const callback = (query: Query, queryOptions?: QueryHandlerOptions) =>
     queryHandler(query, mergeOptions(options, queryOptions));
@@ -123,6 +125,27 @@ export const createSyntaxFactory = (
 
       return queriesHandler(queries, finalOptions) as Promise<PromiseTuple<T>>;
     },
+
+    sql: (strings: TemplateStringsArray, ...values: Array<unknown>) => {
+      let text = '';
+      const params: Array<unknown> = [];
+
+      strings.forEach((string, i) => {
+        text += string;
+
+        if (i < values.length) {
+          text += `$${i + 1}`;
+          params.push(values[i]);
+        }
+      });
+
+      const statement = {
+        statement: text,
+        params,
+      };
+
+      return queryHandler({ statement }, mergeOptions(options, {}));
+    },
   };
 };
 
@@ -147,5 +170,7 @@ export const batch = factory.batch as <
   operations: () => T,
   queryOptions?: Record<string, unknown>,
 ) => Promise<PromiseTuple<T>>;
+
+export const sql = factory.sql;
 
 export default createSyntaxFactory;
