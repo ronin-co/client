@@ -171,4 +171,6 @@ export const batch = factory.batch as <
   queryOptions?: Record<string, unknown>,
 ) => Promise<PromiseTuple<T>>;
 
+export const sql = factory.sql;
+
 export default createSyntaxFactory;
