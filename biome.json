@@ -40,12 +40,15 @@
       "nursery": {
         "all": true,
         "useSortedClasses": "warn",
-        "useExplicitType": "off"
+        "useExplicitType": "off",
+        "noProcessEnv": "off",
+        "noNestedTernary": "off"
       },
       "performance": {
         "all": true,
 
         "noBarrelFile": "off",
+        "noReExportAll": "off",
         "noDelete": "off"
       },
       "security": { "all": true },

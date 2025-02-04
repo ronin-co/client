@@ -21,12 +21,12 @@ describe('queries handler', () => {
     mockFetch.mockClear();
   });
 
-  test('throw if called without token', async () => {
+  test('throw if called without token', () => {
     const originalToken = import.meta.env.RONIN_TOKEN;
 
     import.meta.env.RONIN_TOKEN = undefined;
 
-    expect(queriesHandler.bind([], {})).toThrow(
+    expect(queriesHandler.bind({}, [], {})).toThrow(
       'Please specify the `RONIN_TOKEN` environment variable or set the `token` option when invoking RONIN.',
     );
 

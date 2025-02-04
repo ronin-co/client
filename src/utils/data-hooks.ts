@@ -380,11 +380,11 @@ export const runQueriesWithHooks = async <T>(
     throw new Error(message);
   }
 
-  const queryList: {
+  const queryList: Array<{
     definition: Query;
     result: unknown;
     diffForIndex?: number;
-  }[] = queries.flatMap((query, index) => {
+  }> = queries.flatMap((query, index) => {
     const details = { definition: query, result: EMPTY };
 
     // If data hooks are enabled, we want to send a separate `get` query for
