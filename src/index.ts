@@ -16,12 +16,15 @@ import type {
   Query,
   RemoveQuery,
   SetQuery,
+  Statement,
 } from '@ronin/compiler';
 import {
   type DeepCallable,
   type SyntaxItem,
   getBatchProxy,
+  getBatchProxySQL,
   getSyntaxProxy,
+  getSyntaxProxySQL,
 } from '@ronin/syntax/queries';
 import type { Model } from '@ronin/syntax/schema';
 
@@ -88,7 +91,11 @@ export const createSyntaxFactory = (
     queryOptions?: Record<string, unknown>,
   ) => Promise<PromiseTuple<T>>;
 
-  sql: (strings: TemplateStringsArray, ...values: Array<unknown>) => unknown;
+  sql: (strings: TemplateStringsArray, ...values: Array<unknown>) => Promise<any>;
+  sqlBatch: <T extends [Promise<any>, ...Array<Promise<any>>] | Array<Promise<any>>>(
+    operations: () => T,
+    queryOptions?: Record<string, unknown>,
+  ) => Promise<PromiseTuple<T>>;
 } => {
   const callback = (query: Query, queryOptions?: QueryHandlerOptions) =>
     queryHandler(query, mergeOptions(options, queryOptions));
@@ -126,25 +133,19 @@ export const createSyntaxFactory = (
       return queriesHandler(queries, finalOptions) as Promise<PromiseTuple<T>>;
     },
 
-    sql: (strings: TemplateStringsArray, ...values: Array<unknown>) => {
-      let text = '';
-      const params: Array<unknown> = [];
+    sql: getSyntaxProxySQL({
+      callback: (statement) => queryHandler({ statement }, mergeOptions(options, {})),
+    }),
 
-      strings.forEach((string, i) => {
-        text += string;
+    sqlBatch: <T extends [Promise<any>, ...Array<Promise<any>>] | Array<Promise<any>>>(
+      operations: () => T,
+      queryOptions?: Record<string, unknown>,
+    ): Promise<PromiseTuple<T>> => {
+      const batchOperations = operations as unknown as () => Array<Statement>;
+      const statements = getBatchProxySQL(batchOperations);
+      const finalOptions = mergeOptions(options, queryOptions);
 
-        if (i < values.length) {
-          text += `$${i + 1}`;
-          params.push(values[i]);
-        }
-      });
-
-      const statement = {
-        statement: text,
-        params,
-      };
-
-      return queryHandler({ statement }, mergeOptions(options, {}));
+      return queriesHandler({ statements }, finalOptions) as Promise<PromiseTuple<T>>;
     },
   };
 };
@@ -172,5 +173,6 @@ export const batch = factory.batch as <
 ) => Promise<PromiseTuple<T>>;
 
 export const sql = factory.sql;
+export const sqlBatch = factory.sqlBatch;
 
 export default createSyntaxFactory;
