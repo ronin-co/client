@@ -1,12 +1,12 @@
-import { runQueriesWithStorageAndHooks } from '@/src/queries';
+import { runQueries, runQueriesWithStorageAndHooks } from '@/src/queries';
 import type { QueryHandlerOptions } from '@/src/types/utils';
-import type { Query } from '@ronin/compiler';
+import type { Query, Statement } from '@ronin/compiler';
 
 /**
  * Executes an array of queries and handles their results. It is used to execute
  * multiple queries at once and return their results in a single promise.
  *
- * @param queries - An array of Query objects to be executed.
+ * @param queries - A list of RONIN queries or SQL statements to execute.
  * @param options - An optional object of options for the query execution.
  *
  * @returns A Promise that resolves with the query results.
@@ -22,8 +22,8 @@ import type { Query } from '@ronin/compiler';
  * The `RONIN_TOKEN` environment variable will be used (if available) to
  * authenticate requests if the `token` option is not provided.
  */
-export const queriesHandler = async (
-  queries: Array<Query>,
+export const queriesHandler = (
+  queries: Array<Query> | { statements: Array<Statement> },
   options: QueryHandlerOptions = {},
 ) => {
   if (!options.token && typeof process !== 'undefined') {
@@ -54,13 +54,17 @@ export const queriesHandler = async (
     throw new Error(message);
   }
 
+  if ('statements' in queries) {
+    return runQueries({ statements: queries.statements }, options);
+  }
+
   return runQueriesWithStorageAndHooks(queries, options);
 };
 
 /**
  * Executes a query and returns the result.
  *
- * @param query - A Query object to be executed.
+ * @param query - A RONIN query or SQL statement to execute.
  * @param options - An optional object of options for the query execution.
  *
  * @returns A Promise that resolves with the query result.
@@ -73,7 +77,12 @@ export const queriesHandler = async (
  * );
  * ```
  */
-export const queryHandler = async (query: Query, options: QueryHandlerOptions) => {
-  const results = await queriesHandler([query], options);
+export const queryHandler = async (
+  query: Query | { statement: Statement },
+  options: QueryHandlerOptions,
+) => {
+  const input = 'statement' in query ? { statements: [query.statement] } : [query];
+  const results = await queriesHandler(input, options);
+
   return results[0];
 };

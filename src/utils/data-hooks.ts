@@ -344,7 +344,7 @@ const invokeHooks = async (
  * @returns The results of the queries that were passed.
  */
 export const runQueriesWithHooks = async <T>(
-  queries: Query[],
+  queries: Array<Query>,
   options: QueryHandlerOptions = {},
 ): Promise<Results<T>> => {
   const { hooks, waitUntil, asyncContext } = options;

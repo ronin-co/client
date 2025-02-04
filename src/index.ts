@@ -87,6 +87,8 @@ export const createSyntaxFactory = (
     operations: () => T,
     queryOptions?: Record<string, unknown>,
   ) => Promise<PromiseTuple<T>>;
+
+  sql: (strings: TemplateStringsArray, ...values: Array<unknown>) => unknown;
 } => {
   const callback = (query: Query, queryOptions?: QueryHandlerOptions) =>
     queryHandler(query, mergeOptions(options, queryOptions));
@@ -122,6 +124,13 @@ export const createSyntaxFactory = (
       const finalOptions = mergeOptions(options, queryOptions);
 
       return queriesHandler(queries, finalOptions) as Promise<PromiseTuple<T>>;
+    },
+
+    sql: (strings: TemplateStringsArray, ...values: Array<unknown>) => {
+      console.log('STRING:', strings);
+      console.log('VALUES:', values);
+
+      return 'test';
     },
   };
 };
