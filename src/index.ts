@@ -91,7 +91,7 @@ export const createSyntaxFactory = (
     queryOptions?: Record<string, unknown>,
   ) => Promise<PromiseTuple<T>>;
 
-  sql: (strings: TemplateStringsArray, ...values: Array<unknown>) => unknown;
+  sql: (strings: TemplateStringsArray, ...values: Array<unknown>) => Promise<any>;
   sqlBatch: <T extends [Promise<any>, ...Array<Promise<any>>] | Array<Promise<any>>>(
     operations: () => T,
     queryOptions?: Record<string, unknown>,
@@ -173,5 +173,6 @@ export const batch = factory.batch as <
 ) => Promise<PromiseTuple<T>>;
 
 export const sql = factory.sql;
+export const sqlBatch = factory.sqlBatch;
 
 export default createSyntaxFactory;
