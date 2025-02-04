@@ -17,10 +17,11 @@ test('run SQL statements', async () => {
     token: 'takashitoken',
   });
 
-  await factory.sql`SELECT * FROM accounts`;
+  const accountHandle = 'elaine';
+  await factory.sql`SELECT * FROM accounts WHERE handle = ${accountHandle} AND active = true AND name = ${'dsaads'}`;
 
   expect(mockFetchNew).toHaveBeenCalledTimes(1);
   expect(await mockRequestResolvedValue?.text()).toEqual(
-    '{"queries":[{"count":{"spaces":{"with":{"membersCount":{"greaterThan":10}}}}}]}',
+    '{"nativeQueries":[{"query":"SELECT * FROM accounts WHERE handle = $1 AND active = true AND name = $2","values":["elaine","dsaads"]}]}',
   );
 });

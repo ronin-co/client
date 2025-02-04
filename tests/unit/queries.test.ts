@@ -26,7 +26,7 @@ describe('queries handler', () => {
 
     import.meta.env.RONIN_TOKEN = undefined;
 
-    expect(queriesHandler([], {})).rejects.toThrow(
+    expect(queriesHandler.bind([], {})).toThrow(
       'Please specify the `RONIN_TOKEN` environment variable or set the `token` option when invoking RONIN.',
     );
 
@@ -155,7 +155,8 @@ describe('queries handler', () => {
   });
 
   test('enable verbose logging', async () => {
-    const logSpy = spyOn(console, 'log').mockImplementation(() => {});
+    const currentConsoleLog = console.log;
+    const logSpy = spyOn(console, 'log').mockImplementation(currentConsoleLog);
 
     await queriesHandler([]);
 

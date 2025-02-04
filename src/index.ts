@@ -127,10 +127,24 @@ export const createSyntaxFactory = (
     },
 
     sql: (strings: TemplateStringsArray, ...values: Array<unknown>) => {
-      console.log('STRING:', strings);
-      console.log('VALUES:', values);
+      let text = '';
+      const params: Array<unknown> = [];
 
-      return 'test';
+      strings.forEach((string, i) => {
+        text += string;
+
+        if (i < values.length) {
+          text += `$${i + 1}`;
+          params.push(values[i]);
+        }
+      });
+
+      const statement = {
+        statement: text,
+        params,
+      };
+
+      return queryHandler({ statement }, mergeOptions(options, {}));
     },
   };
 };
