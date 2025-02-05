@@ -1,5 +1,9 @@
 import { runQueries } from '@/src/queries';
-import type { QueryHandlerOptions, RecursivePartial, Results } from '@/src/types/utils';
+import type {
+  FormattedResults,
+  QueryHandlerOptions,
+  RecursivePartial,
+} from '@/src/types/utils';
 import { WRITE_QUERY_TYPES } from '@/src/utils/constants';
 import { toDashCase } from '@/src/utils/helpers';
 import type {
@@ -7,6 +11,7 @@ import type {
   Query,
   QuerySchemaType,
   QueryType,
+  ResultRecord,
 } from '@ronin/compiler';
 
 const EMPTY = Symbol('empty');
@@ -343,10 +348,10 @@ const invokeHooks = async (
  *
  * @returns The results of the queries that were passed.
  */
-export const runQueriesWithHooks = async <T>(
+export const runQueriesWithHooks = async <T extends ResultRecord>(
   queries: Array<Query>,
   options: QueryHandlerOptions = {},
-): Promise<Results<T>> => {
+): Promise<FormattedResults<T>> => {
   const { hooks, waitUntil, asyncContext } = options;
 
   // If no hooks were provided, we can just run the queries and return
@@ -453,7 +458,7 @@ export const runQueriesWithHooks = async <T>(
   // If no queries are remaining, that means all the queries were handled by
   // "during" hooks above, so there are none remaining to send for execution.
   if (queriesWithoutResults.length === 0)
-    return queryList.map(({ result }) => result) as Results<T>;
+    return queryList.map(({ result }) => result) as FormattedResults<T>;
 
   const resultsFromDatabase = await runQueries<T>(
     queriesWithoutResults.map(({ definition }) => definition),
@@ -518,5 +523,5 @@ export const runQueriesWithHooks = async <T>(
   // results of the queries.
   return queryList
     .filter((query) => typeof query.diffForIndex === 'undefined')
-    .map(({ result }) => result) as Results<T>;
+    .map(({ result }) => result) as FormattedResults<T>;
 };

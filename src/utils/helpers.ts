@@ -1,4 +1,5 @@
 import type { QueryHandlerOptions } from '@/src/types/utils';
+import type { ResultRecord } from '@ronin/compiler';
 import { getProperty, setProperty } from '@ronin/syntax/queries';
 
 /**
@@ -34,7 +35,10 @@ export const toDashCase = (string?: string | null): string => {
  * @param record - A record to format the Date fields of.
  * @param dateFields - An array of property keys for the date fields.
  */
-export const formatDateFields = (record: object, dateFields: Array<string>) => {
+export const formatDateFields = <T extends ResultRecord>(
+  record: T,
+  dateFields: Array<string>,
+) => {
   for (const field of dateFields) {
     const value = getProperty(record, field);
     if (typeof value === 'undefined' || value === null) continue;

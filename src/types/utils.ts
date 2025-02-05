@@ -2,7 +2,7 @@ import type { AsyncLocalStorage } from 'node:async_hooks';
 
 import type { Hooks } from '@/src/utils/data-hooks';
 
-import type { Model } from '@ronin/compiler';
+import type { Model, Result, ResultRecord } from '@ronin/compiler';
 
 export interface QueryHandlerOptions {
   /**
@@ -62,36 +62,19 @@ export type PromiseTuple<
   [P in keyof T]: Awaited<T[P]>;
 };
 
-type QueryPaginationOptions = {
-  moreBefore?: (string | null) | undefined;
-  moreAfter?: (string | null) | undefined;
+export type QueryResponse<T> = {
+  results: Array<Result<T>>;
+  error?: any;
 };
 
-/**
- * Utility type that merges extra properties `R` into each element of array-type
- * properties in a type `T`; non-array properties are left unchanged.
- */
-type BindToArray<T, R> = {
-  [K in keyof T]: T[K] extends Array<infer U> ? Array<U> & R : T[K];
-};
+export type RegularFormattedResult<T> =
+  | number
+  | (T & ResultRecord)
+  | (Array<T & ResultRecord> & { moreBefore?: string; moreAfter?: string })
+  | null;
 
-/**
- * Utility type used to type the results of a query.
- *
- * It unwraps the promised type if `T` is an array of Promises, adds `moreBefore?`
- * and `moreAfter?` fields to an array's items if `T` is an array. Otherwise it
- * wraps non-array and non-Promise types in an array.
- */
-export type Results<T> = T extends never | Array<never>
-  ? T
-  : T extends []
-    ? []
-    : T extends [infer First, ...infer Rest]
-      ? Rest extends unknown
-        ? First extends Promise<infer U>
-          ? [U]
-          : BindToArray<[First, ...Rest], QueryPaginationOptions>
-        : Array<First>
-      : T extends Promise<infer U>
-        ? [U]
-        : [T];
+export type ExpandedFormattedResult<T> = Record<Model['slug'], RegularFormattedResult<T>>;
+
+type FormattedResult<T> = RegularFormattedResult<T> | ExpandedFormattedResult<T>;
+
+export type FormattedResults<T> = Array<FormattedResult<T>>;

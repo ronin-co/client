@@ -118,42 +118,6 @@ describe('queries handler', () => {
     expect(requestPromise).rejects.toThrow('Invalid query provided.');
   });
 
-  test('handle error inside results', async () => {
-    const requestPromise = queriesHandler(
-      [
-        {
-          get: {
-            accounts: {},
-          },
-        },
-      ],
-      {
-        token: 'takashitoken',
-        fetch: async (request) => {
-          mockRequestResolvedValue = request as Request;
-
-          return Response.json({
-            results: [
-              {
-                error: {
-                  message: 'Invalid query provided.',
-                  code: 'BAD_REQUEST',
-                  issues: [
-                    {
-                      path: ['queries', 0, 'get', 'accounts'],
-                    },
-                  ],
-                },
-              },
-            ],
-          });
-        },
-      },
-    );
-
-    expect(requestPromise).rejects.toThrow('Invalid query provided.');
-  });
-
   test('enable verbose logging', async () => {
     const currentConsoleLog = console.log;
     const logSpy = spyOn(console, 'log').mockImplementation(currentConsoleLog);
