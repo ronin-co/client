@@ -73,7 +73,7 @@
   "license": "Apache-2.0",
   "dependencies": {
     "@ronin/cli": "0.2.32",
-    "@ronin/compiler": "0.16.1",
+    "@ronin/compiler": "0.16.2",
     "@ronin/syntax": "0.2.16"
   },
   "devDependencies": {
