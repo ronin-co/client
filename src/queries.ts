@@ -172,6 +172,13 @@ export const runQueriesWithStorageAndHooks = async <T extends ResultRecord>(
   return runQueriesWithHooks<T>(queriesPopulatedWithReferences, options);
 };
 
+/**
+ * Formats the result objects provided by the query compiler.
+ *
+ * @param result - The result to format, as received from the query compiler.
+ *
+ * @returns The formatted result, for use in a JavaScript environment.
+ */
 const formatResult = <T extends ResultRecord>(
   result: RegularResult<T>,
 ): RegularFormattedResult<T> => {
