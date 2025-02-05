@@ -618,4 +618,78 @@ describe('factory', () => {
     expect(accounts[0].createdAt.toISOString()).toBe('2024-04-16T15:02:12.710Z');
     expect(accounts[0].ronin.updatedAt.toISOString()).toBe('2024-05-16T15:02:12.710Z');
   });
+
+  test('format expanded results', async () => {
+    const mockFetchNew = mock(async (request) => {
+      mockRequestResolvedValue = request;
+
+      return Response.json({
+        results: [
+          {
+            models: {
+              accounts: {
+                records: [
+                  {
+                    name: 'Elaine',
+                    ronin: {
+                      createdAt: '2024-04-16T15:02:12.710Z',
+                      updatedAt: '2024-05-16T15:02:12.710Z',
+                    },
+                  },
+                ],
+                modelFields: {
+                  name: 'string',
+                  'ronin.createdAt': 'date',
+                  'ronin.updatedAt': 'date',
+                },
+              },
+              teams: {
+                records: [
+                  {
+                    name: 'Engineering',
+                    ronin: {
+                      createdAt: '2024-04-16T15:02:12.710Z',
+                      updatedAt: '2024-05-16T15:02:12.710Z',
+                    },
+                  },
+                ],
+                modelFields: {
+                  name: 'string',
+                  'ronin.createdAt': 'date',
+                  'ronin.updatedAt': 'date',
+                },
+              },
+            },
+          },
+        ],
+      });
+    });
+
+    const factory = createSyntaxFactory({
+      fetch: async (request) => mockFetchNew(request),
+    });
+
+    const results = await factory.get.all();
+
+    expect(results).toMatchObject({
+      accounts: [
+        {
+          name: 'Elaine',
+          ronin: {
+            createdAt: new Date('2024-04-16T15:02:12.710Z'),
+            updatedAt: new Date('2024-04-16T15:02:12.710Z'),
+          },
+        },
+      ],
+      teams: [
+        {
+          name: 'Engineering',
+          ronin: {
+            createdAt: new Date('2024-04-16T15:02:12.710Z'),
+            updatedAt: new Date('2024-04-16T15:02:12.710Z'),
+          },
+        },
+      ],
+    });
+  });
 });

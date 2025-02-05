@@ -1,44 +1,23 @@
 import { processStorableObjects, uploadStorableObjects } from '@/src/storage';
-import type { QueryHandlerOptions, Results } from '@/src/types/utils';
+import type {
+  ExpandedFormattedResult,
+  FormattedResults,
+  QueryHandlerOptions,
+  QueryResponse,
+  RegularFormattedResult,
+} from '@/src/types/utils';
 import { WRITE_QUERY_TYPES } from '@/src/utils/constants';
 import { runQueriesWithHooks } from '@/src/utils/data-hooks';
-import {
-  InvalidQueryError,
-  getDotNotatedPath,
-  getResponseBody,
-} from '@/src/utils/errors';
+import { getResponseBody } from '@/src/utils/errors';
 import { formatDateFields } from '@/src/utils/helpers';
 import {
   type Model,
-  type ModelField,
   type Query,
+  type RegularResult,
+  type ResultRecord,
   type Statement,
   Transaction,
 } from '@ronin/compiler';
-import { getProperty } from '@ronin/syntax/queries';
-
-type QueryResponse<T> = {
-  results: Array<Result<T>>;
-  error?: any;
-};
-
-type Result<T> =
-  | {
-      record: T | any;
-      modelFields: Record<string, ModelField['type'] | undefined>;
-    }
-  | {
-      records: Array<T | any> & { moreBefore?: string; moreAfter?: string };
-      moreBefore?: string;
-      moreAfter?: string;
-      modelFields: Record<string, ModelField['type'] | undefined>;
-    }
-  | {
-      amount: number;
-    }
-  | {
-      error?: any;
-    };
 
 /**
  * Run a set of given queries.
@@ -49,10 +28,10 @@ type Result<T> =
  *
  * @returns Promise resolving the queried data.
  */
-export const runQueries = async <T>(
+export const runQueries = async <T extends ResultRecord>(
   queries: Array<Query> | { statements: Array<Statement> },
   options: QueryHandlerOptions = {},
-): Promise<Results<T>> => {
+): Promise<FormattedResults<T>> => {
   let hasWriteQuery: boolean | null = null;
 
   const requestBody: {
@@ -129,98 +108,24 @@ export const runQueries = async <T>(
   }
 
   const startFormatting = performance.now();
+  const formattedResults: FormattedResults<T> = [];
 
-  for (let index = 0; index < results.length; index++) {
-    const result = results[index];
+  for (const result of results) {
+    // If a `models` property is present in the result, that means the result combines
+    // the results of multiple different queries.
+    if ('models' in result) {
+      formattedResults.push(
+        Object.fromEntries(
+          Object.entries(result.models).map(([model, result]) => {
+            return [model, formatResult(result)];
+          }),
+        ) as ExpandedFormattedResult<T>,
+      );
 
-    if ('error' in result && result.error) {
-      const message =
-        result.error.code === 'BAD_REQUEST'
-          ? 'Invalid query provided.'
-          : result.error.message;
-
-      // Get a dot-notated path to the field that caused the error.
-      const path = result.error.issues?.[0]?.path
-        ? getDotNotatedPath(result.error.issues[0].path)
-        : null;
-
-      // If a path is given, try resolving the query that caused the error.
-      const query =
-        path && typeof result.error.issues[0].path[1] === 'number'
-          ? requestBody?.queries?.[result.error.issues[0].path[1]]
-          : null;
-
-      // Get the last part of the instruction that is invalid.
-      const instruction =
-        query && path ? getProperty(query, path.replace(/queries\[\d+\]\./, '')) : null;
-
-      // Get potential details about the error. These contain instructions how
-      // the issue might be resolved.
-      const details = result.error.issues?.[0] ? result.error.issues[0].message : null;
-
-      throw new InvalidQueryError({
-        message,
-        query:
-          query && path
-            ? `${path.replace(/queries\[\d+\]\./, '')} = ${JSON.stringify(instruction)}`
-            : null,
-        path: path,
-        details,
-        code: result.error.code || null,
-        fields: result.error.fields || null,
-      });
-    }
-
-    // Handle `count` query result.
-    if (
-      'amount' in result &&
-      typeof result.amount !== 'undefined' &&
-      result.amount !== null
-    ) {
-      results[index] = Number(result.amount) as unknown as Result<T>;
       continue;
     }
 
-    const dateFields =
-      'modelFields' in result
-        ? Object.entries(result.modelFields)
-            .filter(([, type]) => type === 'date')
-            .map(([slug]) => slug)
-        : [];
-
-    // Handle single record result.
-    if ('record' in result) {
-      // This happens if no matching record was found for a singular query,
-      // such as `get.account.with.handle('leo')`.
-      if (result.record === null) {
-        results[index] = null as unknown as QueryResponse<T>['results'][number];
-        continue;
-      }
-
-      formatDateFields(result.record, dateFields);
-
-      results[index] = result.record;
-      continue;
-    }
-
-    // Handle result with multiple records.
-    if ('records' in result) {
-      for (const record of result.records) {
-        formatDateFields(record, dateFields);
-      }
-
-      // Expose the pagination cursors in order to allow for retrieving the
-      // previous or next page.
-      //
-      // This value is already available on `result`, but since we're only
-      // returning `result.records`, we want it to be set on that array.
-      if (typeof result.moreBefore !== 'undefined')
-        result.records.moreBefore = result.moreBefore;
-      if (typeof result.moreAfter !== 'undefined')
-        result.records.moreAfter = result.moreAfter;
-
-      results[index] = result.records as unknown as Result<T>;
-    }
+    formattedResults.push(formatResult(result));
   }
 
   const endFormatting = performance.now();
@@ -236,7 +141,7 @@ export const runQueries = async <T>(
     console.log(`Formatting took ${endFormatting - startFormatting}ms`);
   }
 
-  return results as Results<T>;
+  return formattedResults;
 };
 
 /**
@@ -247,10 +152,10 @@ export const runQueries = async <T>(
  *
  * @returns The results of the queries that were passed.
  */
-export const runQueriesWithStorageAndHooks = async <T>(
+export const runQueriesWithStorageAndHooks = async <T extends ResultRecord>(
   queries: Array<Query>,
   options: QueryHandlerOptions = {},
-): Promise<Results<T>> => {
+): Promise<FormattedResults<T>> => {
   // Extract and process `StorableObject`s, if any are present.
   // `queriesPopulatedWithReferences` are the given `queries`, just that any
   // `StorableObject` they might contain has been processed and the value of the
@@ -265,4 +170,61 @@ export const runQueriesWithStorageAndHooks = async <T>(
   );
 
   return runQueriesWithHooks<T>(queriesPopulatedWithReferences, options);
+};
+
+const formatResult = <T extends ResultRecord>(
+  result: RegularResult<T>,
+): RegularFormattedResult<T> => {
+  // Handle `count` query result.
+  if (
+    'amount' in result &&
+    typeof result.amount !== 'undefined' &&
+    result.amount !== null
+  ) {
+    return Number(result.amount);
+  }
+
+  const dateFields =
+    'modelFields' in result
+      ? Object.entries(result.modelFields)
+          .filter(([, type]) => type === 'date')
+          .map(([slug]) => slug)
+      : [];
+
+  // Handle single record result.
+  if ('record' in result) {
+    // This happens if no matching record was found for a singular query,
+    // such as `get.account.with.handle('leo')`.
+    if (result.record === null) return null;
+
+    formatDateFields(result.record, dateFields);
+
+    return result.record;
+  }
+
+  // Handle result with multiple records.
+  if ('records' in result) {
+    for (const record of result.records) {
+      formatDateFields(record, dateFields);
+    }
+
+    const formattedRecords = result.records as Array<T & ResultRecord> & {
+      moreBefore?: string;
+      moreAfter?: string;
+    };
+
+    // Expose the pagination cursors in order to allow for retrieving the
+    // previous or next page.
+    //
+    // This value is already available on `result`, but since we're only
+    // returning `result.records`, we want it to be set on that array.
+    if (typeof result.moreBefore !== 'undefined')
+      formattedRecords.moreBefore = result.moreBefore;
+    if (typeof result.moreAfter !== 'undefined')
+      formattedRecords.moreAfter = result.moreAfter;
+
+    return formattedRecords;
+  }
+
+  return result as unknown as RegularFormattedResult<T>;
 };

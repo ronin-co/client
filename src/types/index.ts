@@ -66,7 +66,7 @@ export type {
   StoredObject,
 } from '@ronin/compiler';
 
-export type { Results } from '@/src/types/utils';
+export type { FormattedResults } from '@/src/types/utils';
 
 // Storage
 export type { StorableObjectValue } from '@/src/types/storage';
