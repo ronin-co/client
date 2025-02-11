@@ -5,7 +5,7 @@
       "name": "ronin",
       "dependencies": {
         "@ronin/cli": "0.2.36",
-        "@ronin/compiler": "0.16.2",
+        "@ronin/compiler": "0.16.4",
         "@ronin/syntax": "0.2.17",
       },
       "devDependencies": {
@@ -173,7 +173,7 @@
 
     "@ronin/cli": ["@ronin/cli@0.2.36", "", { "dependencies": { "@dprint/formatter": "0.4.1", "@dprint/typescript": "0.93.3", "@iarna/toml": "2.2.5", "@inquirer/prompts": "7.2.3", "@ronin/engine": "0.0.27", "chalk-template": "1.1.0", "get-port": "7.1.0", "ini": "5.0.0", "json5": "2.2.3", "open": "10.1.0", "ora": "8.1.1", "resolve-from": "5.0.0" } }, "sha512-U7aCN2S7GQiO/ef8RSxRLdRX13xJxoCEEyEEwwR4R4csZXsuUR1GEK97SA9nOHYVJi+9JA3gQm76y2d80q3Wfw=="],
 
-    "@ronin/compiler": ["@ronin/compiler@0.16.2", "", {}, "sha512-2j862j2FZCb3JkoH7XgvthywK1VwVGCCjOqgWKJanyjOfdfg37NTgiFhdKiA2C5DqICTkf7C7JJgw50gj8BB3Q=="],
+    "@ronin/compiler": ["@ronin/compiler@0.16.4", "", {}, "sha512-eCWc1wi4tC3KWvT5rTlKjJvw5YQ5qdQ9+Sz1ysYZDLDFiMBD5+/wCg2s5wZEABD/Tm1rk0cJCwni4C2yMahHug=="],
 
     "@ronin/engine": ["@ronin/engine@0.0.27", "", { "dependencies": { "zod": "3.23.8" } }, "sha512-ArUFnfNH6pVZb3nQStDNZ2p2m4j9QXQTxPM+BrCB6mMYShXrEv9Ke4DiJb+js0IuVhydWWYyA1sql4Nf0IWY5Q=="],
 
