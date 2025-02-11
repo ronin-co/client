@@ -153,7 +153,6 @@ describe('queries handler', () => {
             records: [
               {
                 id: 'acc_39h8fhe98hefah8j',
-                'ronin.locked': null,
                 'ronin.createdAt': '2021-09-29T14:00:00.000Z',
                 'ronin.createdBy': null,
                 'ronin.updatedAt': '2021-09-29T14:00:00.000Z',
@@ -208,7 +207,6 @@ describe('queries handler', () => {
         id: 'acc_39h8fhe98hefah8j',
         handle: 'markus',
         ronin: {
-          locked: false,
           createdAt: expect.any(Date),
           createdBy: null,
           updatedAt: expect.any(Date),
