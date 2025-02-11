@@ -4,7 +4,7 @@
     "": {
       "name": "ronin",
       "dependencies": {
-        "@ronin/cli": "0.2.35",
+        "@ronin/cli": "0.2.36",
         "@ronin/compiler": "0.16.2",
         "@ronin/syntax": "0.2.17",
       },
@@ -34,6 +34,10 @@
     "@biomejs/cli-win32-arm64": ["@biomejs/cli-win32-arm64@1.9.4", "", { "os": "win32", "cpu": "arm64" }, "sha512-tlbhLk+WXZmgwoIKwHIHEBZUwxml7bRJgk0X2sPyNR3S93cdRq6XulAZRQJ17FYGGzWne0fgrXBKpl7l4M87Hg=="],
 
     "@biomejs/cli-win32-x64": ["@biomejs/cli-win32-x64@1.9.4", "", { "os": "win32", "cpu": "x64" }, "sha512-8Y5wMhVIPaWe6jw2H+KlEm4wP/f7EW3810ZLmDlrEEy5KvBsb9ECEfu/kMWD484ijfQ8+nIi0giMgu9g1UAuuA=="],
+
+    "@dprint/formatter": ["@dprint/formatter@0.4.1", "", {}, "sha512-IB/GXdlMOvi0UhQQ9mcY15Fxcrc2JPadmo6tqefCNV0bptFq7YBpggzpqYXldBXDa04CbKJ+rDwO2eNRPE2+/g=="],
+
+    "@dprint/typescript": ["@dprint/typescript@0.93.3", "", {}, "sha512-P/AAHYDyUG+5hih8knuk3s9n2wrCD1LSh0YsLlJMx6+v0Wsjf0PpcVRn+xDvHCtwPUctB5WBkZT2U8mu6Cm7RQ=="],
 
     "@esbuild/aix-ppc64": ["@esbuild/aix-ppc64@0.24.2", "", { "os": "aix", "cpu": "ppc64" }, "sha512-thpVCb/rhxE/BnMLQ7GReQLLN8q9qbHmI55F4489/ByVg2aQaQ6kbcLb6FHkocZzQhxc4gx0sCk0tJkKBFzDhA=="],
 
@@ -167,7 +171,7 @@
 
     "@rollup/rollup-win32-x64-msvc": ["@rollup/rollup-win32-x64-msvc@4.34.6", "", { "os": "win32", "cpu": "x64" }, "sha512-0PVwmgzZ8+TZ9oGBmdZoQVXflbvuwzN/HRclujpl4N/q3i+y0lqLw8n1bXA8ru3sApDjlmONaNAuYr38y1Kr9w=="],
 
-    "@ronin/cli": ["@ronin/cli@0.2.35", "", { "dependencies": { "@iarna/toml": "2.2.5", "@inquirer/prompts": "7.2.3", "@ronin/engine": "0.0.27", "chalk-template": "1.1.0", "get-port": "7.1.0", "ini": "5.0.0", "json5": "2.2.3", "open": "10.1.0", "ora": "8.1.1", "prettier": "3.4.2", "resolve-from": "5.0.0" } }, "sha512-9+zJ0DOwsLSEptrOxSkX0rIi/W6cjhLV1P3kZfocxMRvptMB9+Y4bLkPgpvV+ErRbQrzoI9mHpqQSubAmktLXQ=="],
+    "@ronin/cli": ["@ronin/cli@0.2.36", "", { "dependencies": { "@dprint/formatter": "0.4.1", "@dprint/typescript": "0.93.3", "@iarna/toml": "2.2.5", "@inquirer/prompts": "7.2.3", "@ronin/engine": "0.0.27", "chalk-template": "1.1.0", "get-port": "7.1.0", "ini": "5.0.0", "json5": "2.2.3", "open": "10.1.0", "ora": "8.1.1", "resolve-from": "5.0.0" } }, "sha512-U7aCN2S7GQiO/ef8RSxRLdRX13xJxoCEEyEEwwR4R4csZXsuUR1GEK97SA9nOHYVJi+9JA3gQm76y2d80q3Wfw=="],
 
     "@ronin/compiler": ["@ronin/compiler@0.16.2", "", {}, "sha512-2j862j2FZCb3JkoH7XgvthywK1VwVGCCjOqgWKJanyjOfdfg37NTgiFhdKiA2C5DqICTkf7C7JJgw50gj8BB3Q=="],
 
@@ -326,8 +330,6 @@
     "pirates": ["pirates@4.0.6", "", {}, "sha512-saLsH7WeYYPiD25LDuLRRY/i+6HaPYr6G1OUlN39otzkSTxKnubR9RTxS3/Kk50s1g2JTgFwWQDQyplC5/SHZg=="],
 
     "postcss-load-config": ["postcss-load-config@6.0.1", "", { "dependencies": { "lilconfig": "^3.1.1" }, "peerDependencies": { "jiti": ">=1.21.0", "postcss": ">=8.0.9", "tsx": "^4.8.1", "yaml": "^2.4.2" }, "optionalPeers": ["jiti", "postcss", "tsx", "yaml"] }, "sha512-oPtTM4oerL+UXmx+93ytZVN82RrlY/wPUV8IeDxFrzIjXOLF1pN+EmKPLbubvKHT2HC20xXsCAH2Z+CKV6Oz/g=="],
-
-    "prettier": ["prettier@3.4.2", "", { "bin": { "prettier": "bin/prettier.cjs" } }, "sha512-e9MewbtFo+Fevyuxn/4rrcDAaq0IYxPGLvObpQjiZBMAzB9IGmzlnG9RZy3FFas+eBMu2vA0CszMeduow5dIuQ=="],
 
     "punycode": ["punycode@2.3.1", "", {}, "sha512-vYt7UD1U9Wg6138shLtLOvdAu+8DsC/ilFtEVHcH+wydcSpNE20AfSOduf6MkRFahL5FY7X1oU7nKVZFtfq8Fg=="],
 
