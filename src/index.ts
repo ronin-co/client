@@ -98,8 +98,12 @@ export const createSyntaxFactory = (
     queryOptions?: Record<string, unknown>,
   ) => Promise<PromiseTuple<T>>;
 } => {
-  const callback = (query: Query, queryOptions?: QueryHandlerOptions) =>
-    queryHandler(query, mergeOptions(options, queryOptions));
+  const callback = (
+    query: Record<typeof QUERY_SYMBOLS.QUERY, Query>,
+    queryOptions?: QueryHandlerOptions,
+  ) => {
+    return queryHandler(query[QUERY_SYMBOLS.QUERY], mergeOptions(options, queryOptions));
+  };
 
   const replacer = (value: unknown) => {
     return isStorableObject(value) ? value : JSON.parse(JSON.stringify(value));
