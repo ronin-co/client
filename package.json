@@ -1,6 +1,6 @@
 {
   "name": "ronin",
-  "version": "6.2.5",
+  "version": "6.2.6",
   "type": "module",
   "description": "Access your RONIN database via TypeScript.",
   "main": "./dist/index.js",
@@ -72,8 +72,8 @@
     "node": ">=18.17.0"
   },
   "dependencies": {
-    "@ronin/cli": "0.2.36",
-    "@ronin/compiler": "0.16.4",
+    "@ronin/cli": "0.2.37",
+    "@ronin/compiler": "0.17.0",
     "@ronin/syntax": "0.2.17"
   },
   "devDependencies": {
