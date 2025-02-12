@@ -98,10 +98,8 @@ export const createSyntaxFactory = (
     queryOptions?: Record<string, unknown>,
   ) => Promise<PromiseTuple<T>>;
 } => {
-  const callback = (
-    query: Record<typeof QUERY_SYMBOLS.QUERY, Query>,
-    queryOptions?: QueryHandlerOptions,
-  ) => {
+  const callback = (defaultQuery: Query, queryOptions?: QueryHandlerOptions) => {
+    const query = defaultQuery as Record<typeof QUERY_SYMBOLS.QUERY, Query>;
     return queryHandler(query[QUERY_SYMBOLS.QUERY], mergeOptions(options, queryOptions));
   };
 
