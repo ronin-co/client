@@ -85,7 +85,7 @@ type HookList<TSchema = unknown> = {
     : K extends 'after' | `after${string}`
       ? AfterHookHandler<QueryType, TSchema>
       : DuringHookHandler<QueryType, TSchema>;
-};
+} & { blockingAfter?: boolean };
 
 export type Hooks<TSchema = unknown> = Record<string, HookList<TSchema>>;
 
@@ -477,7 +477,7 @@ export const runQueriesWithHooks = async <T extends ResultRecord>(
   // `afterAlter`, and `afterDrop`.
   for (let index = 0; index < queryList.length; index++) {
     const query = queryList[index];
-    const queryType = Object.keys(query.definition)[0];
+    const queryType = Object.keys(query.definition)[0] as QueryType;
 
     // "after" hooks should only fire for writes — not reads.
     if (!WRITE_QUERY_TYPES.includes(queryType)) continue;
@@ -503,12 +503,19 @@ export const runQueriesWithHooks = async <T extends ResultRecord>(
       hookCallerOptions,
     );
 
+    const queryInstructions = query.definition[queryType] as QuerySchemaType;
+    const { schema: querySchema } = getSchema(queryInstructions);
+    const hooksForSchema = hooks[querySchema];
+    const isBlocking = hooksForSchema?.blockingAfter;
+
     // The result of the hook should not be made available, otherwise
     // developers might start relying on it. Only errors should be propagated.
     const clearPromise = promise.then(
       () => {},
       (error) => Promise.reject(error),
     );
+
+    if (isBlocking) await clearPromise;
 
     // If the configuration option for extending the lifetime of the edge
     // worker invocation was passed, provide it with the resulting promise of
