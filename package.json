@@ -47,14 +47,14 @@
     }
   },
   "scripts": {
-    "dev": "tsup --watch",
-    "build": "tsup",
-    "test": "bun test",
     "lint": "bun run --bun lint:tsc && bun run --bun lint:biome",
     "lint:biome": "biome check",
     "lint:tsc": "tsc --pretty",
-    "prepare": "bun run build",
-    "format": "biome format --write"
+    "format": "biome format --write",
+    "test": "bun test",
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "prepare": "bun run build"
   },
   "keywords": [
     "ronin",
