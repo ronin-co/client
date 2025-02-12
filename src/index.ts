@@ -2,21 +2,22 @@ import { isStorableObject } from '@/src/storage';
 import type { PromiseTuple, QueryHandlerOptions } from '@/src/types/utils';
 import { queriesHandler, queryHandler } from '@/src/utils/handlers';
 import { mergeOptions } from '@/src/utils/helpers';
-import type {
-  AddQuery,
-  AlterQuery,
-  CountQuery,
-  CreateQuery,
-  DropQuery,
-  GetQuery,
-  ModelField,
-  ModelIndex,
-  ModelPreset,
-  ModelTrigger,
-  Query,
-  RemoveQuery,
-  SetQuery,
-  Statement,
+import {
+  type AddQuery,
+  type AlterQuery,
+  type CountQuery,
+  type CreateQuery,
+  type DropQuery,
+  type GetQuery,
+  type ModelField,
+  type ModelIndex,
+  type ModelPreset,
+  type ModelTrigger,
+  QUERY_SYMBOLS,
+  type Query,
+  type RemoveQuery,
+  type SetQuery,
+  type Statement,
 } from '@ronin/compiler';
 import {
   type DeepCallable,
@@ -106,20 +107,47 @@ export const createSyntaxFactory = (
 
   return {
     // Query types for interacting with records.
-    get: getSyntaxProxy({ rootProperty: 'get', callback, replacer }),
-    set: getSyntaxProxy({ rootProperty: 'set', callback, replacer }),
-    add: getSyntaxProxy({ rootProperty: 'add', callback, replacer }),
-    remove: getSyntaxProxy({ rootProperty: 'remove', callback, replacer }),
-    count: getSyntaxProxy({ rootProperty: 'count', callback, replacer }),
-
-    // Query types for interacting with the database schema.
-    create: getSyntaxProxy({
-      rootProperty: 'create',
+    get: getSyntaxProxy<GetQuery>({
+      root: `${QUERY_SYMBOLS.QUERY}.get`,
       callback,
       replacer,
-    }) as DeepCallable<CreateQuery, Model>,
-    alter: getSyntaxProxy({ rootProperty: 'alter', callback, replacer }),
-    drop: getSyntaxProxy({ rootProperty: 'drop', callback, replacer }),
+    }),
+    set: getSyntaxProxy<SetQuery>({
+      root: `${QUERY_SYMBOLS.QUERY}.set`,
+      callback,
+      replacer,
+    }),
+    add: getSyntaxProxy<AddQuery>({
+      root: `${QUERY_SYMBOLS.QUERY}.add`,
+      callback,
+      replacer,
+    }),
+    remove: getSyntaxProxy<RemoveQuery>({
+      root: `${QUERY_SYMBOLS.QUERY}.remove`,
+      callback,
+      replacer,
+    }),
+    count: getSyntaxProxy<CountQuery, number>({
+      root: `${QUERY_SYMBOLS.QUERY}.count`,
+      callback,
+      replacer,
+    }),
+
+    // Query types for interacting with the database schema.
+    create: getSyntaxProxy<CreateQuery, Model>({
+      root: `${QUERY_SYMBOLS.QUERY}.create`,
+      callback,
+      replacer,
+    }),
+    alter: getSyntaxProxy<
+      AlterQuery,
+      Model | ModelField | ModelIndex | ModelTrigger | ModelPreset
+    >({ root: `${QUERY_SYMBOLS.QUERY}.alter`, callback, replacer }),
+    drop: getSyntaxProxy<DropQuery, Model>({
+      root: `${QUERY_SYMBOLS.QUERY}.drop`,
+      callback,
+      replacer,
+    }),
 
     // Function for executing a transaction containing multiple queries.
     batch: <T extends [Promise<any>, ...Array<Promise<any>>] | Array<Promise<any>>>(
