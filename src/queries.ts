@@ -60,7 +60,7 @@ export const runQueries = async <T extends ResultRecord>(
         ? options.models
         : (Object.values(options.models) as unknown as Array<Model>);
 
-      transaction = new Transaction(queries, { models });
+      transaction = new Transaction(queries, { models, inlineParams: true });
 
       requestBody.nativeQueries = transaction.statements.map((statement) => ({
         query: statement.statement,
