@@ -240,12 +240,11 @@ describe('queries handler', () => {
     const models: Array<Model> = [
       {
         slug: 'account',
-        fields: [
-          {
-            slug: 'handle',
+        fields: {
+          handle: {
             type: 'string',
           },
-        ],
+        },
       },
     ];
 
