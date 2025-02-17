@@ -46,7 +46,7 @@ describe('edge runtime', () => {
         asyncContext: new AsyncLocalStorage(),
       });
 
-      await factory.add.account({ to: { handle: 'leo' } });
+      await factory.add.account({ with: { handle: 'leo' } });
     } catch (err) {
       error = err as Error;
     }
