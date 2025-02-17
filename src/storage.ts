@@ -33,8 +33,8 @@ export const extractStorableObjects = (queries: Array<Query>): Array<StorableObj
         ...references,
         ...Object.entries(query).reduce(
           (references, [queryType, query]) => {
-            // Abort if the `queryType` is not one of `set`, `add`, or `create`.
-            if (!['set', 'add', 'create'].includes(queryType)) return references;
+            // Abort if the `queryType` is not one of `set` or `add`.
+            if (!['set', 'add'].includes(queryType)) return references;
 
             return [
               // biome-ignore lint/performance/noAccumulatingSpread: This code is too complex to refactor.
@@ -43,7 +43,7 @@ export const extractStorableObjects = (queries: Array<Query>): Array<StorableObj
                 (references, [schema, instructions]) => {
                   // Access the query instructions according to the query type.
                   const fields = (instructions as SetInstructions)[
-                    queryType === 'set' || queryType === 'add' ? 'to' : 'with'
+                    queryType === 'set' ? 'to' : 'with'
                   ];
 
                   return [
@@ -165,9 +165,9 @@ export const processStorableObjects = async (
       const reference = storedObjects[index];
 
       // @ts-expect-error It is guaranteed that these keys exist.
-      queries[query.index][query.type][schema][
-        query.type === 'set' || query.type === 'add' ? 'to' : 'with'
-      ][field] = reference;
+      queries[query.index][query.type][schema][query.type === 'set' ? 'to' : 'with'][
+        field
+      ] = reference;
     }
   }
 
