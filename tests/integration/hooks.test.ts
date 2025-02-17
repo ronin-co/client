@@ -556,7 +556,7 @@ describe('hooks', () => {
 
             hookInvoked = true;
 
-            await add.account.to({
+            await add.account.with({
               handle: 'not-juri',
             });
 
@@ -567,7 +567,7 @@ describe('hooks', () => {
       asyncContext: new AsyncLocalStorage(),
     });
 
-    const result = await add.account.to({
+    const result = await add.account.with({
       handle: 'juri',
     });
 
@@ -587,7 +587,7 @@ test('invoke `ronin` with `hooks` defined, but no `asyncContext` defined', async
       },
     });
 
-    await factory.add.account({ to: { handle: 'leo' } });
+    await factory.add.account({ with: { handle: 'leo' } });
   } catch (err) {
     error = err as Error;
   }
