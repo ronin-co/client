@@ -6,7 +6,7 @@
       "dependencies": {
         "@ronin/cli": "0.2.37",
         "@ronin/compiler": "0.17.3",
-        "@ronin/syntax": "0.2.25",
+        "@ronin/syntax": "0.2.26",
       },
       "devDependencies": {
         "@biomejs/biome": "1.9.4",
@@ -177,7 +177,7 @@
 
     "@ronin/engine": ["@ronin/engine@0.0.27", "", { "dependencies": { "zod": "3.23.8" } }, "sha512-ArUFnfNH6pVZb3nQStDNZ2p2m4j9QXQTxPM+BrCB6mMYShXrEv9Ke4DiJb+js0IuVhydWWYyA1sql4Nf0IWY5Q=="],
 
-    "@ronin/syntax": ["@ronin/syntax@0.2.25", "", {}, "sha512-lN+uqOKFn0JrfrgoAmbdiXctENIjkfxZE1GM9hTsN2bXgJXuX6pF6U6OtToMVhe1Vh1kgwj/qzgJLt7grzWHog=="],
+    "@ronin/syntax": ["@ronin/syntax@0.2.26", "", {}, "sha512-ZvfyTSrL2oVM/UloFPvwKr8w0g88vAncFeD1TbE/JI6+Fq8K3FvzGCJIc1KB6RodnKXnEAW8u83LzicgP8Q9UQ=="],
 
     "@types/bun": ["@types/bun@1.2.2", "", { "dependencies": { "bun-types": "1.2.2" } }, "sha512-tr74gdku+AEDN5ergNiBnplr7hpDp3V1h7fqI2GcR/rsUaM39jpSeKH0TFibRvU0KwniRx5POgaYnaXbk0hU+w=="],
 
