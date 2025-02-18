@@ -103,9 +103,8 @@ export const createSyntaxFactory = (
     return queryHandler(query[QUERY_SYMBOLS.QUERY], mergeOptions(options, queryOptions));
   };
 
-  const replacer = (value: unknown) => {
-    return isStorableObject(value) ? value : JSON.parse(JSON.stringify(value));
-  };
+  // Ensure that storable objects are retained as-is instead of being serialized.
+  const replacer = (value: unknown) => (isStorableObject(value) ? value : undefined);
 
   return {
     // Query types for interacting with records.
