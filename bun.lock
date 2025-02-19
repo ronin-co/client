@@ -5,8 +5,8 @@
       "name": "ronin",
       "dependencies": {
         "@ronin/cli": "0.2.37",
-        "@ronin/compiler": "0.17.3",
-        "@ronin/syntax": "0.2.27",
+        "@ronin/compiler": "0.17.5",
+        "@ronin/syntax": "0.2.28",
       },
       "devDependencies": {
         "@biomejs/biome": "1.9.4",
@@ -173,11 +173,11 @@
 
     "@ronin/cli": ["@ronin/cli@0.2.37", "", { "dependencies": { "@dprint/formatter": "0.4.1", "@dprint/typescript": "0.93.3", "@iarna/toml": "2.2.5", "@inquirer/prompts": "7.2.3", "@ronin/engine": "0.0.27", "chalk-template": "1.1.0", "get-port": "7.1.0", "ini": "5.0.0", "json5": "2.2.3", "open": "10.1.0", "ora": "8.1.1", "resolve-from": "5.0.0" } }, "sha512-kBLpbywHT+z32z4xIlEjT8rLrjOBkLUQO/yVeLJkWXPwf/CdKARX156J/qtALascw6eukk/dJAasrnhS2Qcsww=="],
 
-    "@ronin/compiler": ["@ronin/compiler@0.17.3", "", {}, "sha512-9IdYPi/odBAi32WW5oF2z6TFJc1KAJWeokaG3pOox5Um9zsctpilCC+2Texv/yCL3oOR8ecG9uwmWn5wKTtbjA=="],
+    "@ronin/compiler": ["@ronin/compiler@0.17.5", "", {}, "sha512-dTweRRh3sux/usORZZiziCMzADwSXAJhCDkuvTi496Jxxv+Qsvn1LFwjmsq3iR6N338yUXpjQWf8/3BQr3eipw=="],
 
     "@ronin/engine": ["@ronin/engine@0.0.27", "", { "dependencies": { "zod": "3.23.8" } }, "sha512-ArUFnfNH6pVZb3nQStDNZ2p2m4j9QXQTxPM+BrCB6mMYShXrEv9Ke4DiJb+js0IuVhydWWYyA1sql4Nf0IWY5Q=="],
 
-    "@ronin/syntax": ["@ronin/syntax@0.2.27", "", {}, "sha512-4v+GzS6xTr8C0u30j3v6XQHBxzeIdk00zQymS1QYK+8IShMHocXTEYvaEGAF1QED2F2jswmQjaopnpkeKWfxig=="],
+    "@ronin/syntax": ["@ronin/syntax@0.2.28", "", {}, "sha512-wF7vm+QOdnjJRZIn4uj3Z8n3yc39eTPorzQOqEQVm0RmLeHe5B8SE3bXDZzopmaBf1ff5rQvVbFyLzu3+Qig6A=="],
 
     "@types/bun": ["@types/bun@1.2.2", "", { "dependencies": { "bun-types": "1.2.2" } }, "sha512-tr74gdku+AEDN5ergNiBnplr7hpDp3V1h7fqI2GcR/rsUaM39jpSeKH0TFibRvU0KwniRx5POgaYnaXbk0hU+w=="],
 
