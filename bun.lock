@@ -5,12 +5,12 @@
       "name": "ronin",
       "dependencies": {
         "@ronin/cli": "0.2.39",
-        "@ronin/compiler": "0.17.7",
-        "@ronin/syntax": "0.2.30",
+        "@ronin/compiler": "0.17.9",
+        "@ronin/syntax": "0.2.31",
       },
       "devDependencies": {
         "@biomejs/biome": "1.9.4",
-        "@types/bun": "1.2.2",
+        "@types/bun": "1.2.3",
         "tsup": "8.3.6",
         "typescript": "5.7.3",
       },
@@ -173,17 +173,17 @@
 
     "@ronin/cli": ["@ronin/cli@0.2.39", "", { "dependencies": { "@dprint/formatter": "0.4.1", "@dprint/typescript": "0.93.3", "@iarna/toml": "2.2.5", "@inquirer/prompts": "7.2.3", "@ronin/engine": "0.0.27", "chalk-template": "1.1.0", "get-port": "7.1.0", "ini": "5.0.0", "json5": "2.2.3", "open": "10.1.0", "ora": "8.1.1", "resolve-from": "5.0.0" } }, "sha512-r3yEBOCuVyTXOPouJKC/LWLByXE73TJo5bSFsYIDN04lKxBvCjrzGAfFJ8tMVdEeeBxz4slhoQkbWIxmysWuIQ=="],
 
-    "@ronin/compiler": ["@ronin/compiler@0.17.7", "", {}, "sha512-r4Jykn1YzGRCZglO8cxtmT8BnUH90vB5Cr8bjG5DcQNp5djImhe+ClXlzMAz89G3oZ6F2WGaSyOB5FAeiFPIsQ=="],
+    "@ronin/compiler": ["@ronin/compiler@0.17.9", "", {}, "sha512-g19E0fEHK/QelBZAlGG54cgP5apPLpMQyk2mgYzQBQyUhBhb0Ijf+tkgbquVRnRddC39mO8+w2ISt2ibeK7RSw=="],
 
     "@ronin/engine": ["@ronin/engine@0.0.27", "", { "dependencies": { "zod": "3.23.8" } }, "sha512-ArUFnfNH6pVZb3nQStDNZ2p2m4j9QXQTxPM+BrCB6mMYShXrEv9Ke4DiJb+js0IuVhydWWYyA1sql4Nf0IWY5Q=="],
 
-    "@ronin/syntax": ["@ronin/syntax@0.2.30", "", {}, "sha512-bWddS4r6Zj/H3IZ71j5BvG2LKESDEBEx4fJbNKwQegkhHqqL304mFobdF3hoHNhY2LDDkXPKMQFS6C6xEIdmDg=="],
+    "@ronin/syntax": ["@ronin/syntax@0.2.31", "", {}, "sha512-C5OiziUeqiCmAxq8GgjOht1G0QOC1CtzDNzZ4bFdpCYc89mw6dbnz6wgi7BScHltUmgR5b/O8WB6e8gtNEs5FQ=="],
 
-    "@types/bun": ["@types/bun@1.2.2", "", { "dependencies": { "bun-types": "1.2.2" } }, "sha512-tr74gdku+AEDN5ergNiBnplr7hpDp3V1h7fqI2GcR/rsUaM39jpSeKH0TFibRvU0KwniRx5POgaYnaXbk0hU+w=="],
+    "@types/bun": ["@types/bun@1.2.3", "", { "dependencies": { "bun-types": "1.2.3" } }, "sha512-054h79ipETRfjtsCW9qJK8Ipof67Pw9bodFWmkfkaUaRiIQ1dIV2VTlheshlBx3mpKr0KeK8VqnMMCtgN9rQtw=="],
 
     "@types/estree": ["@types/estree@1.0.6", "", {}, "sha512-AYnb1nQyY49te+VRAVgmzfcgjYS91mY5P0TKUDCLEM+gNnA+3T6rWITXRLYCpahpqSQbN5cE+gHpnPyXjHWxcw=="],
 
-    "@types/node": ["@types/node@22.13.4", "", { "dependencies": { "undici-types": "~6.20.0" } }, "sha512-ywP2X0DYtX3y08eFVx5fNIw7/uIv8hYUKgXoK8oayJlLnKcRfEYCxWMVE1XagUdVtCJlZT1AU4LXEABW+L1Peg=="],
+    "@types/node": ["@types/node@22.13.5", "", { "dependencies": { "undici-types": "~6.20.0" } }, "sha512-+lTU0PxZXn0Dr1NBtC7Y8cR21AJr87dLLU953CWA6pMxxv/UDc7jYAY90upcrie1nRcD6XNG5HOYEDtgW5TxAg=="],
 
     "@types/ws": ["@types/ws@8.5.14", "", { "dependencies": { "@types/node": "*" } }, "sha512-bd/YFLW+URhBzMXurx7lWByOu+xzU9+kb3RboOteXYDfW+tr+JZa99OyNmPINEGB/ahzKrEuc8rcv4gnpJmxTw=="],
 
@@ -199,7 +199,7 @@
 
     "brace-expansion": ["brace-expansion@2.0.1", "", { "dependencies": { "balanced-match": "^1.0.0" } }, "sha512-XnAIvQ8eM+kC6aULx6wuQiwVsnzsi9d3WxzV3FpWTGA19F621kwdbsAcFKXgKUHZWsy+mY6iL1sHTxWEFCytDA=="],
 
-    "bun-types": ["bun-types@1.2.2", "", { "dependencies": { "@types/node": "*", "@types/ws": "~8.5.10" } }, "sha512-RCbMH5elr9gjgDGDhkTTugA21XtJAy/9jkKe/G3WR2q17VPGhcquf9Sir6uay9iW+7P/BV0CAHA1XlHXMAVKHg=="],
+    "bun-types": ["bun-types@1.2.3", "", { "dependencies": { "@types/node": "*", "@types/ws": "~8.5.10" } }, "sha512-P7AeyTseLKAvgaZqQrvp3RqFM3yN9PlcLuSTe7SoJOfZkER73mLdT2vEQi8U64S1YvM/ldcNiQjn0Sn7H9lGgg=="],
 
     "bundle-name": ["bundle-name@4.1.0", "", { "dependencies": { "run-applescript": "^7.0.0" } }, "sha512-tjwM5exMg6BGRI+kNmTntNsvdZS1X8BFYS6tnJ2hdH0kVxM6/eVZ2xy+FqStSWvYmtfFMDLIxurorHwDKfDz5Q=="],
 

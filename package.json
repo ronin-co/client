@@ -73,12 +73,12 @@
   },
   "dependencies": {
     "@ronin/cli": "0.2.39",
-    "@ronin/compiler": "0.17.7",
-    "@ronin/syntax": "0.2.30"
+    "@ronin/compiler": "0.17.9",
+    "@ronin/syntax": "0.2.31"
   },
   "devDependencies": {
     "@biomejs/biome": "1.9.4",
-    "@types/bun": "1.2.2",
+    "@types/bun": "1.2.3",
     "tsup": "8.3.6",
     "typescript": "5.7.3"
   }
