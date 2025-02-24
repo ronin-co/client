@@ -5,7 +5,7 @@
       "name": "ronin",
       "dependencies": {
         "@ronin/cli": "0.2.39",
-        "@ronin/compiler": "0.17.9",
+        "@ronin/compiler": "0.17.10",
         "@ronin/syntax": "0.2.31",
       },
       "devDependencies": {
@@ -173,7 +173,7 @@
 
     "@ronin/cli": ["@ronin/cli@0.2.39", "", { "dependencies": { "@dprint/formatter": "0.4.1", "@dprint/typescript": "0.93.3", "@iarna/toml": "2.2.5", "@inquirer/prompts": "7.2.3", "@ronin/engine": "0.0.27", "chalk-template": "1.1.0", "get-port": "7.1.0", "ini": "5.0.0", "json5": "2.2.3", "open": "10.1.0", "ora": "8.1.1", "resolve-from": "5.0.0" } }, "sha512-r3yEBOCuVyTXOPouJKC/LWLByXE73TJo5bSFsYIDN04lKxBvCjrzGAfFJ8tMVdEeeBxz4slhoQkbWIxmysWuIQ=="],
 
-    "@ronin/compiler": ["@ronin/compiler@0.17.9", "", {}, "sha512-g19E0fEHK/QelBZAlGG54cgP5apPLpMQyk2mgYzQBQyUhBhb0Ijf+tkgbquVRnRddC39mO8+w2ISt2ibeK7RSw=="],
+    "@ronin/compiler": ["@ronin/compiler@0.17.10", "", {}, "sha512-pHqYU+k6sQiPRaYqVwfGMTP7rLMsq3fVOCo0nX2Tpk63DdtlrOdnxsvjauu2ooOmWhMcp4Wu7UCafWkxXqtNyg=="],
 
     "@ronin/engine": ["@ronin/engine@0.0.27", "", { "dependencies": { "zod": "3.23.8" } }, "sha512-ArUFnfNH6pVZb3nQStDNZ2p2m4j9QXQTxPM+BrCB6mMYShXrEv9Ke4DiJb+js0IuVhydWWYyA1sql4Nf0IWY5Q=="],
 
@@ -249,7 +249,7 @@
 
     "fdir": ["fdir@6.4.3", "", { "peerDependencies": { "picomatch": "^3 || ^4" }, "optionalPeers": ["picomatch"] }, "sha512-PMXmW2y1hDDfTSRc9gaXIuCCRpuoz3Kaz8cUelp3smouvfT632ozg2vrT6lJsHKKOF59YLbOGfAWGUcKEfRMQw=="],
 
-    "foreground-child": ["foreground-child@3.3.0", "", { "dependencies": { "cross-spawn": "^7.0.0", "signal-exit": "^4.0.1" } }, "sha512-Ld2g8rrAyMYFXBhEqMz8ZAHBi4J4uS1i/CxGMDnjyFWddMXLVcDp051DZfu+t7+ab7Wv6SMqpWmyFIj5UbfFvg=="],
+    "foreground-child": ["foreground-child@3.3.1", "", { "dependencies": { "cross-spawn": "^7.0.6", "signal-exit": "^4.0.1" } }, "sha512-gIXjKqtFuWEgzFRJA9WCQeSJLZDjgJUOMCMzxtvFq/37KojM1BFGufqsCy0r4qSQmYLsZYMeyRqzIWOMup03sw=="],
 
     "fsevents": ["fsevents@2.3.3", "", { "os": "darwin" }, "sha512-5xoDfX+fL7faATnagmWPpbFtwh/R77WmMMqqHGS65C3vvB0YHrgF+B1YmZ3441tMj5n63k0212XNoJwzlhffQw=="],
 
