@@ -72,7 +72,7 @@
     "node": ">=18.17.0"
   },
   "dependencies": {
-    "@ronin/cli": "0.2.39",
+    "@ronin/cli": "0.2.40",
     "@ronin/compiler": "0.17.12",
     "@ronin/syntax": "0.2.32"
   },
