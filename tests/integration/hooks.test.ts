@@ -82,7 +82,6 @@ describe('hooks', () => {
       asyncContext: new AsyncLocalStorage(),
     });
 
-    // @ts-expect-error `handle` is undefined due not not having the schema types.
     await get.account.with.handle('juri');
     // Make sure `leo` is resolved as the account handle.
     expect(mockResolvedRequestText).toEqual(
@@ -121,7 +120,6 @@ describe('hooks', () => {
       asyncContext: new AsyncLocalStorage(),
     }));
 
-    // @ts-expect-error `handle` is undefined due not not having the schema types.
     await get.account.with.handle('juri');
     // Make sure `leo` is resolved as the account handle.
     expect(mockResolvedRequestText).toEqual(
@@ -161,7 +159,6 @@ describe('hooks', () => {
       asyncContext: new AsyncLocalStorage(),
     });
 
-    // @ts-expect-error `id` is undefined due not not having the schema types.
     const schema = await get.schema.with.id('1');
     // Make sure a single schema is resolved.
     expect(schema.id).toBe('1');
@@ -170,7 +167,6 @@ describe('hooks', () => {
     // Make sure multiple schemas are resolved.
     expect(schemas.length).toBe(2);
 
-    // @ts-expect-error `handle` is undefined due not not having the schema types.
     await get.account.with.handle('juri');
     expect(mockResolvedRequestText).toEqual(
       '{"queries":[{"get":{"account":{"with":{"handle":"juri"}}}}]}',

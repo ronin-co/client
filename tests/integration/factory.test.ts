@@ -157,7 +157,6 @@ describe('factory', () => {
       }),
       get.members.limitedTo(100),
       get.spaces.orderedBy.descending(['handle']),
-      // @ts-expect-error `id` is undefined due not not having the schema types.
       get.member.with.id('123'),
     ]) as Parameters<typeof batch>[0]);
 
