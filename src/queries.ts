@@ -10,7 +10,7 @@ import { runQueriesWithHooks } from '@/src/utils/data-hooks';
 import { getResponseBody } from '@/src/utils/errors';
 import { formatDateFields } from '@/src/utils/helpers';
 import {
-  DML_WRITE_QUERY_TYPES,
+  DML_QUERY_TYPES_WRITE,
   type Model,
   type Query,
   type RegularResult,
@@ -48,7 +48,7 @@ export const runQueries = async <T extends ResultRecord>(
     }));
   } else {
     hasWriteQuery = queries.some((query) =>
-      (DML_WRITE_QUERY_TYPES as ReadonlyArray<string>).includes(Object.keys(query)[0]),
+      (DML_QUERY_TYPES_WRITE as ReadonlyArray<string>).includes(Object.keys(query)[0]),
     );
 
     if (options.models) {

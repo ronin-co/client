@@ -7,7 +7,8 @@ import type {
 import { toDashCase } from '@/src/utils/helpers';
 import {
   type CombinedInstructions,
-  DML_WRITE_QUERY_TYPES,
+  DML_QUERY_TYPES_WRITE,
+  QUERY_TYPES,
   type Query,
   type QuerySchemaType,
   type QueryType,
@@ -272,14 +273,7 @@ const invokeHooks = async (
   const parentHook = asyncContext.getStore();
   const shouldSkip =
     hooksForSchema &&
-    (hooksForSchema.get ||
-      hooksForSchema.count ||
-      hooksForSchema.add ||
-      hooksForSchema.set ||
-      hooksForSchema.remove ||
-      hooksForSchema.create ||
-      hooksForSchema.alter ||
-      hooksForSchema.drop) &&
+    QUERY_TYPES.some((type) => type in hooksForSchema) &&
     parentHook &&
     querySchema !== parentHook.querySchema
       ? false
@@ -480,7 +474,7 @@ export const runQueriesWithHooks = async <T extends ResultRecord>(
     const queryType = Object.keys(query.definition)[0] as QueryType;
 
     // "after" hooks should only fire for writes — not reads.
-    if (!(DML_WRITE_QUERY_TYPES as ReadonlyArray<string>).includes(queryType)) continue;
+    if (!(DML_QUERY_TYPES_WRITE as ReadonlyArray<string>).includes(queryType)) continue;
 
     const diffMatch = queryList.find((item) => item.diffForIndex === index);
 
