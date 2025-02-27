@@ -45,14 +45,17 @@ describe('hooks', () => {
       return {};
     });
 
-    await runQueriesWithHooks([query], {
-      hooks: {
-        account: {
-          get: mockHook as any,
+    await runQueriesWithHooks(
+      { default: [query] },
+      {
+        hooks: {
+          account: {
+            get: mockHook as any,
+          },
         },
+        asyncContext: new AsyncLocalStorage(),
       },
-      asyncContext: new AsyncLocalStorage(),
-    });
+    );
 
     expect(mockHook).toHaveBeenCalled();
     expect(query.get.accounts.with).not.toHaveProperty('handle');

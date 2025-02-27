@@ -37,9 +37,6 @@ export interface QueryHandlerOptions {
    * option is required.
    */
   asyncContext?: AsyncLocalStorage<any>;
-
-  /** A list of models defined during development. */
-  models?: Record<string, Record<string, unknown>> | Array<Model>;
 }
 
 /**

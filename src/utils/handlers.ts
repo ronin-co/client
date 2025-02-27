@@ -55,7 +55,7 @@ export const queriesHandler = (
   }
 
   if ('statements' in queries) {
-    return runQueries({ statements: queries.statements }, options);
+    return runQueries({ default: { statements: queries.statements } }, options);
   }
 
   return runQueriesWithStorageAndHooks(queries, options);

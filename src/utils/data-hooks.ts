@@ -359,14 +359,15 @@ const invokeHooks = async (
  * @returns The results of the queries that were passed.
  */
 export const runQueriesWithHooks = async <T extends ResultRecord>(
-  queries: Array<Query>,
+  queries: Record<string, Array<Query>>,
   options: QueryHandlerOptions = {},
 ): Promise<FormattedResults<T>> => {
   const { hooks, waitUntil, asyncContext } = options;
+  const defaultQueries = queries.default;
 
-  // If no hooks were provided, we can just run the queries and return
-  // the results.
-  if (!hooks) return runQueries<T>(queries, options);
+  // If no hooks or default queries (the queries for which the hooks should be run) were
+  // provided, we can just run all the queries and return the results.
+  if (!(hooks && defaultQueries)) return runQueries<T>(queries, options);
 
   if (typeof process === 'undefined' && !waitUntil) {
     let message = 'In the case that the "ronin" package receives a value for';
@@ -399,7 +400,7 @@ export const runQueriesWithHooks = async <T extends ResultRecord>(
     definition: Query;
     result: unknown;
     diffForIndex?: number;
-  }> = queries.flatMap((query, index) => {
+  }> = defaultQueries.flatMap((query, index) => {
     const details = { definition: query, result: EMPTY };
 
     // If data hooks are enabled, we want to send a separate `get` query for
@@ -471,7 +472,7 @@ export const runQueriesWithHooks = async <T extends ResultRecord>(
     return queryList.map(({ result }) => result) as FormattedResults<T>;
 
   const resultsFromDatabase = await runQueries<T>(
-    queriesWithoutResults.map(({ definition }) => definition),
+    { default: queriesWithoutResults.map(({ definition }) => definition) },
     options,
   );
 
