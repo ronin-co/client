@@ -4,14 +4,14 @@ import type {
   QueryHandlerOptions,
   RecursivePartial,
 } from '@/src/types/utils';
-import { WRITE_QUERY_TYPES } from '@/src/utils/constants';
 import { toDashCase } from '@/src/utils/helpers';
-import type {
-  CombinedInstructions,
-  Query,
-  QuerySchemaType,
-  QueryType,
-  ResultRecord,
+import {
+  type CombinedInstructions,
+  DML_WRITE_QUERY_TYPES,
+  type Query,
+  type QuerySchemaType,
+  type QueryType,
+  type ResultRecord,
 } from '@ronin/compiler';
 
 const EMPTY = Symbol('empty');
@@ -480,7 +480,7 @@ export const runQueriesWithHooks = async <T extends ResultRecord>(
     const queryType = Object.keys(query.definition)[0] as QueryType;
 
     // "after" hooks should only fire for writes — not reads.
-    if (!WRITE_QUERY_TYPES.includes(queryType)) continue;
+    if (!(DML_WRITE_QUERY_TYPES as ReadonlyArray<string>).includes(queryType)) continue;
 
     const diffMatch = queryList.find((item) => item.diffForIndex === index);
 
