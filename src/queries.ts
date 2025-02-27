@@ -48,7 +48,7 @@ export const runQueries = async <T extends ResultRecord>(
     }));
   } else {
     hasWriteQuery = queries.some((query) =>
-      WRITE_QUERY_TYPES.includes(Object.keys(query)[0]),
+      (WRITE_QUERY_TYPES as ReadonlyArray<string>).includes(Object.keys(query)[0]),
     );
 
     if (options.models) {
