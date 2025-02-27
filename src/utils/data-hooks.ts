@@ -315,11 +315,11 @@ const invokeHooks = async (
     // If the hook returned a query, we want to replace the original query with
     // the one returned by the hook.
     if (hookType === 'before') {
-      const result = hookResult as Query | CombinedInstructions;
+      const result = hookResult as null | Query | CombinedInstructions;
       let newQuery: Query = query.definition;
 
       // If a full query was returned by the "before" hook, use the query as-is.
-      if (QUERY_TYPES.some((type) => type in result)) {
+      if (result && QUERY_TYPES.some((type) => type in result)) {
         newQuery = result as Query;
       }
       // In the majority of cases, however, only the query instructions are returned, in
