@@ -4,6 +4,7 @@ import type {
   QueryHandlerOptions,
   RecursivePartial,
 } from '@/src/types/utils';
+import { WRITE_QUERY_TYPES } from '@/src/utils/constants';
 import { toDashCase } from '@/src/utils/helpers';
 import {
   type CombinedInstructions,
@@ -474,7 +475,7 @@ export const runQueriesWithHooks = async <T extends ResultRecord>(
     const queryType = Object.keys(query.definition)[0] as QueryType;
 
     // "after" hooks should only fire for writes — not reads.
-    if (!(DML_QUERY_TYPES_WRITE as ReadonlyArray<string>).includes(queryType)) continue;
+    if (!WRITE_QUERY_TYPES.includes(queryType)) continue;
 
     const diffMatch = queryList.find((item) => item.diffForIndex === index);
 

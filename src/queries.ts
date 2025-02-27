@@ -6,6 +6,7 @@ import type {
   QueryResponse,
   RegularFormattedResult,
 } from '@/src/types/utils';
+import { WRITE_QUERY_TYPES } from '@/src/utils/constants';
 import { runQueriesWithHooks } from '@/src/utils/data-hooks';
 import { getResponseBody } from '@/src/utils/errors';
 import { formatDateFields } from '@/src/utils/helpers';
@@ -48,7 +49,7 @@ export const runQueries = async <T extends ResultRecord>(
     }));
   } else {
     hasWriteQuery = queries.some((query) =>
-      (DML_QUERY_TYPES_WRITE as ReadonlyArray<string>).includes(Object.keys(query)[0]),
+      WRITE_QUERY_TYPES.includes(Object.keys(query)[0]),
     );
 
     if (options.models) {
