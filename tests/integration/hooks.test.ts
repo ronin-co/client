@@ -114,10 +114,10 @@ describe('hooks', () => {
     });
 
     // @ts-expect-error `handle` is undefined due not not having the schema types.
-    await get.account.with.handle('juri');
+    await get.account.with.handle('elaine');
 
     expect(mockResolvedRequestText).toEqual(
-      JSON.stringify({ queries: [{ get: { team: { with: { handle: 'leo' } } } }] }),
+      JSON.stringify({ queries: [{ get: { team: { with: { handle: 'elaine' } } } }] }),
     );
   });
 
