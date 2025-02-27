@@ -112,7 +112,6 @@ describe('hooks', () => {
       asyncContext: new AsyncLocalStorage(),
     });
 
-    // @ts-expect-error `handle` is undefined due not not having the schema types.
     await get.account.with.handle('elaine');
 
     expect(mockResolvedRequestText).toEqual(
