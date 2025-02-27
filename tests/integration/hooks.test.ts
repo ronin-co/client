@@ -97,6 +97,30 @@ describe('hooks', () => {
     );
   });
 
+  test('return full query from `before` data hook', async () => {
+    const { get } = createSyntaxFactory({
+      hooks: {
+        account: {
+          beforeGet(query) {
+            return {
+              get: {
+                team: query,
+              },
+            };
+          },
+        },
+      },
+      asyncContext: new AsyncLocalStorage(),
+    });
+
+    // @ts-expect-error `handle` is undefined due not not having the schema types.
+    await get.account.with.handle('juri');
+
+    expect(mockResolvedRequestText).toEqual(
+      JSON.stringify({ queries: [{ get: { team: { with: { handle: 'leo' } } } }] }),
+    );
+  });
+
   test('run `get` query through factory with dynamically generated config', async () => {
     const { get } = createSyntaxFactory(() => ({
       hooks: {
