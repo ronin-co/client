@@ -22,7 +22,7 @@ import type { Query, Statement } from '@ronin/compiler';
  * The `RONIN_TOKEN` environment variable will be used (if available) to
  * authenticate requests if the `token` option is not provided.
  */
-export const queriesHandler = (
+export const queriesHandler = async (
   queries: Array<Query> | { statements: Array<Statement> },
   options: QueryHandlerOptions = {},
 ) => {
@@ -55,7 +55,11 @@ export const queriesHandler = (
   }
 
   if ('statements' in queries) {
-    return runQueries({ statements: queries.statements }, options);
+    const results = await runQueries(
+      queries.statements.map((statement) => ({ statement })),
+      options,
+    );
+    return results.map(({ result }) => result);
   }
 
   return runQueriesWithStorageAndHooks(queries, options);

@@ -10,14 +10,28 @@ import { WRITE_QUERY_TYPES } from '@/src/utils/constants';
 import { runQueriesWithHooks } from '@/src/utils/data-hooks';
 import { getResponseBody } from '@/src/utils/errors';
 import { formatDateFields } from '@/src/utils/helpers';
-import {
-  type Model,
-  type Query,
-  type RegularResult,
-  type ResultRecord,
-  type Statement,
-  Transaction,
+import type {
+  Query,
+  RegularResult,
+  Result,
+  ResultRecord,
+  Statement,
 } from '@ronin/compiler';
+
+interface RequestPayload {
+  queries?: Array<Query>;
+  nativeQueries?: Array<{ query: string; values: Array<unknown> }>;
+}
+
+type RequestBody = RequestPayload | Record<string, RequestPayload>;
+
+export type QueriesPerDatabase = Array<{ query: Query; database?: string }>;
+type StatementsPerDatabase = Array<{ statement: Statement; database?: string }>;
+
+export type ResultsPerDatabase<T> = Array<{
+  result: FormattedResults<T>[number];
+  database?: string;
+}>;
 
 /**
  * Run a set of given queries.
@@ -29,52 +43,54 @@ import {
  * @returns Promise resolving the queried data.
  */
 export const runQueries = async <T extends ResultRecord>(
-  queries: Array<Query> | { statements: Array<Statement> },
+  queries: QueriesPerDatabase | StatementsPerDatabase,
   options: QueryHandlerOptions = {},
-): Promise<FormattedResults<T>> => {
+): Promise<ResultsPerDatabase<T>> => {
   let hasWriteQuery: boolean | null = null;
+  let hasSingleQuery = true;
 
-  const requestBody: {
-    queries?: Array<Query>;
-    nativeQueries?: Array<{ query: string; values: Array<unknown> }>;
-  } = {};
+  const operations = queries.reduce(
+    (acc, details) => {
+      const { database = 'default' } = details;
+      if (!acc[database]) acc[database] = {};
 
-  let transaction: InstanceType<typeof Transaction> | null = null;
+      // If a database is being selected that isn't the default database, that means a
+      // different format should be chosen for the request body.
+      if (database !== 'default') hasSingleQuery = false;
 
-  if ('statements' in queries) {
-    requestBody.nativeQueries = queries.statements.map((statement) => ({
-      query: statement.statement,
-      values: statement.params,
-    }));
-  } else {
-    hasWriteQuery = queries.some((query) =>
-      (WRITE_QUERY_TYPES as ReadonlyArray<string>).includes(Object.keys(query)[0]),
-    );
+      if ('query' in details) {
+        const { query } = details;
 
-    if (options.models) {
-      // If a list of models was provided to the client and the list is an array, we can
-      // pass it to the compiler directly. If it's an object instead, that means a list of
-      // models defined in code (in a dedicated TypeScript file) was provided, so we need
-      // to convert it to an array before passing it to the compiler.
-      const models = Array.isArray(options.models)
-        ? options.models
-        : (Object.values(options.models) as unknown as Array<Model>);
+        if (!acc[database].queries) acc[database].queries = [];
+        acc[database].queries.push(query);
 
-      transaction = new Transaction(queries, { models, inlineParams: true });
+        const queryType = Object.keys(query)[0];
+        hasWriteQuery =
+          hasWriteQuery ||
+          (WRITE_QUERY_TYPES as ReadonlyArray<string>).includes(queryType);
 
-      requestBody.nativeQueries = transaction.statements.map((statement) => ({
+        return acc;
+      }
+
+      const { statement } = details;
+      if (!acc[database].nativeQueries) acc[database].nativeQueries = [];
+
+      acc[database].nativeQueries.push({
         query: statement.statement,
         values: statement.params,
-      }));
-    } else {
-      requestBody.queries = queries;
-    }
-  }
+      });
+
+      return acc;
+    },
+    {} as Record<string, RequestPayload>,
+  );
+
+  const requestBody: RequestBody = hasSingleQuery ? operations.default : operations;
 
   // Runtimes like Cloudflare Workers don't support `cache` yet.
   const hasCachingSupport = 'cache' in new Request('https://ronin.co');
 
-  const request = new Request('https://data.ronin.co/?latest=true', {
+  const request = new Request('https://data.ronin.co', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -95,37 +111,19 @@ export const runQueries = async <T extends ResultRecord>(
 
   const responseResults = await getResponseBody<QueryResponse<T>>(response);
 
-  let results: QueryResponse<T>['results'] = [];
-
-  if (transaction) {
-    const rawResults = responseResults.results.map((result) => {
-      return 'records' in result ? result.records : [];
-    });
-
-    results = transaction.formatResults(rawResults, false);
-  } else {
-    results = responseResults.results;
-  }
-
   const startFormatting = performance.now();
-  const formattedResults: FormattedResults<T> = [];
+  const formattedResults: ResultsPerDatabase<T> = [];
 
-  for (const result of results) {
-    // If a `models` property is present in the result, that means the result combines
-    // the results of multiple different queries.
-    if ('models' in result) {
-      formattedResults.push(
-        Object.fromEntries(
-          Object.entries(result.models).map(([model, result]) => {
-            return [model, formatResult(result)];
-          }),
-        ) as ExpandedFormattedResult<T>,
-      );
+  if ('results' in responseResults) {
+    const usableResults = responseResults.results as Array<Result<T>>;
+    const finalResults = formatResults<T>(usableResults);
 
-      continue;
+    formattedResults.push(...finalResults.map((result) => ({ result })));
+  } else {
+    for (const [database, { results }] of Object.entries(responseResults)) {
+      const finalResults = formatResults<T>(results);
+      formattedResults.push(...finalResults.map((result) => ({ result, database })));
     }
-
-    formattedResults.push(formatResult(result));
   }
 
   const endFormatting = performance.now();
@@ -144,6 +142,16 @@ export const runQueries = async <T extends ResultRecord>(
   return formattedResults;
 };
 
+export async function runQueriesWithStorageAndHooks<T extends ResultRecord>(
+  queries: Array<Query>,
+  options: QueryHandlerOptions,
+): Promise<FormattedResults<T>>;
+
+export async function runQueriesWithStorageAndHooks<T extends ResultRecord>(
+  queries: Record<string, Array<Query>>,
+  options: QueryHandlerOptions,
+): Promise<Record<string, FormattedResults<T>>>;
+
 /**
  * Runs a list of `Query`s.
  *
@@ -152,25 +160,50 @@ export const runQueries = async <T extends ResultRecord>(
  *
  * @returns The results of the queries that were passed.
  */
-export const runQueriesWithStorageAndHooks = async <T extends ResultRecord>(
-  queries: Array<Query>,
+export async function runQueriesWithStorageAndHooks<T extends ResultRecord>(
+  queries: Array<Query> | Record<string, Array<Query>>,
   options: QueryHandlerOptions = {},
-): Promise<FormattedResults<T>> => {
-  // Extract and process `StorableObject`s, if any are present.
-  // `queriesPopulatedWithReferences` are the given `queries`, just that any
-  // `StorableObject` they might contain has been processed and the value of the
-  // field has been replaced with the reference to the `StoredObject`.
-  // This way, we only store the `reference` of the `StoredObject` inside the
-  // database for better performance.
-  const queriesPopulatedWithReferences = await processStorableObjects(
-    queries,
-    (objects) => {
-      return uploadStorableObjects(objects, options);
-    },
-  );
+): Promise<FormattedResults<T> | Record<string, FormattedResults<T>>> {
+  const singleDatabase = Array.isArray(queries);
+  const normalizedQueries = singleDatabase ? { default: queries } : queries;
 
-  return runQueriesWithHooks<T>(queriesPopulatedWithReferences, options);
-};
+  const queriesWithReferences = (
+    await Promise.all(
+      Object.entries(normalizedQueries).map(async ([database, queries]) => {
+        // Extract and process `StorableObject`s, if any are present.
+        // `queriesPopulatedWithReferences` are the given `queries`, just that any
+        // `StorableObject` they might contain has been processed and the value of the
+        // field has been replaced with the reference to the `StoredObject`.
+        // This way, we only store the `reference` of the `StoredObject` inside the
+        // database for better performance.
+        const populatedQueries = await processStorableObjects(queries, (objects) => {
+          return uploadStorableObjects(objects, options);
+        });
+
+        return populatedQueries.map((query) => ({
+          query,
+          database: database === 'default' ? undefined : database,
+        }));
+      }),
+    )
+  ).flat();
+
+  const results = await runQueriesWithHooks<T>(queriesWithReferences, options);
+
+  // If only a single database is being addressed, return the results of that database.
+  if (singleDatabase)
+    return results.filter(({ database }) => !database).map(({ result }) => result);
+
+  // If multiple databases are being addressed, return the results of all databases.
+  return results.reduce(
+    (acc, { result, database = 'default' }) => {
+      if (!acc[database]) acc[database] = [];
+      acc[database].push(result);
+      return acc;
+    },
+    {} as Record<string, FormattedResults<T>>,
+  );
+}
 
 /**
  * Formats the result objects provided by the query compiler.
@@ -179,7 +212,7 @@ export const runQueriesWithStorageAndHooks = async <T extends ResultRecord>(
  *
  * @returns The formatted result, for use in a JavaScript environment.
  */
-const formatResult = <T extends ResultRecord>(
+const formatIndividualResult = <T extends ResultRecord>(
   result: RegularResult<T>,
 ): RegularFormattedResult<T> => {
   // Handle `count` query result.
@@ -234,4 +267,30 @@ const formatResult = <T extends ResultRecord>(
   }
 
   return result as unknown as RegularFormattedResult<T>;
+};
+
+const formatResults = <T extends ResultRecord>(
+  results: Array<Result<T>>,
+): FormattedResults<T> => {
+  const formattedResults: FormattedResults<T> = [];
+
+  for (const result of results) {
+    // If a `models` property is present in the result, that means the result combines
+    // the results of multiple different queries.
+    if ('models' in result) {
+      formattedResults.push(
+        Object.fromEntries(
+          Object.entries(result.models).map(([model, result]) => {
+            return [model, formatIndividualResult(result)];
+          }),
+        ) as ExpandedFormattedResult<T>,
+      );
+
+      continue;
+    }
+
+    formattedResults.push(formatIndividualResult(result));
+  }
+
+  return formattedResults;
 };

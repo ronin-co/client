@@ -45,7 +45,7 @@ describe('hooks', () => {
       return {};
     });
 
-    await runQueriesWithHooks([query], {
+    await runQueriesWithHooks([{ query }], {
       hooks: {
         account: {
           get: mockHook as any,
@@ -592,26 +592,26 @@ describe('hooks', () => {
 
     expect(result).toMatchObject({ handle: 'juri' });
   });
-});
 
-test('invoke `ronin` with `hooks` defined, but no `asyncContext` defined', async () => {
-  let error: Error | undefined;
+  test('invoke `ronin` with `hooks` defined, but no `asyncContext` defined', async () => {
+    let error: Error | undefined;
 
-  try {
-    const factory = createSyntaxFactory({
-      token: 'supertoken',
-      hooks: {
-        // @ts-expect-error - We are deliberately causing an error.
-        beforeAdd: () => undefined,
-      },
-    });
+    try {
+      const factory = createSyntaxFactory({
+        token: 'supertoken',
+        hooks: {
+          // @ts-expect-error - We are deliberately causing an error.
+          beforeAdd: () => undefined,
+        },
+      });
 
-    await factory.add.account({ with: { handle: 'leo' } });
-  } catch (err) {
-    error = err as Error;
-  }
+      await factory.add.account({ with: { handle: 'leo' } });
+    } catch (err) {
+      error = err as Error;
+    }
 
-  expect(error?.message).toMatch(
-    `In the case that the "ronin" package receives a value for its \`hooks\` option, it must also receive a value for its \`asyncContext\` option.`,
-  );
+    expect(error?.message).toMatch(
+      `In the case that the "ronin" package receives a value for its \`hooks\` option, it must also receive a value for its \`asyncContext\` option.`,
+    );
+  });
 });

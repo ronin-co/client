@@ -75,36 +75,39 @@ describe('edge runtime', () => {
     const oldProcess = global.process;
     global.process = undefined as unknown as NodeJS.Process;
 
-    await runQueriesWithHooks(queries, {
-      fetch: async () => {
-        return Response.json({
-          results: [
-            {
-              record: {
-                id: '1',
-                handle: 'leo',
-                firstName: 'Leo',
-                lastName: 'Lamprecht',
+    await runQueriesWithHooks(
+      queries.map((query) => ({ query })),
+      {
+        fetch: async () => {
+          return Response.json({
+            results: [
+              {
+                record: {
+                  id: '1',
+                  handle: 'leo',
+                  firstName: 'Leo',
+                  lastName: 'Lamprecht',
+                },
               },
-            },
-          ],
-        });
-      },
-      hooks: {
-        account: {
-          afterAdd: async () => {
-            // Sleep for 50 milliseconds to simulate an asynchronous action.
-            await new Promise((resolve) => setTimeout(resolve, 50));
+            ],
+          });
+        },
+        hooks: {
+          account: {
+            afterAdd: async () => {
+              // Sleep for 50 milliseconds to simulate an asynchronous action.
+              await new Promise((resolve) => setTimeout(resolve, 50));
 
-            hookInvocation.happened();
+              hookInvocation.happened();
+            },
           },
         },
+        waitUntil: (promise) => {
+          promisesToAwait.push(promise);
+        },
+        asyncContext: new AsyncLocalStorage(),
       },
-      waitUntil: (promise) => {
-        promisesToAwait.push(promise);
-      },
-      asyncContext: new AsyncLocalStorage(),
-    });
+    );
 
     // Restore the old runtime.
     global.process = oldProcess;
@@ -131,33 +134,36 @@ describe('edge runtime', () => {
     const oldProcess = global.process;
     global.process = undefined as unknown as NodeJS.Process;
 
-    await runQueriesWithHooks(queries, {
-      fetch: async () => {
-        return Response.json({
-          results: [
-            {
-              record: {
-                id: '1',
-                handle: 'leo',
-                firstName: 'Leo',
-                lastName: 'Lamprecht',
+    await runQueriesWithHooks(
+      queries.map((query) => ({ query })),
+      {
+        fetch: async () => {
+          return Response.json({
+            results: [
+              {
+                record: {
+                  id: '1',
+                  handle: 'leo',
+                  firstName: 'Leo',
+                  lastName: 'Lamprecht',
+                },
               },
+            ],
+          });
+        },
+        hooks: {
+          account: {
+            afterAdd: () => {
+              throw new Error(errorText);
             },
-          ],
-        });
-      },
-      hooks: {
-        account: {
-          afterAdd: () => {
-            throw new Error(errorText);
           },
         },
+        waitUntil: (promise) => {
+          promisesToAwait.push(promise);
+        },
+        asyncContext: new AsyncLocalStorage(),
       },
-      waitUntil: (promise) => {
-        promisesToAwait.push(promise);
-      },
-      asyncContext: new AsyncLocalStorage(),
-    });
+    );
 
     // Restore the old runtime.
     global.process = oldProcess;
@@ -179,34 +185,37 @@ describe('edge runtime', () => {
     const oldProcess = global.process;
     global.process = undefined as unknown as NodeJS.Process;
 
-    await runQueriesWithHooks(queries, {
-      fetch: async () => {
-        return Response.json({
-          results: [
-            {
-              record: {
-                id: '1',
-                handle: 'leo',
-                firstName: 'Leo',
-                lastName: 'Lamprecht',
+    await runQueriesWithHooks(
+      queries.map((query) => ({ query })),
+      {
+        fetch: async () => {
+          return Response.json({
+            results: [
+              {
+                record: {
+                  id: '1',
+                  handle: 'leo',
+                  firstName: 'Leo',
+                  lastName: 'Lamprecht',
+                },
               },
+            ],
+          });
+        },
+        hooks: {
+          account: {
+            afterAdd: async () => {
+              // Sleep for 50 milliseconds to simulate an asynchronous action.
+              await new Promise((resolve) => setTimeout(resolve, 50));
             },
-          ],
-        });
-      },
-      hooks: {
-        account: {
-          afterAdd: async () => {
-            // Sleep for 50 milliseconds to simulate an asynchronous action.
-            await new Promise((resolve) => setTimeout(resolve, 50));
           },
         },
+        waitUntil: (promise) => {
+          promisesToAwait.push(promise);
+        },
+        asyncContext: new AsyncLocalStorage(),
       },
-      waitUntil: (promise) => {
-        promisesToAwait.push(promise);
-      },
-      asyncContext: new AsyncLocalStorage(),
-    });
+    );
 
     // Restore the old runtime.
     global.process = oldProcess;

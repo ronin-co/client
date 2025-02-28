@@ -37,9 +37,6 @@ export interface QueryHandlerOptions {
    * option is required.
    */
   asyncContext?: AsyncLocalStorage<any>;
-
-  /** A list of models defined during development. */
-  models?: Record<string, Record<string, unknown>> | Array<Model>;
 }
 
 /**
@@ -62,10 +59,12 @@ export type PromiseTuple<
   [P in keyof T]: Awaited<T[P]>;
 };
 
-export type QueryResponse<T> = {
-  results: Array<Result<T>>;
-  error?: any;
-};
+export type QueryResponse<T> =
+  | { results: Array<Result<T>> }
+  | Record<string, { results: Array<Result<T>> }>
+  | {
+      error: any;
+    };
 
 export type RegularFormattedResult<T> =
   | number

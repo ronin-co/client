@@ -1,8 +1,8 @@
 import { beforeEach, describe, expect, mock, spyOn, test } from 'bun:test';
 
-import { model, string } from '@/src/schema';
+import { runQueriesWithStorageAndHooks } from '@/src/queries';
 import { queriesHandler } from '@/src/utils/handlers';
-import type { Model, Query } from '@ronin/compiler';
+import type { Query } from '@ronin/compiler';
 
 let mockRequestResolvedValue: Request | undefined;
 
@@ -141,121 +141,108 @@ describe('queries handler', () => {
     logSpy.mockRestore();
   });
 
-  test('pass custom models as object', async () => {
+  test('accessing multiple databases at once', async () => {
+    const currentTime = new Date();
+
     const mockFetchNew = mock((request) => {
       mockRequestResolvedValue = request;
 
       return Response.json({
-        results: [
-          { records: [{ amount: 40 }] },
-          { records: [{ handle: 'david' }, { handle: 'elaine' }, { handle: 'john' }] },
-          {
-            records: [
-              {
-                id: 'acc_39h8fhe98hefah8j',
-                'ronin.createdAt': '2021-09-29T14:00:00.000Z',
-                'ronin.createdBy': null,
-                'ronin.updatedAt': '2021-09-29T14:00:00.000Z',
-                'ronin.updatedBy': null,
-                handle: 'markus',
+        default: {
+          results: [
+            {
+              record: {
+                handle: 'elaine',
               },
-            ],
-          },
-        ],
+              modelFields: {
+                handle: 'string',
+              },
+            },
+            {
+              record: {
+                name: 'Engineering',
+              },
+              modelFields: {
+                name: 'string',
+              },
+            },
+          ],
+        },
+        secondary: {
+          results: [
+            {
+              record: {
+                name: 'MacBook Pro',
+                releasedAt: currentTime.toISOString(),
+              },
+              modelFields: {
+                name: 'string',
+                releasedAt: 'date',
+              },
+            },
+          ],
+        },
       });
     });
 
-    const queries: Array<Query> = [
-      {
-        count: {
-          accounts: null,
-        },
-      },
-      {
-        get: {
-          accounts: {
-            selecting: ['handle'],
-          },
-        },
-      },
+    const defaultQueries: Array<Query> = [
       {
         get: {
           account: null,
         },
       },
-    ];
-
-    const models = {
-      Account: model({
-        slug: 'account',
-        fields: {
-          handle: string(),
-        },
-      }),
-    };
-
-    const results = await queriesHandler(queries, {
-      fetch: async (request) => mockFetchNew(request),
-      models,
-      token: 'takashitoken',
-    });
-
-    expect(results as Array<unknown>).toEqual([
-      40,
-      [{ handle: 'david' }, { handle: 'elaine' }, { handle: 'john' }],
-      {
-        id: 'acc_39h8fhe98hefah8j',
-        handle: 'markus',
-        ronin: {
-          createdAt: expect.any(Date),
-          createdBy: null,
-          updatedAt: expect.any(Date),
-          updatedBy: null,
-        },
-      },
-    ]);
-  });
-
-  test('pass custom models as array', async () => {
-    const mockFetchNew = mock((request) => {
-      mockRequestResolvedValue = request;
-
-      return Response.json({
-        results: [
-          { records: [{ handle: 'david' }, { handle: 'elaine' }, { handle: 'john' }] },
-        ],
-      });
-    });
-
-    const queries: Array<Query> = [
       {
         get: {
-          accounts: {
-            selecting: ['handle'],
-          },
+          team: null,
         },
       },
     ];
 
-    const models: Array<Model> = [
+    const secondaryQueries: Array<Query> = [
       {
-        slug: 'account',
-        fields: {
-          handle: {
-            type: 'string',
-          },
+        get: {
+          product: null,
         },
       },
     ];
 
-    const results = await queriesHandler(queries, {
-      fetch: async (request) => mockFetchNew(request),
-      models,
-      token: 'takashitoken',
-    });
+    const results = await runQueriesWithStorageAndHooks(
+      {
+        default: defaultQueries,
+        secondary: secondaryQueries,
+      },
+      {
+        fetch: async (request) => mockFetchNew(request),
+        token: 'takashitoken',
+      },
+    );
 
-    expect(results as Array<unknown>).toEqual([
-      [{ handle: 'david' }, { handle: 'elaine' }, { handle: 'john' }],
-    ]);
+    expect(await mockRequestResolvedValue?.text()).toEqual(
+      JSON.stringify({
+        default: {
+          queries: defaultQueries,
+        },
+        secondary: {
+          queries: secondaryQueries,
+        },
+      }),
+    );
+
+    expect(results).toMatchObject({
+      default: [
+        {
+          handle: 'elaine',
+        },
+        {
+          name: 'Engineering',
+        },
+      ],
+      secondary: [
+        {
+          name: 'MacBook Pro',
+          releasedAt: currentTime,
+        },
+      ],
+    });
   });
 });
