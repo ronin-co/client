@@ -25,6 +25,14 @@ interface RequestPayload {
 
 type RequestBody = RequestPayload | Record<string, RequestPayload>;
 
+export type QueriesPerDatabase = Array<{ query: Query; database?: string }>;
+type StatementsPerDatabase = Array<{ statement: Statement; database?: string }>;
+
+export type ResultsPerDatabase<T> = Array<{
+  result: FormattedResults<T>[number];
+  database?: string;
+}>;
+
 /**
  * Run a set of given queries.
  *
@@ -35,9 +43,9 @@ type RequestBody = RequestPayload | Record<string, RequestPayload>;
  * @returns Promise resolving the queried data.
  */
 export const runQueries = async <T extends ResultRecord>(
-  queries: Array<({ query: Query } | { statement: Statement }) & { database?: string }>,
+  queries: QueriesPerDatabase | StatementsPerDatabase,
   options: QueryHandlerOptions = {},
-): Promise<Array<{ result: FormattedResults<T>[number]; database?: string }>> => {
+): Promise<ResultsPerDatabase<T>> => {
   let hasWriteQuery: boolean | null = null;
   let hasSingleQuery = true;
 
@@ -108,10 +116,7 @@ export const runQueries = async <T extends ResultRecord>(
   const responseResults = await getResponseBody<QueryResponse<T>>(response);
 
   const startFormatting = performance.now();
-  const formattedResults: Array<{
-    result: FormattedResults<T>[number];
-    database?: string;
-  }> = [];
+  const formattedResults: ResultsPerDatabase<T> = [];
 
   if ('results' in responseResults) {
     const usableResults = responseResults.results as Array<Result<T>>;

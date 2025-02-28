@@ -1,4 +1,8 @@
-import { runQueries } from '@/src/queries';
+import {
+  type QueriesPerDatabase,
+  type ResultsPerDatabase,
+  runQueries,
+} from '@/src/queries';
 import type {
   FormattedResults,
   QueryHandlerOptions,
@@ -372,9 +376,9 @@ const invokeHooks = async (
  * @returns The results of the queries that were passed.
  */
 export const runQueriesWithHooks = async <T extends ResultRecord>(
-  queries: Array<{ query: Query; database?: string }>,
+  queries: QueriesPerDatabase,
   options: QueryHandlerOptions = {},
-): Promise<Array<{ result: FormattedResults<T>[number]; database?: string }>> => {
+): Promise<ResultsPerDatabase<T>> => {
   const { hooks, waitUntil, asyncContext } = options;
 
   // If no hooks were provided, we can just run all the queries and return the results.
@@ -407,12 +411,12 @@ export const runQueriesWithHooks = async <T extends ResultRecord>(
     throw new Error(message);
   }
 
-  const queryList: Array<{
-    query: Query;
-    result: FormattedResults<T>[number] | symbol;
-    diffForIndex?: number;
-    database?: string;
-  }> = queries.flatMap(({ query, database }, index) => {
+  const queryList: Array<
+    QueriesPerDatabase[number] & {
+      result: FormattedResults<T>[number] | symbol;
+      diffForIndex?: number;
+    }
+  > = queries.flatMap(({ query, database }, index) => {
     const details = { query, result: EMPTY, database };
 
     // If data hooks are enabled, we want to send a separate `get` query for
