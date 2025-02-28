@@ -129,20 +129,20 @@ export type AfterCreateHook<TSchema = unknown> = AfterHook<'create', TSchema>;
 export type AfterAlterHook<TSchema = unknown> = AfterHook<'alter', TSchema>;
 export type AfterDropHook<TSchema = unknown> = AfterHook<'drop', TSchema>;
 
-const getSchema = (
+const getModel = (
   instruction: QuerySchemaType,
 ): {
   key: string;
-  schema: string;
+  model: string;
   multipleRecords: boolean;
 } => {
   const key = Object.keys(instruction)[0];
 
-  let schema = String(key);
+  let model = String(key);
   let multipleRecords = false;
 
-  if (schema.endsWith('s')) {
-    schema = schema.substring(0, schema.length - 1);
+  if (model.endsWith('s')) {
+    model = model.substring(0, model.length - 1);
     multipleRecords = true;
   }
 
@@ -150,7 +150,7 @@ const getSchema = (
     key,
     // Convert camel case (e.g. `subscriptionItems`) into slugs
     // (e.g. `subscription-items`).
-    schema: toDashCase(schema),
+    model: toDashCase(model),
     multipleRecords,
   };
 };
@@ -189,6 +189,11 @@ const normalizeResults = (result: unknown) => {
 interface HookCallerOptions extends Omit<QueryHandlerOptions, 'hooks' | 'asyncContext'> {
   hooks: NonNullable<QueryHandlerOptions['hooks']>;
   asyncContext: NonNullable<QueryHandlerOptions['asyncContext']>;
+  /**
+   * If the hooks are being called for a custom database, the identifier of the database
+   * would be provided here.
+   */
+  database?: string;
 }
 
 export interface HookContext {
@@ -227,10 +232,16 @@ const invokeHooks = async (
 
   const queryType = Object.keys(query.definition)[0] as QueryType;
   const queryInstructions = query.definition[queryType] as QuerySchemaType;
-  const { key, schema: querySchema, multipleRecords } = getSchema(queryInstructions);
+  const { key, model: queryModel, multipleRecords } = getModel(queryInstructions);
   const oldInstruction = queryInstructions[key];
 
-  const hooksForSchema = hooks[querySchema];
+  // If the hooks are being executed for a custom database, all hooks must be located
+  // inside a file named `sink.ts`, which catches the queries for all other databases.
+  //
+  // If the hooks are *not* being executed for a custom database, the hook file name
+  // matches the model that is being addressed by the query.
+  const hookFile = options.database ? 'sink' : queryModel;
+  const hooksForSchema = hooks[hookFile];
   const hookName = getMethodName(hookType, queryType);
 
   // If `oldInstruction` is falsy (e.g. `null`), we want to default to `{}`.
@@ -275,11 +286,11 @@ const invokeHooks = async (
     hooksForSchema &&
     QUERY_TYPES.some((type) => type in hooksForSchema) &&
     parentHook &&
-    querySchema !== parentHook.querySchema
+    hookFile !== parentHook.hookFile
       ? false
       : parentHook &&
         (HOOK_TYPES.indexOf(hookType) <= HOOK_TYPES.indexOf(parentHook.hookType) ||
-          (querySchema === parentHook.querySchema &&
+          (hookFile === parentHook.hookFile &&
             HOOK_TYPES.indexOf(hookType) > HOOK_TYPES.indexOf(parentHook.hookType)));
 
   if (hooksForSchema && hookName in hooksForSchema && !shouldSkip) {
@@ -289,9 +300,9 @@ const invokeHooks = async (
       {
         hookType,
         queryType,
-        querySchema,
+        hookFile,
       },
-      async () => {
+      () => {
         // For data hooks of type "after" (such as `afterAdd`), we want to
         // pass special function arguments that contain the value of the
         // affected records before and after the query was executed.
@@ -363,11 +374,14 @@ export const runQueriesWithHooks = async <T extends ResultRecord>(
   options: QueryHandlerOptions = {},
 ): Promise<FormattedResults<T>> => {
   const { hooks, waitUntil, asyncContext } = options;
-  const defaultQueries = queries.default;
 
-  // If no hooks or default queries (the queries for which the hooks should be run) were
-  // provided, we can just run all the queries and return the results.
-  if (!(hooks && defaultQueries)) return runQueries<T>(queries, options);
+  // If no hooks were provided, we can just run all the queries and return the results.
+  if (!hooks) return runQueries<T>(queries, options);
+
+  const allQueries = Object.entries(queries).flatMap(([database, queries]) => {
+    const databaseSlug = database === 'default' ? undefined : database;
+    return queries.map((query) => ({ query, database: databaseSlug }));
+  });
 
   if (typeof process === 'undefined' && !waitUntil) {
     let message = 'In the case that the "ronin" package receives a value for';
@@ -400,8 +414,9 @@ export const runQueriesWithHooks = async <T extends ResultRecord>(
     definition: Query;
     result: unknown;
     diffForIndex?: number;
-  }> = defaultQueries.flatMap((query, index) => {
-    const details = { definition: query, result: EMPTY };
+    database?: string;
+  }> = allQueries.flatMap(({ query, database }, index) => {
+    const details = { definition: query, result: EMPTY, database };
 
     // If data hooks are enabled, we want to send a separate `get` query for
     // every `set` query (in the same transaction), so that we can provide the
@@ -424,6 +439,7 @@ export const runQueriesWithHooks = async <T extends ResultRecord>(
         },
         diffForIndex: index + 1,
         result: EMPTY,
+        database,
       };
 
       return [diffQuery, details];
@@ -434,17 +450,16 @@ export const runQueriesWithHooks = async <T extends ResultRecord>(
 
   const hookCallerOptions = { hooks, asyncContext };
 
-  // Invoke `beforeAdd`, `beforeGet`, `beforeSet`, `beforeRemove`, and
-  // also `beforeCount`.
+  // Invoke `beforeAdd`, `beforeGet`, `beforeSet`, `beforeRemove`, and `beforeCount`.
   await Promise.all(
-    queryList.map(async ({ definition, diffForIndex }, index) => {
+    queryList.map(async ({ definition, diffForIndex, database }, index) => {
       // For diff queries, we don't want to run "before" hooks.
       if (typeof diffForIndex !== 'undefined') return;
 
       const modifiedQuery = await invokeHooks(
         'before',
         { definition },
-        hookCallerOptions,
+        { ...hookCallerOptions, database },
       );
       queryList[index].definition = modifiedQuery.definition;
     }),
@@ -452,11 +467,11 @@ export const runQueriesWithHooks = async <T extends ResultRecord>(
 
   // Invoke `get`, `set`, `add`, `remove`, and `count`.
   await Promise.all(
-    queryList.map(async ({ definition }, index) => {
+    queryList.map(async ({ definition, database }, index) => {
       const modifiedQuery = await invokeHooks(
         'during',
         { definition },
-        hookCallerOptions,
+        { ...hookCallerOptions, database },
       );
       queryList[index].result = modifiedQuery.result;
     }),
@@ -515,7 +530,7 @@ export const runQueriesWithHooks = async <T extends ResultRecord>(
     );
 
     const queryInstructions = query.definition[queryType] as QuerySchemaType;
-    const { schema: querySchema } = getSchema(queryInstructions);
+    const { schema: querySchema } = getModel(queryInstructions);
     const hooksForSchema = hooks[querySchema];
     const isBlocking = hooksForSchema?.blockingAfter;
 
