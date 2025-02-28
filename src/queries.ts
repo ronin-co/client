@@ -120,7 +120,7 @@ export const runQueries = async <T extends ResultRecord>(
 
     formattedResults.push(...finalResults.map((result) => ({ result })));
   } else {
-    for (const [database, results] of Object.entries(responseResults)) {
+    for (const [database, { results }] of Object.entries(responseResults)) {
       const finalResults = formatResults<T>(results);
       formattedResults.push(...finalResults.map((result) => ({ result, database })));
     }

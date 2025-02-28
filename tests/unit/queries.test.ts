@@ -1,6 +1,8 @@
 import { beforeEach, describe, expect, mock, spyOn, test } from 'bun:test';
 
+import { runQueriesWithStorageAndHooks } from '@/src/queries';
 import { queriesHandler } from '@/src/utils/handlers';
+import type { Query } from '@ronin/compiler';
 
 let mockRequestResolvedValue: Request | undefined;
 
@@ -137,5 +139,110 @@ describe('queries handler', () => {
 
     // Restore the global console.log() function.
     logSpy.mockRestore();
+  });
+
+  test('accessing multiple databases at once', async () => {
+    const currentTime = new Date();
+
+    const mockFetchNew = mock((request) => {
+      mockRequestResolvedValue = request;
+
+      return Response.json({
+        default: {
+          results: [
+            {
+              record: {
+                handle: 'elaine',
+              },
+              modelFields: {
+                handle: 'string',
+              },
+            },
+            {
+              record: {
+                name: 'Engineering',
+              },
+              modelFields: {
+                name: 'string',
+              },
+            },
+          ],
+        },
+        secondary: {
+          results: [
+            {
+              record: {
+                name: 'MacBook Pro',
+                releasedAt: currentTime.toISOString(),
+              },
+              modelFields: {
+                name: 'string',
+                releasedAt: 'date',
+              },
+            },
+          ],
+        },
+      });
+    });
+
+    const defaultQueries: Array<Query> = [
+      {
+        get: {
+          account: null,
+        },
+      },
+      {
+        get: {
+          team: null,
+        },
+      },
+    ];
+
+    const secondaryQueries: Array<Query> = [
+      {
+        get: {
+          product: null,
+        },
+      },
+    ];
+
+    const results = await runQueriesWithStorageAndHooks(
+      {
+        default: defaultQueries,
+        secondary: secondaryQueries,
+      },
+      {
+        fetch: async (request) => mockFetchNew(request),
+        token: 'takashitoken',
+      },
+    );
+
+    expect(await mockRequestResolvedValue?.text()).toEqual(
+      JSON.stringify({
+        default: {
+          queries: defaultQueries,
+        },
+        secondary: {
+          queries: secondaryQueries,
+        },
+      }),
+    );
+
+    expect(results).toMatchObject({
+      default: [
+        {
+          handle: 'elaine',
+        },
+        {
+          name: 'Engineering',
+        },
+      ],
+      secondary: [
+        {
+          name: 'MacBook Pro',
+          releasedAt: currentTime,
+        },
+      ],
+    });
   });
 });
