@@ -10,7 +10,13 @@ import { WRITE_QUERY_TYPES } from '@/src/utils/constants';
 import { runQueriesWithHooks } from '@/src/utils/data-hooks';
 import { getResponseBody } from '@/src/utils/errors';
 import { formatDateFields } from '@/src/utils/helpers';
-import type { Query, RegularResult, ResultRecord, Statement } from '@ronin/compiler';
+import type {
+  Query,
+  RegularResult,
+  Result,
+  ResultRecord,
+  Statement,
+} from '@ronin/compiler';
 
 interface RequestPayload {
   queries?: Array<Query>;
@@ -31,7 +37,7 @@ type RequestBody = RequestPayload | Record<string, RequestPayload>;
 export const runQueries = async <T extends ResultRecord>(
   queries: Record<string, Array<Query> | { statements: Array<Statement> }>,
   options: QueryHandlerOptions = {},
-): Promise<FormattedResults<T>> => {
+): Promise<Record<string, FormattedResults<T>>> => {
   let hasWriteQuery: boolean | null = null;
   let hasSingleQuery = true;
 
@@ -87,27 +93,15 @@ export const runQueries = async <T extends ResultRecord>(
 
   const responseResults = await getResponseBody<QueryResponse<T>>(response);
 
-  const results: QueryResponse<T>['results'] = responseResults.results;
-
   const startFormatting = performance.now();
-  const formattedResults: FormattedResults<T> = [];
+  const formattedResults: Record<string, FormattedResults<T>> = {};
 
-  for (const result of results) {
-    // If a `models` property is present in the result, that means the result combines
-    // the results of multiple different queries.
-    if ('models' in result) {
-      formattedResults.push(
-        Object.fromEntries(
-          Object.entries(result.models).map(([model, result]) => {
-            return [model, formatResult(result)];
-          }),
-        ) as ExpandedFormattedResult<T>,
-      );
-
-      continue;
+  if (responseResults.results) {
+    formattedResults.default = formatResults(responseResults.results);
+  } else {
+    for (const [database, results] of Object.entries(responseResults)) {
+      formattedResults[database] = formatResults(results);
     }
-
-    formattedResults.push(formatResult(result));
   }
 
   const endFormatting = performance.now();
@@ -126,6 +120,16 @@ export const runQueries = async <T extends ResultRecord>(
   return formattedResults;
 };
 
+export async function runQueriesWithStorageAndHooks<T extends ResultRecord>(
+  queries: Array<Query>,
+  options: QueryHandlerOptions,
+): Promise<FormattedResults<T>>;
+
+export async function runQueriesWithStorageAndHooks<T extends ResultRecord>(
+  queries: Record<string, Array<Query>>,
+  options: QueryHandlerOptions,
+): Promise<Record<string, FormattedResults<T>>>;
+
 /**
  * Runs a list of `Query`s.
  *
@@ -134,11 +138,12 @@ export const runQueries = async <T extends ResultRecord>(
  *
  * @returns The results of the queries that were passed.
  */
-export const runQueriesWithStorageAndHooks = async <T extends ResultRecord>(
+export async function runQueriesWithStorageAndHooks<T extends ResultRecord>(
   queries: Array<Query> | Record<string, Array<Query>>,
   options: QueryHandlerOptions = {},
-): Promise<FormattedResults<T>> => {
-  const normalizedQueries = Array.isArray(queries) ? { default: queries } : queries;
+): Promise<FormattedResults<T> | Record<string, FormattedResults<T>>> {
+  const singleDatabase = Array.isArray(queries);
+  const normalizedQueries = singleDatabase ? { default: queries } : queries;
 
   const queriesWithReferences = await Promise.all(
     Object.entries(normalizedQueries).map(async ([database, queries]) => {
@@ -156,8 +161,17 @@ export const runQueriesWithStorageAndHooks = async <T extends ResultRecord>(
     }),
   );
 
-  return runQueriesWithHooks<T>(Object.fromEntries(queriesWithReferences), options);
-};
+  const results = await runQueriesWithHooks<T>(
+    Object.fromEntries(queriesWithReferences),
+    options,
+  );
+
+  // If only a single database is being addressed, return the results of that database.
+  if (singleDatabase) return results.default;
+
+  // If multiple databases are being addressed, return the results of all databases.
+  return results;
+}
 
 /**
  * Formats the result objects provided by the query compiler.
@@ -166,7 +180,7 @@ export const runQueriesWithStorageAndHooks = async <T extends ResultRecord>(
  *
  * @returns The formatted result, for use in a JavaScript environment.
  */
-const formatResult = <T extends ResultRecord>(
+const formatIndividualResult = <T extends ResultRecord>(
   result: RegularResult<T>,
 ): RegularFormattedResult<T> => {
   // Handle `count` query result.
@@ -221,4 +235,30 @@ const formatResult = <T extends ResultRecord>(
   }
 
   return result as unknown as RegularFormattedResult<T>;
+};
+
+const formatResults = <T extends ResultRecord>(
+  results: Array<Result<T>>,
+): FormattedResults<T> => {
+  const formattedResults: FormattedResults<T> = [];
+
+  for (const result of results) {
+    // If a `models` property is present in the result, that means the result combines
+    // the results of multiple different queries.
+    if ('models' in result) {
+      formattedResults.push(
+        Object.fromEntries(
+          Object.entries(result.models).map(([model, result]) => {
+            return [model, formatIndividualResult(result)];
+          }),
+        ) as ExpandedFormattedResult<T>,
+      );
+
+      continue;
+    }
+
+    formattedResults.push(formatIndividualResult(result));
+  }
+
+  return formattedResults;
 };

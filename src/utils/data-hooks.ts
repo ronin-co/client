@@ -372,7 +372,7 @@ const invokeHooks = async (
 export const runQueriesWithHooks = async <T extends ResultRecord>(
   queries: Record<string, Array<Query>>,
   options: QueryHandlerOptions = {},
-): Promise<FormattedResults<T>> => {
+): Promise<Record<string, FormattedResults<T>>> => {
   const { hooks, waitUntil, asyncContext } = options;
 
   // If no hooks were provided, we can just run all the queries and return the results.
