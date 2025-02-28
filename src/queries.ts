@@ -113,8 +113,10 @@ export const runQueries = async <T extends ResultRecord>(
     database?: string;
   }> = [];
 
-  if (responseResults.results) {
-    const finalResults = formatResults<T>(responseResults.results);
+  if ('results' in responseResults) {
+    const usableResults = responseResults.results as Array<Result<T>>;
+    const finalResults = formatResults<T>(usableResults);
+
     formattedResults.push(...finalResults.map((result) => ({ result })));
   } else {
     for (const [database, results] of Object.entries(responseResults)) {
