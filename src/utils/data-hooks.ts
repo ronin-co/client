@@ -226,7 +226,7 @@ const invokeHooks = async (
   options: HookCallerOptions,
 ): Promise<{
   definition: Query;
-  result?: FormattedResults<unknown>[number];
+  result?: FormattedResults<unknown>[number] | symbol;
 }> => {
   const { hooks, asyncContext } = options;
 
@@ -349,7 +349,8 @@ const invokeHooks = async (
     // If the hook returned a record (or multiple), we want to set the query's
     // result to the value returned by the hook.
     if (hookType === 'during') {
-      return { definition: query.definition, result: hookResult };
+      const result = hookResult as FormattedResults<unknown>[number];
+      return { definition: query.definition, result };
     }
 
     // In the case of "after" hooks, we don't need to do anything, because they
@@ -485,16 +486,13 @@ export const runQueriesWithHooks = async <T extends ResultRecord>(
     }));
   }
 
-  const queryObject = queriesWithoutResults.reduce(
-    (acc, { database = 'default', definition }) => {
-      if (!acc[database]) acc[database] = [];
-      acc[database].push(definition);
-      return acc;
-    },
-    {} as Record<string, Array<Query>>,
+  const resultsFromDatabase = await runQueries<T>(
+    queriesWithoutResults.map(({ definition, database }) => ({
+      query: definition,
+      database,
+    })),
+    options,
   );
-
-  const resultsFromDatabase = await runQueries<T>(queryObject, options);
 
   // Assign the results from the database to the list of queries.
   for (let index = 0; index < resultsFromDatabase.length; index++) {

@@ -35,39 +35,53 @@ type RequestBody = RequestPayload | Record<string, RequestPayload>;
  * @returns Promise resolving the queried data.
  */
 export const runQueries = async <T extends ResultRecord>(
-  queries: Record<string, Array<Query> | { statements: Array<Statement> }>,
+  queries: Array<({ query: Query } | { statement: Statement }) & { database?: string }>,
   options: QueryHandlerOptions = {},
 ): Promise<Array<{ result: FormattedResults<T>[number]; database?: string }>> => {
   let hasWriteQuery: boolean | null = null;
   let hasSingleQuery = true;
 
-  const operations = Object.entries(queries).map(([database, queries]) => {
-    // The queries that should be executed for a particular database.
-    const payload: RequestPayload = {};
+  const operations = queries.reduce(
+    (acc, details) => {
+      const { database = 'default' } = details;
+      if (!acc[database]) acc[database] = {};
 
-    if ('statements' in queries) {
-      payload.nativeQueries = queries.statements.map((statement) => ({
-        query: statement.statement,
-        values: statement.params,
-      }));
-    } else {
-      hasWriteQuery = queries.some((query) =>
-        (WRITE_QUERY_TYPES as ReadonlyArray<string>).includes(Object.keys(query)[0]),
-      );
+      // If a database is being selected that isn't the default database, that means a
+      // different format should be chosen for the request body.
+      if (database !== 'default') hasSingleQuery = false;
 
-      payload.queries = queries;
-    }
+      if ('query' in details) {
+        const { query } = details;
 
-    // If a database is being selected that isn't the default database, that means a
-    // different format should be chosen for the request body.
-    if (database !== 'default') hasSingleQuery = false;
+        if (!acc[database].queries) acc[database].queries = [];
+        acc[database].queries.push(query);
 
-    return [database, payload];
-  });
+        const queryType = Object.keys(query)[0];
+        hasWriteQuery =
+          hasWriteQuery ||
+          (WRITE_QUERY_TYPES as ReadonlyArray<string>).includes(queryType);
 
-  const requestBody: RequestBody = hasSingleQuery
-    ? operations[0][1]
-    : Object.fromEntries(operations);
+        return acc;
+      }
+
+      if ('statement' in details) {
+        const { statement } = details;
+        if (!acc[database].nativeQueries) acc[database].nativeQueries = [];
+
+        acc[database].nativeQueries.push({
+          query: statement.statement,
+          values: statement.params,
+        });
+
+        return acc;
+      }
+
+      return acc;
+    },
+    {} as Record<string, RequestPayload>,
+  );
+
+  const requestBody: RequestBody = hasSingleQuery ? operations.default : operations;
 
   // Runtimes like Cloudflare Workers don't support `cache` yet.
   const hasCachingSupport = 'cache' in new Request('https://ronin.co');

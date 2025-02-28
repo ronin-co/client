@@ -56,13 +56,13 @@ export const queriesHandler = async (
 
   if ('statements' in queries) {
     const results = await runQueries(
-      { default: { statements: queries.statements } },
+      queries.statements.map((statement) => ({ statement })),
       options,
     );
-    return results.default;
+    return results.map(({ result }) => result);
   }
 
-  return runQueriesWithStorageAndHooks({ default: queries }, options);
+  return runQueriesWithStorageAndHooks(queries, options);
 };
 
 /**
