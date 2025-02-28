@@ -199,7 +199,7 @@ interface HookCallerOptions extends Omit<QueryHandlerOptions, 'hooks' | 'asyncCo
 export interface HookContext {
   hookType: HookType;
   queryType: QueryType;
-  querySchema: string;
+  queryModel: string;
 }
 
 /**
@@ -241,11 +241,11 @@ const invokeHooks = async (
   // If the hooks are *not* being executed for a custom database, the hook file name
   // matches the model that is being addressed by the query.
   const hookFile = options.database ? 'sink' : queryModel;
-  const hooksForSchema = hooks[hookFile];
+  const hooksForModel = hooks[hookFile];
   const hookName = getMethodName(hookType, queryType);
 
   // If `oldInstruction` is falsy (e.g. `null`), we want to default to `{}`.
-  // This would happen in cases where all records of a particular schema are
+  // This would happen in cases where all records of a particular model are
   // retrieved. For example, the query `get.members();` would trigger this.
   //
   // It's important to provide an object to hooks, as people might otherwise
@@ -262,29 +262,29 @@ const invokeHooks = async (
   // that come after the lifecycle level of the current data hook (1).
   //
   // Additionally, no data hooks should be called for queries inside data hooks
-  // that are addressing the same schema as the surrounding data hook (2).
+  // that are addressing the same model as the surrounding data hook (2).
   //
-  // For queries that target a schema that has "during" data hooks defined,
+  // For queries that target a model that has "during" data hooks defined,
   // however, this behavior should not apply (3).
   //
   // **EXAMPLES**
   //
-  // 1. If a query targeting the `customer` schema is executed in the
-  // `beforeAdd` data hook of the `account` schema, only data hooks after
+  // 1. If a query targeting the `customer` model is executed in the
+  // `beforeAdd` data hook of the `account` model, only data hooks after
   // the "before" lifecycle level (such as `set`, `afterSet`, `add`,
   // `afterAdd` etc.) will be executed for the `customer` query.
   //
-  // 2. If a query targeting the `customer` schema is executed in the
-  // `beforeAdd` data hook of the `customer` schema, no data hooks will be
+  // 2. If a query targeting the `customer` model is executed in the
+  // `beforeAdd` data hook of the `customer` model, no data hooks will be
   // executed for the `customer` query.
   //
-  // 3. If a query targeting the `customer` schema is executed and that schema
+  // 3. If a query targeting the `customer` model is executed and that model
   // contains data hooks of the "during" lifecycle level, all data hooks of
-  // that target schema will be executed and none will be skipped.
+  // that target model will be executed and none will be skipped.
   const parentHook = asyncContext.getStore();
   const shouldSkip =
-    hooksForSchema &&
-    QUERY_TYPES.some((type) => type in hooksForSchema) &&
+    hooksForModel &&
+    QUERY_TYPES.some((type) => type in hooksForModel) &&
     parentHook &&
     hookFile !== parentHook.hookFile
       ? false
@@ -293,8 +293,8 @@ const invokeHooks = async (
           (hookFile === parentHook.hookFile &&
             HOOK_TYPES.indexOf(hookType) > HOOK_TYPES.indexOf(parentHook.hookType)));
 
-  if (hooksForSchema && hookName in hooksForSchema && !shouldSkip) {
-    const hook = hooksForSchema[hookName as keyof typeof hooksForSchema];
+  if (hooksForModel && hookName in hooksForModel && !shouldSkip) {
+    const hook = hooksForModel[hookName as keyof typeof hooksForModel];
 
     const hookResult = await asyncContext.run(
       {
@@ -427,13 +427,13 @@ export const runQueriesWithHooks = async <T extends ResultRecord>(
     // record afterward, but in order to get the version of the record
     // *before* the modification, we need a separate `get` query.
     if (query.set) {
-      const schemaSlug = Object.keys(query.set)[0];
+      const modelSlug = Object.keys(query.set)[0];
 
       const diffQuery = {
         definition: {
           get: {
-            [schemaSlug]: {
-              with: query.set[schemaSlug].with,
+            [modelSlug]: {
+              with: query.set[modelSlug].with,
             },
           },
         },
@@ -483,8 +483,9 @@ export const runQueriesWithHooks = async <T extends ResultRecord>(
 
   // If no queries are remaining, that means all the queries were handled by
   // "during" hooks above, so there are none remaining to send for execution.
-  if (queriesWithoutResults.length === 0)
+  if (queriesWithoutResults.length === 0) {
     return queryList.map(({ result }) => result) as FormattedResults<T>;
+  }
 
   const resultsFromDatabase = await runQueries<T>(
     { default: queriesWithoutResults.map(({ definition }) => definition) },
@@ -530,9 +531,9 @@ export const runQueriesWithHooks = async <T extends ResultRecord>(
     );
 
     const queryInstructions = query.definition[queryType] as QuerySchemaType;
-    const { schema: querySchema } = getModel(queryInstructions);
-    const hooksForSchema = hooks[querySchema];
-    const isBlocking = hooksForSchema?.blockingAfter;
+    const { model: queryModel } = getModel(queryInstructions);
+    const hooksForModel = hooks[queryModel];
+    const isBlocking = hooksForModel?.blockingAfter;
 
     // The result of the hook should not be made available, otherwise
     // developers might start relying on it. Only errors should be propagated.

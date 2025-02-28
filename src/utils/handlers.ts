@@ -58,7 +58,7 @@ export const queriesHandler = (
     return runQueries({ default: { statements: queries.statements } }, options);
   }
 
-  return runQueriesWithStorageAndHooks(queries, options);
+  return runQueriesWithStorageAndHooks({ default: queries }, options);
 };
 
 /**
