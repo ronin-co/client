@@ -211,27 +211,28 @@ export interface HookContext {
  * because no output is returned by the hook.
  *
  * @param hookType - The type of hook, so "before", "during", or "after".
- * @param query - The definition and other details of a query that is being run.
+ * @param definition - The definition and other details of a query that is being run.
  * @param options - A list of options to change how the queries are executed.
  *
  * @returns The modified query and its results, if any are available.
  */
 const invokeHooks = async (
   hookType: HookType,
-  query: {
-    definition: Query;
+  definition: {
+    query: Query;
     resultBefore?: unknown;
     resultAfter?: unknown;
   },
   options: HookCallerOptions,
 ): Promise<{
-  definition: Query;
+  query: Query;
   result?: FormattedResults<unknown>[number] | symbol;
 }> => {
   const { hooks, asyncContext } = options;
+  const { query } = definition;
 
-  const queryType = Object.keys(query.definition)[0] as QueryType;
-  const queryInstructions = query.definition[queryType] as QuerySchemaType;
+  const queryType = Object.keys(query)[0] as QueryType;
+  const queryInstructions = query[queryType] as QuerySchemaType;
   const { key, model: queryModel, multipleRecords } = getModel(queryInstructions);
   const oldInstruction = queryInstructions[key];
 
@@ -311,8 +312,8 @@ const invokeHooks = async (
             queryInstruction,
             multipleRecords,
 
-            normalizeResults(query.resultBefore),
-            normalizeResults(query.resultAfter),
+            normalizeResults(definition.resultBefore),
+            normalizeResults(definition.resultAfter),
           );
         }
 
@@ -327,7 +328,7 @@ const invokeHooks = async (
     // the one returned by the hook.
     if (hookType === 'before') {
       const result = hookResult as null | Query | CombinedInstructions;
-      let newQuery: Query = query.definition;
+      let newQuery: Query = query;
 
       // If a full query was returned by the "before" hook, use the query as-is.
       if (result && QUERY_TYPES.some((type) => type in result)) {
@@ -343,21 +344,21 @@ const invokeHooks = async (
         };
       }
 
-      return { definition: newQuery, result: EMPTY };
+      return { query: newQuery, result: EMPTY };
     }
 
     // If the hook returned a record (or multiple), we want to set the query's
     // result to the value returned by the hook.
     if (hookType === 'during') {
       const result = hookResult as FormattedResults<unknown>[number];
-      return { definition: query.definition, result };
+      return { query, result };
     }
 
     // In the case of "after" hooks, we don't need to do anything, because they
     // are run asynchronously and aren't expected to return anything.
   }
 
-  return { definition: query.definition, result: EMPTY };
+  return { query, result: EMPTY };
 };
 
 /**
@@ -407,12 +408,12 @@ export const runQueriesWithHooks = async <T extends ResultRecord>(
   }
 
   const queryList: Array<{
-    definition: Query;
+    query: Query;
     result: FormattedResults<T>[number] | symbol;
     diffForIndex?: number;
     database?: string;
   }> = queries.flatMap(({ query, database }, index) => {
-    const details = { definition: query, result: EMPTY, database };
+    const details = { query, result: EMPTY, database };
 
     // If data hooks are enabled, we want to send a separate `get` query for
     // every `set` query (in the same transaction), so that we can provide the
@@ -426,7 +427,7 @@ export const runQueriesWithHooks = async <T extends ResultRecord>(
       const modelSlug = Object.keys(query.set)[0];
 
       const diffQuery = {
-        definition: {
+        query: {
           get: {
             [modelSlug]: {
               with: query.set[modelSlug].with,
@@ -448,25 +449,25 @@ export const runQueriesWithHooks = async <T extends ResultRecord>(
 
   // Invoke `beforeAdd`, `beforeGet`, `beforeSet`, `beforeRemove`, and `beforeCount`.
   await Promise.all(
-    queryList.map(async ({ definition, diffForIndex, database }, index) => {
+    queryList.map(async ({ query, diffForIndex, database }, index) => {
       // For diff queries, we don't want to run "before" hooks.
       if (typeof diffForIndex !== 'undefined') return;
 
       const modifiedQuery = await invokeHooks(
         'before',
-        { definition },
+        { query },
         { ...hookCallerOptions, database },
       );
-      queryList[index].definition = modifiedQuery.definition;
+      queryList[index].query = modifiedQuery.query;
     }),
   );
 
   // Invoke `get`, `set`, `add`, `remove`, and `count`.
   await Promise.all(
-    queryList.map(async ({ definition, database }, index) => {
+    queryList.map(async ({ query, database }, index) => {
       const modifiedQuery = await invokeHooks(
         'during',
-        { definition },
+        { query },
         { ...hookCallerOptions, database },
       );
       queryList[index].result = modifiedQuery.result as FormattedResults<T>[number];
@@ -486,13 +487,7 @@ export const runQueriesWithHooks = async <T extends ResultRecord>(
     }));
   }
 
-  const resultsFromDatabase = await runQueries<T>(
-    queriesWithoutResults.map(({ definition, database }) => ({
-      query: definition,
-      database,
-    })),
-    options,
-  );
+  const resultsFromDatabase = await runQueries<T>(queriesWithoutResults, options);
 
   // Assign the results from the database to the list of queries.
   for (let index = 0; index < resultsFromDatabase.length; index++) {
@@ -505,8 +500,8 @@ export const runQueriesWithHooks = async <T extends ResultRecord>(
   // Asynchronously invoke `afterAdd`, `afterSet`, `afterRemove`, `afterCreate`,
   // `afterAlter`, and `afterDrop`.
   for (let index = 0; index < queryList.length; index++) {
-    const query = queryList[index];
-    const queryType = Object.keys(query.definition)[0] as QueryType;
+    const { query, result, database } = queryList[index];
+    const queryType = Object.keys(query)[0] as QueryType;
 
     // "after" hooks should only fire for writes — not reads.
     if (!(WRITE_QUERY_TYPES as ReadonlyArray<string>).includes(queryType)) continue;
@@ -514,25 +509,25 @@ export const runQueriesWithHooks = async <T extends ResultRecord>(
     const diffMatch = queryList.find((item) => item.diffForIndex === index);
 
     let resultBefore = diffMatch ? diffMatch.result : EMPTY;
-    let resultAfter = query.result;
+    let resultAfter = result;
 
     // For queries of type "remove" and "drop", we want to set `resultBefore` to the
     // result of the query (which contains the record), because the record will no longer
     // exist after the query has been executed, so it wouldn't make sense to expose the
     // record as `resultAfter` in the data hooks.
     if (queryType === 'remove' || queryType === 'drop') {
-      resultBefore = query.result;
+      resultBefore = result;
       resultAfter = EMPTY;
     }
 
     // Run the actual hook functions.
     const promise = invokeHooks(
       'after',
-      { definition: query.definition, resultBefore, resultAfter },
-      { ...hookCallerOptions, database: query.database },
+      { query, resultBefore, resultAfter },
+      { ...hookCallerOptions, database },
     );
 
-    const queryInstructions = query.definition[queryType] as QuerySchemaType;
+    const queryInstructions = query[queryType] as QuerySchemaType;
     const { model: queryModel } = getModel(queryInstructions);
     const hooksForModel = hooks[queryModel];
     const isBlocking = hooksForModel?.blockingAfter;
