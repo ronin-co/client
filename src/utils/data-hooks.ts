@@ -487,10 +487,16 @@ export const runQueriesWithHooks = async <T extends ResultRecord>(
     return queryList.map(({ result }) => result) as FormattedResults<T>;
   }
 
-  const resultsFromDatabase = await runQueries<T>(
-    { default: queriesWithoutResults.map(({ definition }) => definition) },
-    options,
+  const queryObject = queriesWithoutResults.reduce(
+    (acc, { database = 'default', definition }) => {
+      if (!acc[database]) acc[database] = [];
+      acc[database].push(definition);
+      return acc;
+    },
+    {} as Record<string, Array<Query>>,
   );
+
+  const resultsFromDatabase = await runQueries<T>(queryObject, options);
 
   // Assign the results from the database to the list of queries.
   for (let index = 0; index < resultsFromDatabase.length; index++) {
@@ -527,7 +533,7 @@ export const runQueriesWithHooks = async <T extends ResultRecord>(
     const promise = invokeHooks(
       'after',
       { definition: query.definition, resultBefore, resultAfter },
-      hookCallerOptions,
+      { ...hookCallerOptions, database: query.database },
     );
 
     const queryInstructions = query.definition[queryType] as QuerySchemaType;
