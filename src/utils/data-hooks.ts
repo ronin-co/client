@@ -226,7 +226,7 @@ const invokeHooks = async (
   options: HookCallerOptions,
 ): Promise<{
   definition: Query;
-  result?: unknown;
+  result?: FormattedResults<unknown>[number];
 }> => {
   const { hooks, asyncContext } = options;
 
@@ -370,18 +370,13 @@ const invokeHooks = async (
  * @returns The results of the queries that were passed.
  */
 export const runQueriesWithHooks = async <T extends ResultRecord>(
-  queries: Record<string, Array<Query>>,
+  queries: Array<{ query: Query; database?: string }>,
   options: QueryHandlerOptions = {},
-): Promise<Record<string, FormattedResults<T>>> => {
+): Promise<Array<{ result: FormattedResults<T>[number]; database?: string }>> => {
   const { hooks, waitUntil, asyncContext } = options;
 
   // If no hooks were provided, we can just run all the queries and return the results.
   if (!hooks) return runQueries<T>(queries, options);
-
-  const allQueries = Object.entries(queries).flatMap(([database, queries]) => {
-    const databaseSlug = database === 'default' ? undefined : database;
-    return queries.map((query) => ({ query, database: databaseSlug }));
-  });
 
   if (typeof process === 'undefined' && !waitUntil) {
     let message = 'In the case that the "ronin" package receives a value for';
@@ -412,10 +407,10 @@ export const runQueriesWithHooks = async <T extends ResultRecord>(
 
   const queryList: Array<{
     definition: Query;
-    result: unknown;
+    result: FormattedResults<T>[number] | symbol;
     diffForIndex?: number;
     database?: string;
-  }> = allQueries.flatMap(({ query, database }, index) => {
+  }> = queries.flatMap(({ query, database }, index) => {
     const details = { definition: query, result: EMPTY, database };
 
     // If data hooks are enabled, we want to send a separate `get` query for
@@ -473,7 +468,7 @@ export const runQueriesWithHooks = async <T extends ResultRecord>(
         { definition },
         { ...hookCallerOptions, database },
       );
-      queryList[index].result = modifiedQuery.result;
+      queryList[index].result = modifiedQuery.result as FormattedResults<T>[number];
     }),
   );
 
@@ -484,7 +479,10 @@ export const runQueriesWithHooks = async <T extends ResultRecord>(
   // If no queries are remaining, that means all the queries were handled by
   // "during" hooks above, so there are none remaining to send for execution.
   if (queriesWithoutResults.length === 0) {
-    return queryList.map(({ result }) => result) as FormattedResults<T>;
+    return queryList.map(({ result, database }) => ({
+      result: result as FormattedResults<T>[number],
+      database,
+    }));
   }
 
   const queryObject = queriesWithoutResults.reduce(
@@ -501,7 +499,7 @@ export const runQueriesWithHooks = async <T extends ResultRecord>(
   // Assign the results from the database to the list of queries.
   for (let index = 0; index < resultsFromDatabase.length; index++) {
     const query = queriesWithoutResults[index];
-    const result = resultsFromDatabase[index];
+    const result = resultsFromDatabase[index].result;
 
     queryList[query.index].result = result;
   }
@@ -563,5 +561,8 @@ export const runQueriesWithHooks = async <T extends ResultRecord>(
   // results of the queries.
   return queryList
     .filter((query) => typeof query.diffForIndex === 'undefined')
-    .map(({ result }) => result) as FormattedResults<T>;
+    .map(({ result, database }) => ({
+      result: result as FormattedResults<T>[number],
+      database,
+    }));
 };

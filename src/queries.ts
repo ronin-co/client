@@ -37,7 +37,7 @@ type RequestBody = RequestPayload | Record<string, RequestPayload>;
 export const runQueries = async <T extends ResultRecord>(
   queries: Record<string, Array<Query> | { statements: Array<Statement> }>,
   options: QueryHandlerOptions = {},
-): Promise<Record<string, FormattedResults<T>>> => {
+): Promise<Array<{ result: FormattedResults<T>[number]; database?: string }>> => {
   let hasWriteQuery: boolean | null = null;
   let hasSingleQuery = true;
 
@@ -94,13 +94,18 @@ export const runQueries = async <T extends ResultRecord>(
   const responseResults = await getResponseBody<QueryResponse<T>>(response);
 
   const startFormatting = performance.now();
-  const formattedResults: Record<string, FormattedResults<T>> = {};
+  const formattedResults: Array<{
+    result: FormattedResults<T>[number];
+    database?: string;
+  }> = [];
 
   if (responseResults.results) {
-    formattedResults.default = formatResults(responseResults.results);
+    const finalResults = formatResults<T>(responseResults.results);
+    formattedResults.push(...finalResults.map((result) => ({ result })));
   } else {
     for (const [database, results] of Object.entries(responseResults)) {
-      formattedResults[database] = formatResults(results);
+      const finalResults = formatResults<T>(results);
+      formattedResults.push(...finalResults.map((result) => ({ result, database })));
     }
   }
 
@@ -145,32 +150,42 @@ export async function runQueriesWithStorageAndHooks<T extends ResultRecord>(
   const singleDatabase = Array.isArray(queries);
   const normalizedQueries = singleDatabase ? { default: queries } : queries;
 
-  const queriesWithReferences = await Promise.all(
-    Object.entries(normalizedQueries).map(async ([database, queries]) => {
-      // Extract and process `StorableObject`s, if any are present.
-      // `queriesPopulatedWithReferences` are the given `queries`, just that any
-      // `StorableObject` they might contain has been processed and the value of the
-      // field has been replaced with the reference to the `StoredObject`.
-      // This way, we only store the `reference` of the `StoredObject` inside the
-      // database for better performance.
-      const populatedQueries = await processStorableObjects(queries, (objects) => {
-        return uploadStorableObjects(objects, options);
-      });
+  const queriesWithReferences = (
+    await Promise.all(
+      Object.entries(normalizedQueries).map(async ([database, queries]) => {
+        // Extract and process `StorableObject`s, if any are present.
+        // `queriesPopulatedWithReferences` are the given `queries`, just that any
+        // `StorableObject` they might contain has been processed and the value of the
+        // field has been replaced with the reference to the `StoredObject`.
+        // This way, we only store the `reference` of the `StoredObject` inside the
+        // database for better performance.
+        const populatedQueries = await processStorableObjects(queries, (objects) => {
+          return uploadStorableObjects(objects, options);
+        });
 
-      return [database, populatedQueries];
-    }),
-  );
+        return populatedQueries.map((query) => ({
+          query,
+          database: database === 'default' ? undefined : database,
+        }));
+      }),
+    )
+  ).flat();
 
-  const results = await runQueriesWithHooks<T>(
-    Object.fromEntries(queriesWithReferences),
-    options,
-  );
+  const results = await runQueriesWithHooks<T>(queriesWithReferences, options);
 
   // If only a single database is being addressed, return the results of that database.
-  if (singleDatabase) return results.default;
+  if (singleDatabase)
+    return results.filter(({ database }) => !database).map(({ result }) => result);
 
   // If multiple databases are being addressed, return the results of all databases.
-  return results;
+  return results.reduce(
+    (acc, { result, database = 'default' }) => {
+      if (!acc[database]) acc[database] = [];
+      acc[database].push(result);
+      return acc;
+    },
+    {} as Record<string, FormattedResults<T>>,
+  );
 }
 
 /**
