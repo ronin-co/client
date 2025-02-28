@@ -76,7 +76,7 @@ describe('edge runtime', () => {
     global.process = undefined as unknown as NodeJS.Process;
 
     await runQueriesWithHooks(
-      { default: queries },
+      queries.map((query) => ({ query })),
       {
         fetch: async () => {
           return Response.json({
@@ -135,7 +135,7 @@ describe('edge runtime', () => {
     global.process = undefined as unknown as NodeJS.Process;
 
     await runQueriesWithHooks(
-      { default: queries },
+      queries.map((query) => ({ query })),
       {
         fetch: async () => {
           return Response.json({
@@ -186,7 +186,7 @@ describe('edge runtime', () => {
     global.process = undefined as unknown as NodeJS.Process;
 
     await runQueriesWithHooks(
-      { default: queries },
+      queries.map((query) => ({ query })),
       {
         fetch: async () => {
           return Response.json({
