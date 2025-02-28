@@ -72,17 +72,13 @@ export const runQueries = async <T extends ResultRecord>(
         return acc;
       }
 
-      if ('statement' in details) {
-        const { statement } = details;
-        if (!acc[database].nativeQueries) acc[database].nativeQueries = [];
+      const { statement } = details;
+      if (!acc[database].nativeQueries) acc[database].nativeQueries = [];
 
-        acc[database].nativeQueries.push({
-          query: statement.statement,
-          values: statement.params,
-        });
-
-        return acc;
-      }
+      acc[database].nativeQueries.push({
+        query: statement.statement,
+        values: statement.params,
+      });
 
       return acc;
     },
