@@ -469,24 +469,24 @@ export const runQueriesWithHooks = async <T extends ResultRecord>(
       // For diff queries, we don't want to run "before" hooks.
       if (typeof diffForIndex !== 'undefined') return;
 
-      const modifiedQuery = await invokeHooks(
+      const hookResults = await invokeHooks(
         'before',
         { query },
         { ...hookCallerOptions, database },
       );
-      queryList[index].query = modifiedQuery.query;
+      queryList[index].query = hookResults.query;
     }),
   );
 
   // Invoke `get`, `set`, `add`, `remove`, and `count`.
   await Promise.all(
     queryList.map(async ({ query, database }, index) => {
-      const modifiedQuery = await invokeHooks(
+      const hookResults = await invokeHooks(
         'during',
         { query },
         { ...hookCallerOptions, database },
       );
-      queryList[index].result = modifiedQuery.result as FormattedResults<T>[number];
+      queryList[index].result = hookResults.result as FormattedResults<T>[number];
     }),
   );
 
