@@ -22,7 +22,10 @@ import {
 const EMPTY = Symbol('empty');
 
 interface DataHookOptions {
+  /** The model for which the query is being executed. */
   model?: string;
+  /** The database for which the query is being executed. */
+  database?: string;
 }
 
 export type FilteredHookQuery<
@@ -310,7 +313,8 @@ const invokeHooks = async (
 
   if (hooksForModel && hookName in hooksForModel && !shouldSkip) {
     const hook = hooksForModel[hookName as keyof typeof hooksForModel];
-    const hookOptions = hookFile === 'sink' ? { model: queryModel } : {};
+    const hookOptions =
+      hookFile === 'sink' ? { model: queryModel, database: options.database } : {};
 
     const hookResult = await asyncContext.run(
       {

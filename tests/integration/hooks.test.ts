@@ -695,7 +695,7 @@ describe('hooks', () => {
       },
     );
 
-    const expectedOptions = { model: 'product' };
+    const expectedOptions = { model: 'product', database: 'secondary' };
 
     expect(beforeAddOptions).toMatchObject(expectedOptions);
     expect(duringAddOptions).toMatchObject(expectedOptions);
