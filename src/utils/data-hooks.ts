@@ -21,6 +21,10 @@ import {
 
 const EMPTY = Symbol('empty');
 
+interface DataHookOptions {
+  model?: string;
+}
+
 export type FilteredHookQuery<
   TQuery extends CombinedInstructions,
   TType extends QueryType,
@@ -46,11 +50,16 @@ export type BeforeHookHandler<
     CombinedInstructions,
     TType
   >,
-> = (query: TQuery, multipleRecords: boolean) => TQuery | Promise<TQuery>;
+> = (
+  query: TQuery,
+  multipleRecords: boolean,
+  options: DataHookOptions,
+) => TQuery | Promise<TQuery>;
 
 export type DuringHookHandler<TType extends QueryType, TSchema = unknown> = (
   query: FilteredHookQuery<CombinedInstructions, TType>,
   multipleRecords: boolean,
+  options: DataHookOptions,
 ) => TSchema | Promise<TSchema>;
 
 export type AfterHookHandler<TType extends QueryType, TSchema = unknown> = (
@@ -58,6 +67,7 @@ export type AfterHookHandler<TType extends QueryType, TSchema = unknown> = (
   multipleRecords: boolean,
   beforeResult: TSchema,
   afterResult: TSchema,
+  options: DataHookOptions,
 ) => void | Promise<void>;
 
 // The order of these types is important, as they determine the order in which
@@ -300,6 +310,7 @@ const invokeHooks = async (
 
   if (hooksForModel && hookName in hooksForModel && !shouldSkip) {
     const hook = hooksForModel[hookName as keyof typeof hooksForModel];
+    const hookOptions = hookFile === 'sink' ? { model: queryModel } : {};
 
     const hookResult = await asyncContext.run(
       {
@@ -315,15 +326,16 @@ const invokeHooks = async (
           return (hook as AfterHook<QueryType, unknown>)(
             queryInstruction,
             multipleRecords,
-
             normalizeResults(definition.resultBefore),
             normalizeResults(definition.resultAfter),
+            hookOptions,
           );
         }
 
         return (hook as BeforeHook<QueryType> | DuringHook<QueryType>)(
           queryInstruction,
           multipleRecords,
+          hookOptions,
         );
       },
     );
