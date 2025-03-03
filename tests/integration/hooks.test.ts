@@ -3,8 +3,15 @@ import { AsyncLocalStorage } from 'node:async_hooks';
 import { beforeEach, describe, expect, mock, test } from 'bun:test';
 
 import { createSyntaxFactory } from '@/src/index';
-import { type FilteredHookQuery, runQueriesWithHooks } from '@/src/utils/data-hooks';
-import type { CombinedInstructions, QueryType } from '@ronin/compiler';
+import { runQueriesWithStorageAndHooks } from '@/src/queries';
+import {
+  type AddHook,
+  type AfterAddHook,
+  type BeforeAddHook,
+  type FilteredHookQuery,
+  runQueriesWithHooks,
+} from '@/src/utils/data-hooks';
+import type { CombinedInstructions, Query, QueryType } from '@ronin/compiler';
 
 let mockResolvedRequestText: any;
 
@@ -613,5 +620,98 @@ describe('hooks', () => {
     expect(error?.message).toMatch(
       `In the case that the "ronin" package receives a value for its \`hooks\` option, it must also receive a value for its \`asyncContext\` option.`,
     );
+  });
+
+  test('receive options for sink hook', async () => {
+    const mockFetchNew = mock(() => {
+      return Response.json({
+        default: {
+          results: [
+            {
+              record: {
+                handle: 'elaine',
+              },
+              modelFields: {
+                name: 'string',
+              },
+            },
+          ],
+        },
+      });
+    });
+
+    const defaultQueries: Array<Query> = [
+      {
+        add: {
+          account: {
+            with: {
+              handle: 'elaine',
+            },
+          },
+        },
+      },
+    ];
+
+    const secondaryQueries: Array<Query> = [
+      {
+        add: {
+          product: {
+            with: {
+              name: 'MacBook Pro',
+            },
+          },
+        },
+      },
+    ];
+
+    let beforeAddOptions: Parameters<BeforeAddHook>[2] | undefined;
+    let duringAddOptions: Parameters<AddHook>[2] | undefined;
+    let afterAddOptions: Parameters<AfterAddHook>[4] | undefined;
+
+    const results = await runQueriesWithStorageAndHooks(
+      {
+        default: defaultQueries,
+        secondary: secondaryQueries,
+      },
+      {
+        fetch: async () => mockFetchNew(),
+        token: 'takashitoken',
+        hooks: {
+          sink: {
+            beforeAdd: (query, _multiple, options) => {
+              beforeAddOptions = options;
+              return query;
+            },
+            add: (query, _multiple, options) => {
+              duringAddOptions = options;
+              return query.with;
+            },
+            afterAdd: (_query, _multiple, _beforeResult, _afterResult, options) => {
+              afterAddOptions = options;
+            },
+          },
+        },
+        asyncContext: new AsyncLocalStorage(),
+      },
+    );
+
+    const expectedOptions = { model: 'product', database: 'secondary' };
+
+    expect(beforeAddOptions).toMatchObject(expectedOptions);
+    expect(duringAddOptions).toMatchObject(expectedOptions);
+    expect(afterAddOptions).toMatchObject(expectedOptions);
+
+    expect(results).toMatchObject({
+      default: [
+        {
+          handle: 'elaine',
+        },
+      ],
+      secondary: [
+        {
+          name: 'MacBook Pro',
+        },
+      ],
+    });
   });
 });

@@ -21,6 +21,13 @@ import {
 
 const EMPTY = Symbol('empty');
 
+interface DataHookOptions {
+  /** The model for which the query is being executed. */
+  model?: string;
+  /** The database for which the query is being executed. */
+  database?: string;
+}
+
 export type FilteredHookQuery<
   TQuery extends CombinedInstructions,
   TType extends QueryType,
@@ -46,11 +53,16 @@ export type BeforeHookHandler<
     CombinedInstructions,
     TType
   >,
-> = (query: TQuery, multipleRecords: boolean) => TQuery | Promise<TQuery>;
+> = (
+  query: TQuery,
+  multipleRecords: boolean,
+  options: DataHookOptions,
+) => TQuery | Promise<TQuery>;
 
 export type DuringHookHandler<TType extends QueryType, TSchema = unknown> = (
   query: FilteredHookQuery<CombinedInstructions, TType>,
   multipleRecords: boolean,
+  options: DataHookOptions,
 ) => TSchema | Promise<TSchema>;
 
 export type AfterHookHandler<TType extends QueryType, TSchema = unknown> = (
@@ -58,6 +70,7 @@ export type AfterHookHandler<TType extends QueryType, TSchema = unknown> = (
   multipleRecords: boolean,
   beforeResult: TSchema,
   afterResult: TSchema,
+  options: DataHookOptions,
 ) => void | Promise<void>;
 
 // The order of these types is important, as they determine the order in which
@@ -300,6 +313,8 @@ const invokeHooks = async (
 
   if (hooksForModel && hookName in hooksForModel && !shouldSkip) {
     const hook = hooksForModel[hookName as keyof typeof hooksForModel];
+    const hookOptions =
+      hookFile === 'sink' ? { model: queryModel, database: options.database } : {};
 
     const hookResult = await asyncContext.run(
       {
@@ -315,15 +330,16 @@ const invokeHooks = async (
           return (hook as AfterHook<QueryType, unknown>)(
             queryInstruction,
             multipleRecords,
-
             normalizeResults(definition.resultBefore),
             normalizeResults(definition.resultAfter),
+            hookOptions,
           );
         }
 
         return (hook as BeforeHook<QueryType> | DuringHook<QueryType>)(
           queryInstruction,
           multipleRecords,
+          hookOptions,
         );
       },
     );
@@ -457,24 +473,24 @@ export const runQueriesWithHooks = async <T extends ResultRecord>(
       // For diff queries, we don't want to run "before" hooks.
       if (typeof diffForIndex !== 'undefined') return;
 
-      const modifiedQuery = await invokeHooks(
+      const hookResults = await invokeHooks(
         'before',
         { query },
         { ...hookCallerOptions, database },
       );
-      queryList[index].query = modifiedQuery.query;
+      queryList[index].query = hookResults.query;
     }),
   );
 
   // Invoke `get`, `set`, `add`, `remove`, and `count`.
   await Promise.all(
     queryList.map(async ({ query, database }, index) => {
-      const modifiedQuery = await invokeHooks(
+      const hookResults = await invokeHooks(
         'during',
         { query },
         { ...hookCallerOptions, database },
       );
-      queryList[index].result = modifiedQuery.result as FormattedResults<T>[number];
+      queryList[index].result = hookResults.result as FormattedResults<T>[number];
     }),
   );
 
