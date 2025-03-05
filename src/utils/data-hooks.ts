@@ -29,8 +29,8 @@ interface DataHookOptions {
 }
 
 export type FilteredHookQuery<
-  TQuery extends CombinedInstructions,
   TType extends QueryType,
+  TQuery extends CombinedInstructions = CombinedInstructions,
 > = RecursivePartial<TQuery> &
   Pick<
     TQuery,
@@ -49,10 +49,7 @@ export type FilteredHookQuery<
 
 export type BeforeHookHandler<
   TType extends QueryType,
-  TQuery extends FilteredHookQuery<CombinedInstructions, TType> = FilteredHookQuery<
-    CombinedInstructions,
-    TType
-  >,
+  TQuery extends FilteredHookQuery<TType> = FilteredHookQuery<TType>,
 > = (
   query: TQuery,
   multipleRecords: boolean,
@@ -60,13 +57,13 @@ export type BeforeHookHandler<
 ) => TQuery | Promise<TQuery>;
 
 export type DuringHookHandler<TType extends QueryType, TSchema = unknown> = (
-  query: FilteredHookQuery<CombinedInstructions, TType>,
+  query: FilteredHookQuery<TType>,
   multipleRecords: boolean,
   options: DataHookOptions,
 ) => TSchema | Promise<TSchema>;
 
 export type AfterHookHandler<TType extends QueryType, TSchema = unknown> = (
-  query: FilteredHookQuery<CombinedInstructions, TType>,
+  query: FilteredHookQuery<TType>,
   multipleRecords: boolean,
   beforeResult: TSchema,
   afterResult: TSchema,
