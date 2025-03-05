@@ -54,7 +54,7 @@ export type BeforeHookHandler<
   query: TQuery,
   multipleRecords: boolean,
   options: DataHookOptions,
-) => TQuery | Promise<TQuery>;
+) => TQuery | Promise<TQuery> | Query;
 
 export type DuringHookHandler<TType extends QueryType, TSchema = unknown> = (
   query: FilteredHookQuery<TType>,
