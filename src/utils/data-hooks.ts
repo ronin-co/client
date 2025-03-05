@@ -29,8 +29,8 @@ interface DataHookOptions {
 }
 
 export type FilteredHookQuery<
-  TQuery extends CombinedInstructions,
   TType extends QueryType,
+  TQuery extends CombinedInstructions = CombinedInstructions,
 > = RecursivePartial<TQuery> &
   Pick<
     TQuery,
@@ -49,24 +49,21 @@ export type FilteredHookQuery<
 
 export type BeforeHookHandler<
   TType extends QueryType,
-  TQuery extends FilteredHookQuery<CombinedInstructions, TType> = FilteredHookQuery<
-    CombinedInstructions,
-    TType
-  >,
+  TQuery extends FilteredHookQuery<TType> = FilteredHookQuery<TType>,
 > = (
   query: TQuery,
   multipleRecords: boolean,
   options: DataHookOptions,
-) => TQuery | Promise<TQuery>;
+) => TQuery | Promise<TQuery> | Query;
 
 export type DuringHookHandler<TType extends QueryType, TSchema = unknown> = (
-  query: FilteredHookQuery<CombinedInstructions, TType>,
+  query: FilteredHookQuery<TType>,
   multipleRecords: boolean,
   options: DataHookOptions,
 ) => TSchema | Promise<TSchema>;
 
 export type AfterHookHandler<TType extends QueryType, TSchema = unknown> = (
-  query: FilteredHookQuery<CombinedInstructions, TType>,
+  query: FilteredHookQuery<TType>,
   multipleRecords: boolean,
   beforeResult: TSchema,
   afterResult: TSchema,
@@ -98,7 +95,7 @@ type Hook<
       : never;
 
 type HookList<TSchema = unknown> = {
-  [K in HookKeys]?: K extends 'before'
+  [K in HookKeys]?: K extends 'before' | `before${string}`
     ? BeforeHookHandler<QueryType>
     : K extends 'after' | `after${string}`
       ? AfterHookHandler<QueryType, TSchema>

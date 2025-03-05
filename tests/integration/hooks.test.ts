@@ -108,11 +108,13 @@ describe('hooks', () => {
       hooks: {
         account: {
           beforeGet(query) {
-            return {
+            const fullQuery: Query = {
               get: {
                 team: query,
               },
             };
+
+            return fullQuery;
           },
         },
       },
@@ -204,7 +206,7 @@ describe('hooks', () => {
   });
 
   test('run `create` query through factory containing `after` data hook', async () => {
-    let finalQuery: FilteredHookQuery<CombinedInstructions, QueryType> | undefined;
+    let finalQuery: FilteredHookQuery<QueryType> | undefined;
     let finalMultiple: boolean | undefined;
     let finalBeforeResult: unknown;
     let finalAfterResult: unknown;
@@ -261,7 +263,7 @@ describe('hooks', () => {
   });
 
   test('run `alter` query through factory containing `after` data hook', async () => {
-    let finalQuery: FilteredHookQuery<CombinedInstructions, QueryType> | undefined;
+    let finalQuery: FilteredHookQuery<QueryType> | undefined;
     let finalMultiple: boolean | undefined;
     let finalBeforeResult: unknown;
     let finalAfterResult: unknown;
@@ -410,7 +412,7 @@ describe('hooks', () => {
   });
 
   test('run `set` query affecting multiple accounts through factory containing `after` data hook', async () => {
-    let finalQuery: FilteredHookQuery<CombinedInstructions, QueryType> | undefined;
+    let finalQuery: FilteredHookQuery<QueryType> | undefined;
     let finalMultiple: boolean | undefined;
     let finalBeforeResult: unknown;
     let finalAfterResult: unknown;
@@ -492,7 +494,7 @@ describe('hooks', () => {
   });
 
   test('run normal queries alongside queries that are handled by `during` hook', async () => {
-    let finalQuery: FilteredHookQuery<CombinedInstructions, QueryType> | undefined;
+    let finalQuery: FilteredHookQuery<QueryType> | undefined;
     let finalMultiple: boolean | undefined;
     let mockResolvedRequestText: string | undefined;
 
