@@ -95,7 +95,7 @@ type Hook<
       : never;
 
 type HookList<TSchema = unknown> = {
-  [K in HookKeys]?: K extends 'before'
+  [K in HookKeys]?: K extends 'before' | `before${string}`
     ? BeforeHookHandler<QueryType>
     : K extends 'after' | `after${string}`
       ? AfterHookHandler<QueryType, TSchema>

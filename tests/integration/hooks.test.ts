@@ -108,11 +108,13 @@ describe('hooks', () => {
       hooks: {
         account: {
           beforeGet(query) {
-            return {
+            const fullQuery: Query = {
               get: {
                 team: query,
               },
             };
+
+            return fullQuery;
           },
         },
       },
