@@ -466,10 +466,7 @@ export const runQueriesWithHooks = async <T extends ResultRecord>(
 
   // Invoke `beforeAdd`, `beforeGet`, `beforeSet`, `beforeRemove`, and `beforeCount`.
   await Promise.all(
-    queryList.map(async ({ query, diffForIndex, database }, index) => {
-      // For diff queries, we don't want to run "before" hooks.
-      if (typeof diffForIndex !== 'undefined') return;
-
+    queryList.map(async ({ query, database }, index) => {
       const hookResults = await invokeHooks(
         'before',
         { query },
