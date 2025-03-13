@@ -1,9 +1,7 @@
 {
   "$schema": "https://esm.sh/tsup@8.4.0/schema.json",
   "clean": true,
-  "dts": {
-    "resolve": true
-  },
+  "dts": true,
   "format": "esm",
   "entry": [
     "src/index.ts",
