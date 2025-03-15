@@ -69,7 +69,7 @@ export type PostHookHandler<
   query: TQuery,
   multipleRecords: boolean,
   options: DataHookOptions,
-) => TQuery | Promise<TQuery> | Query;
+) => Array<Query> | Promise<Array<Query>>;
 
 export type AfterHookHandler<TType extends QueryType, TSchema = unknown> = (
   query: FilteredHookQuery<TType>,
