@@ -462,7 +462,10 @@ export const runQueriesWithHooks = async <T extends ResultRecord>(
   const queryList: Array<
     QueriesPerDatabase[number] & {
       result: FormattedResults<T>[number] | symbol;
+      /** Whether the query is a diff query for another query. */
       diffForIndex?: number;
+      /** Whether the query was generated in a "post" hook for another query. */
+      postForIndex?: number;
     }
   > = queries.flatMap(({ query, database }, index) => {
     const details = { query, result: EMPTY, database };
@@ -536,6 +539,7 @@ export const runQueriesWithHooks = async <T extends ResultRecord>(
         query,
         result: EMPTY,
         database,
+        postForIndex: index,
       }));
 
       queryList.splice(index + 1, 0, ...queriesToInsert);
@@ -610,11 +614,15 @@ export const runQueriesWithHooks = async <T extends ResultRecord>(
     if (waitUntil) waitUntil(clearPromise);
   }
 
-  // Filter the list of queries to remove any potential queries used for
-  // "diffing" (retrieving the previous value of a record) and return only the
-  // results of the queries.
+  // Filter the list of queries to remove any potential queries used for "diffing"
+  // (retrieving the previous value of a record) and any potential queries resulting from
+  // "post" hooks. Then return only the results of the queries.
   return queryList
-    .filter((query) => typeof query.diffForIndex === 'undefined')
+    .filter(
+      (query) =>
+        typeof query.diffForIndex === 'undefined' &&
+        typeof query.postForIndex === 'undefined',
+    )
     .map(({ result, database }) => ({
       result: result as FormattedResults<T>[number],
       database,
