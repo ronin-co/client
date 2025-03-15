@@ -820,8 +820,8 @@ describe('hooks', () => {
       add.space.with.handle('company'),
       add.product.with({
         name: 'MacBook',
-        color: 'Space Black'
-      })
+        color: 'Space Black',
+      }),
     ]);
 
     expect(results).toEqual([
@@ -830,8 +830,8 @@ describe('hooks', () => {
       },
       {
         name: 'MacBook',
-        color: 'Space Black'
-      }
+        color: 'Space Black',
+      },
     ]);
 
     expect(memberHooksSpy).toHaveBeenCalled();
@@ -843,6 +843,7 @@ describe('hooks', () => {
           { add: { space: { with: { handle: 'company' } } } },
           { add: { member: { with: { space: { handle: 'company' }, role: 'owner' } } } },
           { add: { app: { with: { space: { handle: 'company' }, token: '1234' } } } },
+          { add: { product: { with: { name: 'MacBook', color: 'Space Black' } } } },
         ],
       }),
     );
