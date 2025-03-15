@@ -1,6 +1,6 @@
 import { AsyncLocalStorage } from 'node:async_hooks';
 
-import { beforeEach, describe, expect, mock, test } from 'bun:test';
+import { beforeEach, describe, expect, mock, spyOn, test } from 'bun:test';
 
 import { createSyntaxFactory } from '@/src/index';
 import { runQueriesWithStorageAndHooks } from '@/src/queries';
@@ -715,5 +715,68 @@ describe('hooks', () => {
         },
       ],
     });
+  });
+
+  test('return queries from `post` data hook', async () => {
+    const memberHooks = { beforeAdd: (query: Parameters<BeforeAddHook>[0]) => query };
+    const memberHooksSpy = spyOn(memberHooks, 'beforeAdd');
+
+    const appHooks = { beforeAdd: (query: Parameters<BeforeAddHook>[0]) => query };
+    const appHooksSpy = spyOn(appHooks, 'beforeAdd');
+
+    const { add } = createSyntaxFactory({
+      hooks: {
+        space: {
+          postAdd(query) {
+            const memberQuery: Query = {
+              add: {
+                member: {
+                  with: {
+                    space: {
+                      handle: (query.with as { handle: string }).handle,
+                    },
+                    role: 'owner',
+                  },
+                },
+              },
+            };
+
+            const appQuery: Query = {
+              add: {
+                app: {
+                  with: {
+                    space: {
+                      handle: (query.with as { handle: string }).handle,
+                    },
+                    token: '1234',
+                  },
+                },
+              },
+            };
+
+            return [memberQuery, appQuery];
+          },
+        },
+
+        member: memberHooks,
+        app: appHooks,
+      },
+      asyncContext: new AsyncLocalStorage(),
+    });
+
+    await add.space.with.handle('elaine');
+
+    expect(memberHooksSpy).toHaveBeenCalled();
+    expect(appHooksSpy).toHaveBeenCalled();
+
+    expect(mockResolvedRequestText).toEqual(
+      JSON.stringify({
+        queries: [
+          { add: { space: { with: { handle: 'elaine' } } } },
+          { add: { member: { with: { space: { handle: 'elaine' }, role: 'owner' } } } },
+          { add: { app: { with: { space: { handle: 'elaine' }, token: '1234' } } } },
+        ],
+      }),
+    );
   });
 });
