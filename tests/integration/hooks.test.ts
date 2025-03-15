@@ -752,6 +752,16 @@ describe('hooks', () => {
                 role: 'string',
               },
             },
+            {
+              record: {
+                name: 'MacBook',
+                color: 'Space Black',
+              },
+              modelFields: {
+                name: 'string',
+                color: 'string',
+              },
+            },
           ],
         },
       });
@@ -806,12 +816,22 @@ describe('hooks', () => {
 
     // We're using a batch to be able to check whether the results of the queries
     // returned from the `post` data hook are being excluded correctly.
-    const results = await batch(() => [add.space.with.handle('company')]);
+    const results = await batch(() => [
+      add.space.with.handle('company'),
+      add.product.with({
+        name: 'MacBook',
+        color: 'Space Black'
+      })
+    ]);
 
     expect(results).toEqual([
       {
         handle: 'company',
       },
+      {
+        name: 'MacBook',
+        color: 'Space Black'
+      }
     ]);
 
     expect(memberHooksSpy).toHaveBeenCalled();
