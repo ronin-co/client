@@ -263,8 +263,12 @@ const invokeHooks = async (
   },
   options: HookCallerOptions,
 ): Promise<{
+  /** The original query that was provided — possibly modified within the hook. */
   query: Query;
+  /** The result of a query provided by a "during" hook. */
   result?: FormattedResults<unknown>[number] | symbol;
+  /** A list of queries provided by a "post" hook. */
+  resultQueries?: Array<Query>;
 }> => {
   const { hooks, asyncContext } = options;
   const { query } = definition;
@@ -395,6 +399,13 @@ const invokeHooks = async (
       return { query, result };
     }
 
+    // If the hook returned multiple queries that should be run after the original query,
+    // we want to return those queries.
+    if (hookType === 'post') {
+      const queries = hookResult as Array<Query>;
+      return { query, resultQueries: queries };
+    }
+
     // In the case of "after" hooks, we don't need to do anything, because they
     // are run asynchronously and aren't expected to return anything.
   }
@@ -509,6 +520,25 @@ export const runQueriesWithHooks = async <T extends ResultRecord>(
         { ...hookCallerOptions, database },
       );
       queryList[index].result = hookResults.result as FormattedResults<T>[number];
+    }),
+  );
+
+  // Invoke `postAdd`, `postGet`, `postSet`, `postRemove`, and `postCount`.
+  await Promise.all(
+    queryList.map(async ({ query, database }, index) => {
+      const hookResults = await invokeHooks(
+        'post',
+        { query },
+        { ...hookCallerOptions, database },
+      );
+
+      const queriesToInsert = (hookResults.resultQueries || []).map((query) => ({
+        query,
+        result: EMPTY,
+        database,
+      }));
+
+      queryList.splice(index + 1, 0, ...queriesToInsert);
     }),
   );
 
