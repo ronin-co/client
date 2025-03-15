@@ -718,13 +718,52 @@ describe('hooks', () => {
   });
 
   test('return queries from `post` data hook', async () => {
-    const memberHooks = { beforeAdd: (query: Parameters<BeforeAddHook>[0]) => query };
-    const memberHooksSpy = spyOn(memberHooks, 'beforeAdd');
+    const mockFetchNew: typeof fetch = async (input: string | URL | Request) => {
+      mockResolvedRequestText = await (input as Request).text();
 
-    const appHooks = { beforeAdd: (query: Parameters<BeforeAddHook>[0]) => query };
-    const appHooksSpy = spyOn(appHooks, 'beforeAdd');
+      return Response.json({
+        default: {
+          results: [
+            {
+              record: {
+                handle: 'company',
+              },
+              modelFields: {
+                handle: 'string',
+              },
+            },
+            {
+              record: {
+                space: '1234',
+                role: 'owner',
+              },
+              modelFields: {
+                space: 'link',
+                role: 'string',
+              },
+            },
+            {
+              record: {
+                space: '1234',
+                token: '1234',
+              },
+              modelFields: {
+                space: 'link',
+                role: 'string',
+              },
+            },
+          ],
+        },
+      });
+    };
 
-    const { add } = createSyntaxFactory({
+    const memberHooks = { afterAdd: () => undefined };
+    const memberHooksSpy = spyOn(memberHooks, 'afterAdd');
+
+    const appHooks = { afterAdd: () => undefined };
+    const appHooksSpy = spyOn(appHooks, 'afterAdd');
+
+    const { batch, add } = createSyntaxFactory({
       hooks: {
         space: {
           postAdd(query) {
@@ -761,10 +800,19 @@ describe('hooks', () => {
         member: memberHooks,
         app: appHooks,
       },
+      fetch: mockFetchNew,
       asyncContext: new AsyncLocalStorage(),
     });
 
-    await add.space.with.handle('elaine');
+    // We're using a batch to be able to check whether the results of the queries
+    // returned from the `post` data hook are being excluded correctly.
+    const results = await batch(() => [add.space.with.handle('company')]);
+
+    expect(results).toEqual([
+      {
+        handle: 'company',
+      },
+    ]);
 
     expect(memberHooksSpy).toHaveBeenCalled();
     expect(appHooksSpy).toHaveBeenCalled();
@@ -772,9 +820,9 @@ describe('hooks', () => {
     expect(mockResolvedRequestText).toEqual(
       JSON.stringify({
         queries: [
-          { add: { space: { with: { handle: 'elaine' } } } },
-          { add: { member: { with: { space: { handle: 'elaine' }, role: 'owner' } } } },
-          { add: { app: { with: { space: { handle: 'elaine' }, token: '1234' } } } },
+          { add: { space: { with: { handle: 'company' } } } },
+          { add: { member: { with: { space: { handle: 'company' }, role: 'owner' } } } },
+          { add: { app: { with: { space: { handle: 'company' }, token: '1234' } } } },
         ],
       }),
     );
