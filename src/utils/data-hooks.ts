@@ -62,6 +62,15 @@ export type DuringHookHandler<TType extends QueryType, TSchema = unknown> = (
   options: DataHookOptions,
 ) => TSchema | Promise<TSchema>;
 
+export type PostHookHandler<
+  TType extends QueryType,
+  TQuery extends FilteredHookQuery<TType> = FilteredHookQuery<TType>,
+> = (
+  query: TQuery,
+  multipleRecords: boolean,
+  options: DataHookOptions,
+) => Array<Query> | Promise<Array<Query>>;
+
 export type AfterHookHandler<TType extends QueryType, TSchema = unknown> = (
   query: FilteredHookQuery<TType>,
   multipleRecords: boolean,
@@ -72,13 +81,14 @@ export type AfterHookHandler<TType extends QueryType, TSchema = unknown> = (
 
 // The order of these types is important, as they determine the order in which
 // data hooks are run (the "data hook lifecycle").
-const HOOK_TYPES = ['before', 'during', 'after'] as const;
+const HOOK_TYPES = ['before', 'during', 'post', 'after'] as const;
 
 type HookType = (typeof HOOK_TYPES)[number];
 
 type HookKeys = (
   | { [K in QueryType]: K }
   | { [K in QueryType]: `before${Capitalize<K>}` }
+  | { [K in QueryType]: `post${Capitalize<K>}` }
   | { [K in QueryType]: `after${Capitalize<K>}` }
 )[QueryType];
 
@@ -90,17 +100,21 @@ type Hook<
   ? BeforeHookHandler<TType>
   : TStage extends 'during'
     ? DuringHookHandler<TType, TSchema>
-    : TStage extends 'after'
-      ? AfterHookHandler<TType, TSchema>
-      : never;
+    : TStage extends 'post'
+      ? PostHookHandler<TType>
+      : TStage extends 'after'
+        ? AfterHookHandler<TType, TSchema>
+        : never;
 
 type HookList<TSchema = unknown> = {
   [K in HookKeys]?: K extends 'before' | `before${string}`
     ? BeforeHookHandler<QueryType>
-    : K extends 'after' | `after${string}`
-      ? AfterHookHandler<QueryType, TSchema>
-      : DuringHookHandler<QueryType, TSchema>;
-} & { blockingAfter?: boolean };
+    : K extends 'post' | `post${string}`
+      ? PostHookHandler<QueryType>
+      : K extends 'after' | `after${string}`
+        ? AfterHookHandler<QueryType, TSchema>
+        : DuringHookHandler<QueryType, TSchema>;
+};
 
 export type Hooks<TSchema = unknown> = Record<string, HookList<TSchema>>;
 
@@ -110,6 +124,7 @@ type DuringHook<TType extends QueryType, TSchema = unknown> = Hook<
   TType,
   TSchema
 >;
+type PostHook<TType extends QueryType> = Hook<'post', TType>;
 type AfterHook<TType extends QueryType, TSchema = unknown> = Hook<
   'after',
   TType,
@@ -133,6 +148,15 @@ export type CountHook<TSchema = unknown> = DuringHook<'count', TSchema>;
 export type CreateHook<TSchema = unknown> = DuringHook<'create', TSchema>;
 export type AlterHook<TSchema = unknown> = DuringHook<'alter', TSchema>;
 export type DropHook<TSchema = unknown> = DuringHook<'drop', TSchema>;
+
+export type PostGetHook = PostHook<'get'>;
+export type PostSetHook = PostHook<'set'>;
+export type PostAddHook = PostHook<'add'>;
+export type PostRemoveHook = PostHook<'remove'>;
+export type PostCountHook = PostHook<'count'>;
+export type PostCreateHook = PostHook<'create'>;
+export type PostAlterHook = PostHook<'alter'>;
+export type PostDropHook = PostHook<'drop'>;
 
 export type AfterGetHook<TSchema = unknown> = AfterHook<'get', TSchema>;
 export type AfterSetHook<TSchema = unknown> = AfterHook<'set', TSchema>;
@@ -239,8 +263,12 @@ const invokeHooks = async (
   },
   options: HookCallerOptions,
 ): Promise<{
+  /** The original query that was provided — possibly modified within the hook. */
   query: Query;
+  /** The result of a query provided by a "during" hook. */
   result?: FormattedResults<unknown>[number] | symbol;
+  /** A list of queries provided by a "post" hook. */
+  resultQueries?: Array<Query>;
 }> => {
   const { hooks, asyncContext } = options;
   const { query } = definition;
@@ -371,6 +399,13 @@ const invokeHooks = async (
       return { query, result };
     }
 
+    // If the hook returned multiple queries that should be run after the original query,
+    // we want to return those queries.
+    if (hookType === 'post') {
+      const queries = hookResult as Array<Query>;
+      return { query, resultQueries: queries };
+    }
+
     // In the case of "after" hooks, we don't need to do anything, because they
     // are run asynchronously and aren't expected to return anything.
   }
@@ -427,7 +462,10 @@ export const runQueriesWithHooks = async <T extends ResultRecord>(
   const queryList: Array<
     QueriesPerDatabase[number] & {
       result: FormattedResults<T>[number] | symbol;
+      /** Whether the query is a diff query for another query. */
       diffForIndex?: number;
+      /** Whether the query was generated in a "post" hook for another query. */
+      postForIndex?: number;
     }
   > = queries.flatMap(({ query, database }, index) => {
     const details = { query, result: EMPTY, database };
@@ -488,6 +526,26 @@ export const runQueriesWithHooks = async <T extends ResultRecord>(
     }),
   );
 
+  // Invoke `postAdd`, `postGet`, `postSet`, `postRemove`, and `postCount`.
+  await Promise.all(
+    queryList.map(async ({ query, database }, index) => {
+      const hookResults = await invokeHooks(
+        'post',
+        { query },
+        { ...hookCallerOptions, database },
+      );
+
+      const queriesToInsert = (hookResults.resultQueries || []).map((query) => ({
+        query,
+        result: EMPTY,
+        database,
+        postForIndex: index,
+      }));
+
+      queryList.splice(index + 1, 0, ...queriesToInsert);
+    }),
+  );
+
   const queriesWithoutResults = queryList
     .map((query, index) => ({ ...query, index }))
     .filter((query) => query.result === EMPTY);
@@ -541,19 +599,12 @@ export const runQueriesWithHooks = async <T extends ResultRecord>(
       { ...hookCallerOptions, database },
     );
 
-    const queryInstructions = query[queryType] as QuerySchemaType;
-    const { model: queryModel } = getModel(queryInstructions);
-    const hooksForModel = hooks[queryModel];
-    const isBlocking = hooksForModel?.blockingAfter;
-
     // The result of the hook should not be made available, otherwise
     // developers might start relying on it. Only errors should be propagated.
     const clearPromise = promise.then(
       () => {},
       (error) => Promise.reject(error),
     );
-
-    if (isBlocking) await clearPromise;
 
     // If the configuration option for extending the lifetime of the edge
     // worker invocation was passed, provide it with the resulting promise of
@@ -563,11 +614,15 @@ export const runQueriesWithHooks = async <T extends ResultRecord>(
     if (waitUntil) waitUntil(clearPromise);
   }
 
-  // Filter the list of queries to remove any potential queries used for
-  // "diffing" (retrieving the previous value of a record) and return only the
-  // results of the queries.
+  // Filter the list of queries to remove any potential queries used for "diffing"
+  // (retrieving the previous value of a record) and any potential queries resulting from
+  // "post" hooks. Then return only the results of the queries.
   return queryList
-    .filter((query) => typeof query.diffForIndex === 'undefined')
+    .filter(
+      (query) =>
+        typeof query.diffForIndex === 'undefined' &&
+        typeof query.postForIndex === 'undefined',
+    )
     .map(({ result, database }) => ({
       result: result as FormattedResults<T>[number],
       database,

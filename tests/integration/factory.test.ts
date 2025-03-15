@@ -309,12 +309,12 @@ describe('factory', () => {
       // schema types.
       remove.accounts.with.emailVerified(false),
       add.spaces({
-        to: { handle: 'test-space', members: ['member1', 'member2'] },
+        with: { handle: 'test-space', members: ['member1', 'member2'] },
       }),
     ]) as Parameters<typeof batch>[0]);
 
     expect(mockResolvedRequestText).toEqual(
-      '{"queries":[{"set":{"members":{"with":{"createdAt":{"lessThan":"2024-04-16T15:02:12.710Z"},"paid":true},"to":{"status":"active","activeFrom":"2024-04-16T15:02:12.710Z"}}}},{"get":{"accounts":{}}},{"count":{"spaces":{"with":{"membersCount":{"notBeing":0}}}}},{"remove":{"accounts":{"with":{"emailVerified":false}}}},{"add":{"spaces":{"to":{"handle":"test-space","members":["member1","member2"]}}}}]}',
+      '{"queries":[{"set":{"members":{"with":{"createdAt":{"lessThan":"2024-04-16T15:02:12.710Z"},"paid":true},"to":{"status":"active","activeFrom":"2024-04-16T15:02:12.710Z"}}}},{"get":{"accounts":{}}},{"count":{"spaces":{"with":{"membersCount":{"notBeing":0}}}}},{"remove":{"accounts":{"with":{"emailVerified":false}}}},{"add":{"spaces":{"with":{"handle":"test-space","members":["member1","member2"]}}}}]}',
     );
   });
 

@@ -1,6 +1,6 @@
 import { AsyncLocalStorage } from 'node:async_hooks';
 
-import { beforeEach, describe, expect, mock, test } from 'bun:test';
+import { beforeEach, describe, expect, mock, spyOn, test } from 'bun:test';
 
 import { createSyntaxFactory } from '@/src/index';
 import { runQueriesWithStorageAndHooks } from '@/src/queries';
@@ -715,5 +715,137 @@ describe('hooks', () => {
         },
       ],
     });
+  });
+
+  test('return queries from `post` data hook', async () => {
+    const mockFetchNew: typeof fetch = async (input: string | URL | Request) => {
+      mockResolvedRequestText = await (input as Request).text();
+
+      return Response.json({
+        default: {
+          results: [
+            {
+              record: {
+                handle: 'company',
+              },
+              modelFields: {
+                handle: 'string',
+              },
+            },
+            {
+              record: {
+                space: '1234',
+                role: 'owner',
+              },
+              modelFields: {
+                space: 'link',
+                role: 'string',
+              },
+            },
+            {
+              record: {
+                space: '1234',
+                token: '1234',
+              },
+              modelFields: {
+                space: 'link',
+                role: 'string',
+              },
+            },
+            {
+              record: {
+                name: 'MacBook',
+                color: 'Space Black',
+              },
+              modelFields: {
+                name: 'string',
+                color: 'string',
+              },
+            },
+          ],
+        },
+      });
+    };
+
+    const memberHooks = { afterAdd: () => undefined };
+    const memberHooksSpy = spyOn(memberHooks, 'afterAdd');
+
+    const appHooks = { afterAdd: () => undefined };
+    const appHooksSpy = spyOn(appHooks, 'afterAdd');
+
+    const { batch, add } = createSyntaxFactory({
+      hooks: {
+        space: {
+          postAdd(query) {
+            const memberQuery: Query = {
+              add: {
+                member: {
+                  with: {
+                    space: {
+                      handle: (query.with as { handle: string }).handle,
+                    },
+                    role: 'owner',
+                  },
+                },
+              },
+            };
+
+            const appQuery: Query = {
+              add: {
+                app: {
+                  with: {
+                    space: {
+                      handle: (query.with as { handle: string }).handle,
+                    },
+                    token: '1234',
+                  },
+                },
+              },
+            };
+
+            return [memberQuery, appQuery];
+          },
+        },
+
+        member: memberHooks,
+        app: appHooks,
+      },
+      fetch: mockFetchNew,
+      asyncContext: new AsyncLocalStorage(),
+    });
+
+    // We're using a batch to be able to check whether the results of the queries
+    // returned from the `post` data hook are being excluded correctly.
+    const results = await batch(() => [
+      add.space.with.handle('company'),
+      add.product.with({
+        name: 'MacBook',
+        color: 'Space Black',
+      }),
+    ]);
+
+    expect(results).toEqual([
+      {
+        handle: 'company',
+      },
+      {
+        name: 'MacBook',
+        color: 'Space Black',
+      },
+    ]);
+
+    expect(memberHooksSpy).toHaveBeenCalled();
+    expect(appHooksSpy).toHaveBeenCalled();
+
+    expect(mockResolvedRequestText).toEqual(
+      JSON.stringify({
+        queries: [
+          { add: { space: { with: { handle: 'company' } } } },
+          { add: { member: { with: { space: { handle: 'company' }, role: 'owner' } } } },
+          { add: { app: { with: { space: { handle: 'company' }, token: '1234' } } } },
+          { add: { product: { with: { name: 'MacBook', color: 'Space Black' } } } },
+        ],
+      }),
+    );
   });
 });
