@@ -309,7 +309,7 @@ describe('factory', () => {
       // schema types.
       remove.accounts.with.emailVerified(false),
       add.spaces({
-        to: { handle: 'test-space', members: ['member1', 'member2'] },
+        with: { handle: 'test-space', members: ['member1', 'member2'] },
       }),
     ]) as Parameters<typeof batch>[0]);
 

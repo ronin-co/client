@@ -62,6 +62,15 @@ export type DuringHookHandler<TType extends QueryType, TSchema = unknown> = (
   options: DataHookOptions,
 ) => TSchema | Promise<TSchema>;
 
+export type PostHookHandler<
+  TType extends QueryType,
+  TQuery extends FilteredHookQuery<TType> = FilteredHookQuery<TType>,
+> = (
+  query: TQuery,
+  multipleRecords: boolean,
+  options: DataHookOptions,
+) => TQuery | Promise<TQuery> | Query;
+
 export type AfterHookHandler<TType extends QueryType, TSchema = unknown> = (
   query: FilteredHookQuery<TType>,
   multipleRecords: boolean,
@@ -72,13 +81,14 @@ export type AfterHookHandler<TType extends QueryType, TSchema = unknown> = (
 
 // The order of these types is important, as they determine the order in which
 // data hooks are run (the "data hook lifecycle").
-const HOOK_TYPES = ['before', 'during', 'after'] as const;
+const HOOK_TYPES = ['before', 'during', 'post', 'after'] as const;
 
 type HookType = (typeof HOOK_TYPES)[number];
 
 type HookKeys = (
   | { [K in QueryType]: K }
   | { [K in QueryType]: `before${Capitalize<K>}` }
+  | { [K in QueryType]: `post${Capitalize<K>}` }
   | { [K in QueryType]: `after${Capitalize<K>}` }
 )[QueryType];
 
@@ -90,16 +100,20 @@ type Hook<
   ? BeforeHookHandler<TType>
   : TStage extends 'during'
     ? DuringHookHandler<TType, TSchema>
-    : TStage extends 'after'
-      ? AfterHookHandler<TType, TSchema>
-      : never;
+    : TStage extends 'post'
+      ? PostHookHandler<TType>
+      : TStage extends 'after'
+        ? AfterHookHandler<TType, TSchema>
+        : never;
 
 type HookList<TSchema = unknown> = {
   [K in HookKeys]?: K extends 'before' | `before${string}`
     ? BeforeHookHandler<QueryType>
-    : K extends 'after' | `after${string}`
-      ? AfterHookHandler<QueryType, TSchema>
-      : DuringHookHandler<QueryType, TSchema>;
+    : K extends 'post' | `post${string}`
+      ? PostHookHandler<QueryType>
+      : K extends 'after' | `after${string}`
+        ? AfterHookHandler<QueryType, TSchema>
+        : DuringHookHandler<QueryType, TSchema>;
 };
 
 export type Hooks<TSchema = unknown> = Record<string, HookList<TSchema>>;
@@ -110,6 +124,7 @@ type DuringHook<TType extends QueryType, TSchema = unknown> = Hook<
   TType,
   TSchema
 >;
+type PostHook<TType extends QueryType> = Hook<'post', TType>;
 type AfterHook<TType extends QueryType, TSchema = unknown> = Hook<
   'after',
   TType,
@@ -133,6 +148,15 @@ export type CountHook<TSchema = unknown> = DuringHook<'count', TSchema>;
 export type CreateHook<TSchema = unknown> = DuringHook<'create', TSchema>;
 export type AlterHook<TSchema = unknown> = DuringHook<'alter', TSchema>;
 export type DropHook<TSchema = unknown> = DuringHook<'drop', TSchema>;
+
+export type PostGetHook = PostHook<'get'>;
+export type PostSetHook = PostHook<'set'>;
+export type PostAddHook = PostHook<'add'>;
+export type PostRemoveHook = PostHook<'remove'>;
+export type PostCountHook = PostHook<'count'>;
+export type PostCreateHook = PostHook<'create'>;
+export type PostAlterHook = PostHook<'alter'>;
+export type PostDropHook = PostHook<'drop'>;
 
 export type AfterGetHook<TSchema = unknown> = AfterHook<'get', TSchema>;
 export type AfterSetHook<TSchema = unknown> = AfterHook<'set', TSchema>;
