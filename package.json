@@ -78,7 +78,7 @@
   },
   "devDependencies": {
     "@biomejs/biome": "1.9.4",
-    "@types/bun": "1.2.5",
+    "@types/bun": "1.2.4",
     "tsup": "8.4.0",
     "typescript": "5.8.2"
   }
