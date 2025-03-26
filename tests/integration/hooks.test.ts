@@ -195,7 +195,7 @@ describe('hooks', () => {
     // Make sure a single schema is resolved.
     expect(schema.id).toBe('1');
 
-    const schemas = await get.schemas();
+    const schemas = await get.schemas<Array<unknown>>();
     // Make sure multiple schemas are resolved.
     expect(schemas.length).toBe(2);
 
