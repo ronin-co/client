@@ -37,6 +37,12 @@ export interface QueryHandlerOptions {
    * option is required.
    */
   asyncContext?: AsyncLocalStorage<any>;
+
+  /**
+   * If the query should be run for a specific database within your space, you may
+   * provide the desired database name here.
+   */
+  database?: string;
 }
 
 /**
