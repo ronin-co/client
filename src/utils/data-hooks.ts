@@ -275,15 +275,19 @@ const invokeHooks = async (
 
   const queryType = Object.keys(query)[0] as QueryType;
   const queryInstructions = query[queryType] as QuerySchemaType;
-  const { key, model: queryModel, multipleRecords } = getModel(queryInstructions);
-  const oldInstruction = queryInstructions[key];
+  const {
+    key: queryModel,
+    model: queryModelDashed,
+    multipleRecords,
+  } = getModel(queryInstructions);
+  const oldInstruction = queryInstructions[queryModel];
 
   // If the hooks are being executed for a custom database, all hooks must be located
   // inside a file named `sink.ts`, which catches the queries for all other databases.
   //
   // If the hooks are *not* being executed for a custom database, the hook file name
   // matches the model that is being addressed by the query.
-  const hookFile = options.database ? 'sink' : queryModel;
+  const hookFile = options.database ? 'sink' : queryModelDashed;
   const hooksForModel = hooks[hookFile];
   const hookName = getMethodName(hookType, queryType);
 
@@ -384,7 +388,7 @@ const invokeHooks = async (
       else {
         newQuery = {
           [queryType]: {
-            [key]: result as CombinedInstructions,
+            [queryModel]: result as CombinedInstructions,
           },
         };
       }
