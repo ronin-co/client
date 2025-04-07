@@ -79,6 +79,128 @@ describe('factory', () => {
     );
   });
 
+  test('can use custom database', async () => {
+    const mockFetchNew = mock((request) => {
+      mockRequestResolvedValue = request;
+
+      return Response.json({
+        databaseName: {
+          results: [
+            {
+              record: {
+                name: 'Tim',
+                createdAt: '2024-04-16T15:02:12.710Z',
+                ronin: {
+                  updatedAt: '2024-05-16T15:02:12.710Z',
+                },
+              },
+              modelFields: {
+                name: 'string',
+                createdAt: 'date',
+                'ronin.updatedAt': 'date',
+              },
+            },
+          ],
+        },
+      });
+    });
+
+    const factory = createSyntaxFactory({
+      fetch: async (request) => mockFetchNew(request),
+      token: 'takashitoken',
+    });
+
+    const record = await factory.get.account(
+      {},
+      {
+        database: 'databaseName',
+      },
+    );
+
+    expect(record).toMatchObject({
+      name: 'Tim',
+      createdAt: new Date('2024-04-16T15:02:12.710Z'),
+      ronin: {
+        updatedAt: new Date('2024-05-16T15:02:12.710Z'),
+      },
+    });
+  });
+
+  test('can use custom database in batch', async () => {
+    const mockFetchNew = mock((request) => {
+      mockRequestResolvedValue = request;
+
+      return Response.json({
+        databaseName: {
+          results: [
+            {
+              record: {
+                name: 'Tim',
+                handle: 'tim',
+                createdAt: '2024-04-16T15:02:12.710Z',
+                ronin: {
+                  updatedAt: '2024-05-16T15:02:12.710Z',
+                },
+              },
+              modelFields: {
+                name: 'string',
+                createdAt: 'date',
+                'ronin.updatedAt': 'date',
+              },
+            },
+            {
+              record: {
+                name: 'David',
+                handle: 'david',
+                createdAt: '2024-04-16T15:02:12.710Z',
+                ronin: {
+                  updatedAt: '2024-05-16T15:02:12.710Z',
+                },
+              },
+              modelFields: {
+                name: 'string',
+                createdAt: 'date',
+                'ronin.updatedAt': 'date',
+              },
+            },
+          ],
+        },
+      });
+    });
+
+    const factory = createSyntaxFactory({
+      fetch: async (request) => mockFetchNew(request),
+      token: 'takashitoken',
+    });
+
+    const records = await factory.batch(
+      () => [
+        factory.get.account.with.handle('tim'),
+        factory.get.account.with.handle('david'),
+      ],
+      { database: 'databaseName' },
+    );
+
+    expect(records).toMatchObject([
+      {
+        name: 'Tim',
+        handle: 'tim',
+        createdAt: new Date('2024-04-16T15:02:12.710Z'),
+        ronin: {
+          updatedAt: new Date('2024-05-16T15:02:12.710Z'),
+        },
+      },
+      {
+        name: 'David',
+        handle: 'david',
+        createdAt: new Date('2024-04-16T15:02:12.710Z'),
+        ronin: {
+          updatedAt: new Date('2024-05-16T15:02:12.710Z'),
+        },
+      },
+    ]);
+  });
+
   test('send correct `queries` for single `get` request', async () => {
     await get.accounts();
 
