@@ -657,7 +657,9 @@ describe('hooks', () => {
     const secondaryQueries: Array<Query> = [
       {
         add: {
-          product: {
+          // We are purposefully using camel-case here in order to ensure that the final
+          // data hook options are formatted correctly.
+          someProduct: {
             with: {
               name: 'MacBook Pro',
             },
@@ -697,7 +699,7 @@ describe('hooks', () => {
       },
     );
 
-    const expectedOptions = { model: 'product', database: 'secondary' };
+    const expectedOptions = { model: 'someProduct', database: 'secondary' };
 
     expect(beforeAddOptions).toMatchObject(expectedOptions);
     expect(duringAddOptions).toMatchObject(expectedOptions);
