@@ -270,6 +270,8 @@ describe('hooks', () => {
     let finalBeforeResult: unknown;
     let finalAfterResult: unknown;
 
+    let mockResolvedRequestJSON: unknown | undefined;
+
     const previousModel = {
       id: '1',
       slug: 'account',
@@ -287,7 +289,9 @@ describe('hooks', () => {
     };
 
     const { alter } = createSyntaxFactory({
-      fetch: async () => {
+      fetch: async (request) => {
+        mockResolvedRequestJSON = await (request as Request).json();
+
         return Response.json({
           results: [
             {
@@ -317,6 +321,13 @@ describe('hooks', () => {
       to: {
         slug: 'user',
       },
+    });
+
+    expect(mockResolvedRequestJSON).toEqual({
+      queries: [
+        { list: { model: 'account' } },
+        { alter: { model: 'account', to: { slug: 'user' } } },
+      ],
     });
 
     // Make sure `finalQuery` matches the initial query payload.

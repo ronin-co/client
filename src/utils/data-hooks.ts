@@ -517,16 +517,28 @@ export const runQueriesWithHooks = async <T extends ResultRecord>(
     const { query, database } = details;
 
     if (query.set || query.alter) {
-      const modelSlug = query.alter ? 'model' : Object.keys(query.set!)[0];
-      const withInstruction =
-        modelSlug === 'model' ? { slug: query.alter!.model } : query.set![modelSlug].with;
+      let newQuery: Query | undefined;
+
+      if (query.set) {
+        const modelSlug = Object.keys(query.set!)[0];
+
+        newQuery = {
+          get: {
+            [modelSlug]: {
+              with: query.set![modelSlug].with,
+            },
+          },
+        };
+      } else {
+        newQuery = {
+          list: {
+            model: query.alter!.model,
+          },
+        };
+      }
 
       const diffQuery = {
-        query: {
-          get: {
-            [modelSlug]: { with: withInstruction },
-          },
-        },
+        query: newQuery,
         diffForIndex: index + 1,
         result: EMPTY,
         database,
