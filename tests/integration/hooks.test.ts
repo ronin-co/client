@@ -312,7 +312,7 @@ describe('hooks', () => {
       asyncContext: new AsyncLocalStorage(),
     });
 
-    const model = await (alter as unknown as (details: object) => unknown)({
+    await (alter as unknown as (details: object) => unknown)({
       model: 'account',
       to: {
         slug: 'user',
