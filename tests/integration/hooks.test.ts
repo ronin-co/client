@@ -246,7 +246,9 @@ describe('hooks', () => {
 
     // Make sure `finalQuery` matches the initial query.
     expect(finalQuery).toMatchObject({
-      slug: 'account',
+      model: {
+        slug: 'account',
+      },
     });
 
     // Make sure `finalBeforeResult` is empty, since the record is being
@@ -305,7 +307,12 @@ describe('hooks', () => {
     });
 
     // Make sure `finalQuery` matches the initial query payload.
-    expect(finalQuery).toMatch('account');
+    expect(finalQuery).toMatchObject({
+      model: 'account',
+      to: {
+        slug: 'user',
+      },
+    });
 
     // Make sure `finalBeforeResult` is empty, since the record is being
     // created and didn't exist before.
@@ -321,6 +328,8 @@ describe('hooks', () => {
   });
 
   test('run `drop` query through factory containing `after` data hook', async () => {
+    let finalQuery: FilteredHookQuery<QueryType> | undefined;
+    let finalMultiple: boolean | undefined;
     let finalBeforeResult: unknown;
     let finalAfterResult: unknown;
 
@@ -342,7 +351,9 @@ describe('hooks', () => {
       },
       hooks: {
         model: {
-          afterDrop(_query, _multiple, beforeResult, afterResult) {
+          afterDrop(query, multiple, beforeResult, afterResult) {
+            finalQuery = query;
+            finalMultiple = multiple;
             finalBeforeResult = beforeResult;
             finalAfterResult = afterResult;
           },
@@ -353,6 +364,11 @@ describe('hooks', () => {
 
     const model = await drop.model('account' as Parameters<typeof drop.model>[0]);
 
+    // Make sure `finalQuery` matches the initial query payload.
+    expect(finalQuery).toMatchObject({
+      model: 'account',
+    });
+
     // Make sure `finalBeforeResult` is defined and contains the value of the record
     // before it was removed.
     expect(finalBeforeResult).toEqual([model]);
@@ -362,6 +378,8 @@ describe('hooks', () => {
     // We must use `toMatchObject` here, to ensure that the array is really
     // empty and doesn't contain any `undefined` items.
     expect(finalAfterResult).toMatchObject([]);
+
+    expect(finalMultiple).toBe(false);
   });
 
   test('run `remove` query through factory containing `after` data hook', async () => {
