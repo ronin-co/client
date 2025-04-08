@@ -1,6 +1,6 @@
 {
   "name": "ronin",
-  "version": "6.4.10",
+  "version": "6.4.11",
   "type": "module",
   "description": "Access your RONIN database via TypeScript.",
   "main": "./dist/index.js",
