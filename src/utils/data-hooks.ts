@@ -492,23 +492,23 @@ export const runQueriesWithHooks = async <T extends ResultRecord>(
   > = queries.flatMap(({ query, database }, index) => {
     const details = { query, result: EMPTY, database };
 
-    // If data hooks are enabled, we want to send a separate `get` query for
-    // every `set` query (in the same transaction), so that we can provide the
-    // data hooks with a "before and after" of the modified records.
+    // If data hooks are enabled, we want to send a separate `get` query for every `set`
+    // and `alter` query (in the same transaction), so that we can provide the data hooks
+    // with a "before and after" of the modified records.
     //
-    // The version of the record *after* the modification is already available
-    // without the extra `get` query, since `set` queries return the modified
-    // record afterward, but in order to get the version of the record
-    // *before* the modification, we need a separate `get` query.
-    if (query.set) {
-      const modelSlug = Object.keys(query.set)[0];
+    // The version of the record *after* the modification is already available without
+    // the extra `get` query, since `set` queries return the modified record afterward,
+    // but in order to get the version of the record *before* the modification, we need a
+    // separate `get` query.
+    if (query.set || query.alter) {
+      const modelSlug = query.alter ? 'model' : Object.keys(query.set!)[0];
+      const withInstruction =
+        modelSlug === 'model' ? { slug: query.alter!.model } : query.set![modelSlug].with;
 
       const diffQuery = {
         query: {
           get: {
-            [modelSlug]: {
-              with: query.set[modelSlug].with,
-            },
+            [modelSlug]: { with: withInstruction },
           },
         },
         diffForIndex: index + 1,

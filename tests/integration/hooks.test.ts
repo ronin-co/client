@@ -270,18 +270,31 @@ describe('hooks', () => {
     let finalBeforeResult: unknown;
     let finalAfterResult: unknown;
 
+    const previousModel = {
+      id: '1',
+      slug: 'account',
+      pluralSlug: 'accounts',
+      name: 'Account',
+      pluralName: 'Accounts',
+    };
+
+    const nextModel = {
+      id: '1',
+      slug: 'user',
+      pluralSlug: 'users',
+      name: 'User',
+      pluralName: 'Users',
+    };
+
     const { alter } = createSyntaxFactory({
       fetch: async () => {
         return Response.json({
           results: [
             {
-              record: {
-                id: '1',
-                slug: 'account',
-                pluralSlug: 'accounts',
-                name: 'Account',
-                pluralName: 'Accounts',
-              },
+              record: previousModel,
+            },
+            {
+              record: nextModel,
             },
           ],
         });
@@ -299,7 +312,7 @@ describe('hooks', () => {
       asyncContext: new AsyncLocalStorage(),
     });
 
-    const model = await (alter as unknown as (details: object) => unknown)({
+    await (alter as unknown as (details: object) => unknown)({
       model: 'account',
       to: {
         slug: 'user',
@@ -319,10 +332,10 @@ describe('hooks', () => {
     //
     // We must use `toMatchObject` here, to ensure that the array is really
     // empty and doesn't contain any `undefined` items.
-    expect(finalBeforeResult).toMatchObject([]);
+    expect(finalBeforeResult).toMatchObject([previousModel]);
 
     // Make sure `finalAfterResult` matches the resolved account.
-    expect(finalAfterResult).toEqual([model]);
+    expect(finalAfterResult).toEqual([nextModel]);
 
     expect(finalMultiple).toBe(false);
   });
