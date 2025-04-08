@@ -554,23 +554,18 @@ export const runQueriesWithHooks = async <T extends ResultRecord>(
     .map((query, index) => ({ ...query, index }))
     .filter((query) => query.result === EMPTY);
 
-  // If no queries are remaining, that means all the queries were handled by
-  // "during" hooks above, so there are none remaining to send for execution.
-  if (queriesWithoutResults.length === 0) {
-    return queryList.map(({ result, database }) => ({
-      result: result as FormattedResults<T>[number],
-      database,
-    }));
-  }
+  // If queries are remaining that don't have any results that were provided by above by
+  // data hooks, we need to run those queries against the database.
+  if (queriesWithoutResults.length > 0) {
+    const resultsFromDatabase = await runQueries<T>(queriesWithoutResults, options);
 
-  const resultsFromDatabase = await runQueries<T>(queriesWithoutResults, options);
+    // Assign the results from the database to the list of queries.
+    for (let index = 0; index < resultsFromDatabase.length; index++) {
+      const query = queriesWithoutResults[index];
+      const result = resultsFromDatabase[index].result;
 
-  // Assign the results from the database to the list of queries.
-  for (let index = 0; index < resultsFromDatabase.length; index++) {
-    const query = queriesWithoutResults[index];
-    const result = resultsFromDatabase[index].result;
-
-    queryList[query.index].result = result;
+      queryList[query.index].result = result;
+    }
   }
 
   // Asynchronously invoke `afterAdd`, `afterSet`, `afterRemove`, `afterCreate`,
