@@ -194,6 +194,7 @@ export const add = factory.add as DeepCallable<AddQuery>;
 export const remove = factory.remove as DeepCallable<RemoveQuery>;
 export const count = factory.count as DeepCallable<CountQuery, number>;
 
+export const list = factory.list as DeepCallable<ListQuery>;
 export const create = factory.create as DeepCallable<CreateQuery, Model>;
 export const alter = factory.alter as DeepCallable<
   AlterQuery,
