@@ -12,6 +12,7 @@ import { WRITE_QUERY_TYPES } from '@/src/utils/constants';
 import { toDashCase } from '@/src/utils/helpers';
 import {
   type CombinedInstructions,
+  DDL_QUERY_TYPES,
   QUERY_TYPES,
   type Query,
   type QuerySchemaType,
@@ -274,13 +275,30 @@ const invokeHooks = async (
   const { query } = definition;
 
   const queryType = Object.keys(query)[0] as QueryType;
-  const queryInstructions = query[queryType] as QuerySchemaType;
-  const {
-    key: queryModel,
-    model: queryModelDashed,
-    multipleRecords,
-  } = getModel(queryInstructions);
-  const oldInstruction = queryInstructions[queryModel];
+
+  let queryModel: string;
+  let queryModelDashed: string;
+  let multipleRecords: boolean;
+
+  let oldInstruction: CombinedInstructions | undefined;
+
+  // If the provided query interacts with a model, the query instructions must be
+  // determined in a special way, since Data Definition Language (DDL) queries have a
+  // different structure than regular Data Manipulation Language (DML) queries.
+  if (DDL_QUERY_TYPES.includes(queryType as (typeof DDL_QUERY_TYPES)[number])) {
+    queryModel = queryModelDashed = 'model';
+    multipleRecords = false;
+    oldInstruction = query[queryType] as CombinedInstructions;
+  } else {
+    const queryInstructions = query[queryType] as QuerySchemaType;
+    ({
+      key: queryModel,
+      model: queryModelDashed,
+      multipleRecords,
+    } = getModel(queryInstructions));
+
+    oldInstruction = queryInstructions[queryModel];
+  }
 
   // If the hooks are being executed for a custom database, all hooks must be located
   // inside a file named `sink.ts`, which catches the queries for all other databases.
