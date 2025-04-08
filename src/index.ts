@@ -9,6 +9,7 @@ import {
   type CreateQuery,
   type DropQuery,
   type GetQuery,
+  type ListQuery,
   type ModelField,
   type ModelIndex,
   type ModelPreset,
@@ -80,6 +81,7 @@ export const createSyntaxFactory = (
   remove: DeepCallable<RemoveQuery>;
   count: DeepCallable<CountQuery, number>;
 
+  list: DeepCallable<ListQuery>;
   create: DeepCallable<CreateQuery, Model>;
   alter: DeepCallable<
     AlterQuery,
@@ -135,6 +137,11 @@ export const createSyntaxFactory = (
     }),
 
     // Query types for interacting with the database schema.
+    list: getSyntaxProxy<ListQuery>({
+      root: `${QUERY_SYMBOLS.QUERY}.list`,
+      callback,
+      replacer,
+    }),
     create: getSyntaxProxy<CreateQuery, Model>({
       root: `${QUERY_SYMBOLS.QUERY}.create`,
       callback,
