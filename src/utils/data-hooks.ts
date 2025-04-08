@@ -481,7 +481,7 @@ export const runQueriesWithHooks = async <T extends ResultRecord>(
     throw new Error(message);
   }
 
-  const queryList: Array<
+  let queryList: Array<
     QueriesPerDatabase[number] & {
       result: FormattedResults<T>[number] | symbol;
       /** Whether the query is a diff query for another query. */
@@ -489,17 +489,33 @@ export const runQueriesWithHooks = async <T extends ResultRecord>(
       /** Whether the query was generated in a "post" hook for another query. */
       postForIndex?: number;
     }
-  > = queries.flatMap(({ query, database }, index) => {
-    const details = { query, result: EMPTY, database };
+  > = queries.map(({ query, database }) => ({ query, result: EMPTY, database }));
 
-    // If data hooks are enabled, we want to send a separate `get` query for every `set`
-    // and `alter` query (in the same transaction), so that we can provide the data hooks
-    // with a "before and after" of the modified records.
-    //
-    // The version of the record *after* the modification is already available without
-    // the extra `get` query, since `set` queries return the modified record afterward,
-    // but in order to get the version of the record *before* the modification, we need a
-    // separate `get` query.
+  const hookCallerOptions = { hooks, asyncContext };
+
+  // Invoke `beforeAdd`, `beforeGet`, `beforeSet`, `beforeRemove`, and `beforeCount`.
+  await Promise.all(
+    queryList.map(async ({ query, database }, index) => {
+      const hookResults = await invokeHooks(
+        'before',
+        { query },
+        { ...hookCallerOptions, database },
+      );
+      queryList[index].query = hookResults.query;
+    }),
+  );
+
+  // If data hooks are enabled, we want to send a separate `get` query for every `set`
+  // and `alter` query (in the same transaction), so that we can provide the data hooks
+  // with a "before and after" of the modified records.
+  //
+  // The version of the record *after* the modification is already available without the
+  // extra `get` query, since `set` queries return the modified record afterward, but in
+  // order to get the version of the record *before* the modification, we need a separate
+  // query of type `get`.
+  queryList = queryList.flatMap((details, index) => {
+    const { query, database } = details;
+
     if (query.set || query.alter) {
       const modelSlug = query.alter ? 'model' : Object.keys(query.set!)[0];
       const withInstruction =
@@ -521,20 +537,6 @@ export const runQueriesWithHooks = async <T extends ResultRecord>(
 
     return [details];
   });
-
-  const hookCallerOptions = { hooks, asyncContext };
-
-  // Invoke `beforeAdd`, `beforeGet`, `beforeSet`, `beforeRemove`, and `beforeCount`.
-  await Promise.all(
-    queryList.map(async ({ query, database }, index) => {
-      const hookResults = await invokeHooks(
-        'before',
-        { query },
-        { ...hookCallerOptions, database },
-      );
-      queryList[index].query = hookResults.query;
-    }),
-  );
 
   // Invoke `get`, `set`, `add`, `remove`, and `count`.
   await Promise.all(
