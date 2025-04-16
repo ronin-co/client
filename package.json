@@ -73,7 +73,7 @@
   },
   "dependencies": {
     "@ronin/cli": "0.3.5",
-    "@ronin/compiler": "0.18.1",
+    "@ronin/compiler": "0.18.2",
     "@ronin/syntax": "0.2.37"
   },
   "devDependencies": {
