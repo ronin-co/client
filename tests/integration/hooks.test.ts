@@ -6,9 +6,9 @@ import { createSyntaxFactory } from '@/src/index';
 import { runQueriesWithStorageAndHooks } from '@/src/queries';
 import {
   type AddHook,
-  type AfterAddHook,
-  type BeforeAddHook,
   type FilteredHookQuery,
+  type FollowingAddHook,
+  type ResolvingAddHook,
   runQueriesWithHooks,
 } from '@/src/utils/data-hooks';
 import type { CombinedInstructions, Query, QueryType } from '@ronin/compiler';
@@ -55,7 +55,7 @@ describe('hooks', () => {
     await runQueriesWithHooks([{ query }], {
       hooks: {
         account: {
-          get: mockHook as any,
+          resolvingGet: mockHook as any,
         },
       },
       asyncContext: new AsyncLocalStorage(),
@@ -65,11 +65,11 @@ describe('hooks', () => {
     expect(query.get.accounts.with).not.toHaveProperty('handle');
   });
 
-  test('run `get` query through factory containing `before` data hook', async () => {
+  test('run `get` query through factory containing `during` data hook', async () => {
     const { get } = createSyntaxFactory({
       hooks: {
         account: {
-          beforeGet(query, multiple) {
+          get(query, multiple) {
             if (multiple) {
               query.with = {
                 email: {
@@ -103,11 +103,11 @@ describe('hooks', () => {
     );
   });
 
-  test('return full query from `before` data hook', async () => {
+  test('return full query from `during` data hook', async () => {
     const { get } = createSyntaxFactory({
       hooks: {
         account: {
-          beforeGet(query) {
+          get(query) {
             const fullQuery: Query = {
               get: {
                 team: query,
@@ -132,7 +132,7 @@ describe('hooks', () => {
     const { get } = createSyntaxFactory(() => ({
       hooks: {
         account: {
-          beforeGet(query, multiple) {
+          get(query, multiple) {
             if (multiple) {
               query.with = {
                 email: {
@@ -166,11 +166,11 @@ describe('hooks', () => {
     );
   });
 
-  test('run `get` query through factory containing `during` data hook', async () => {
+  test('run `get` query through factory containing `resolving` data hook', async () => {
     const { get } = createSyntaxFactory({
       hooks: {
         schema: {
-          get(_query, multiple) {
+          resolvingGet(_query, multiple) {
             if (multiple)
               return [
                 {
@@ -205,7 +205,7 @@ describe('hooks', () => {
     );
   });
 
-  test('run `create` query through factory containing `after` data hook', async () => {
+  test('run `create` query through factory containing `following` data hook', async () => {
     let finalQuery: FilteredHookQuery<QueryType> | undefined;
     let finalMultiple: boolean | undefined;
     let finalBeforeResult: unknown;
@@ -229,7 +229,7 @@ describe('hooks', () => {
       },
       hooks: {
         model: {
-          afterCreate(query, multiple, beforeResult, afterResult) {
+          followingCreate(query, multiple, beforeResult, afterResult) {
             finalQuery = query;
             finalMultiple = multiple;
             finalBeforeResult = beforeResult;
@@ -305,7 +305,7 @@ describe('hooks', () => {
       },
       hooks: {
         model: {
-          afterAlter(query, multiple, beforeResult, afterResult) {
+          followingAlter(query, multiple, beforeResult, afterResult) {
             finalQuery = query;
             finalMultiple = multiple;
             finalBeforeResult = beforeResult;
@@ -375,7 +375,7 @@ describe('hooks', () => {
       },
       hooks: {
         model: {
-          afterDrop(query, multiple, beforeResult, afterResult) {
+          followingDrop(query, multiple, beforeResult, afterResult) {
             finalQuery = query;
             finalMultiple = multiple;
             finalBeforeResult = beforeResult;
@@ -427,7 +427,7 @@ describe('hooks', () => {
       },
       hooks: {
         account: {
-          afterRemove(_query, _multiple, beforeResult, afterResult) {
+          followingRemove(_query, _multiple, beforeResult, afterResult) {
             finalBeforeResult = beforeResult;
             finalAfterResult = afterResult;
           },
@@ -489,7 +489,7 @@ describe('hooks', () => {
       },
       hooks: {
         account: {
-          afterSet(query, multiple, beforeResult, afterResult) {
+          followingSet(query, multiple, beforeResult, afterResult) {
             finalQuery = query;
             finalMultiple = multiple;
             finalBeforeResult = beforeResult;
@@ -535,7 +535,7 @@ describe('hooks', () => {
     expect(finalMultiple).toBe(true);
   });
 
-  test('run normal queries alongside queries that are handled by `during` hook', async () => {
+  test('run normal queries alongside queries that are handled by `resolving` hook', async () => {
     let finalQuery: FilteredHookQuery<QueryType> | undefined;
     let finalMultiple: boolean | undefined;
     let mockResolvedRequestText: string | undefined;
@@ -554,7 +554,7 @@ describe('hooks', () => {
       },
       hooks: {
         account: {
-          get(query, multiple) {
+          resolvingGet(query, multiple) {
             finalQuery = query;
             finalMultiple = multiple;
 
@@ -575,7 +575,7 @@ describe('hooks', () => {
     ]);
 
     // Make sure only one request is sent to the server and the request which
-    // was handled by the "during" "get" hook is dropped out.
+    // was handled by the "resolving" "get" hook is dropped out.
     expect(mockResolvedRequestText).toEqual('{"queries":[{"get":{"members":{}}}]}');
 
     expect(result.length).toBe(2);
@@ -613,7 +613,7 @@ describe('hooks', () => {
       },
       hooks: {
         account: {
-          async add() {
+          async resolvingAdd() {
             // If an infinite recursion is detected, we need to exit
             // immediately instead of performing a test assertion, because the
             // code will otherwise run forever (until memory is exceeded).
@@ -652,7 +652,7 @@ describe('hooks', () => {
         token: 'supertoken',
         hooks: {
           // @ts-expect-error - We are deliberately causing an error.
-          beforeAdd: () => undefined,
+          add: () => undefined,
         },
       });
 
@@ -710,9 +710,9 @@ describe('hooks', () => {
       },
     ];
 
-    let beforeAddOptions: Parameters<BeforeAddHook>[2] | undefined;
     let duringAddOptions: Parameters<AddHook>[2] | undefined;
-    let afterAddOptions: Parameters<AfterAddHook>[4] | undefined;
+    let resolvingAddOptions: Parameters<ResolvingAddHook>[2] | undefined;
+    let followingAddOptions: Parameters<FollowingAddHook>[4] | undefined;
 
     const results = await runQueriesWithStorageAndHooks(
       {
@@ -724,16 +724,16 @@ describe('hooks', () => {
         token: 'takashitoken',
         hooks: {
           sink: {
-            beforeAdd: (query, _multiple, options) => {
-              beforeAddOptions = options;
-              return query;
-            },
             add: (query, _multiple, options) => {
               duringAddOptions = options;
+              return query;
+            },
+            resolvingAdd: (query, _multiple, options) => {
+              resolvingAddOptions = options;
               return query.with;
             },
-            afterAdd: (_query, _multiple, _beforeResult, _afterResult, options) => {
-              afterAddOptions = options;
+            followingAdd: (_query, _multiple, _beforeResult, _afterResult, options) => {
+              followingAddOptions = options;
             },
           },
         },
@@ -743,9 +743,9 @@ describe('hooks', () => {
 
     const expectedOptions = { model: 'someProduct', database: 'secondary' };
 
-    expect(beforeAddOptions).toMatchObject(expectedOptions);
     expect(duringAddOptions).toMatchObject(expectedOptions);
-    expect(afterAddOptions).toMatchObject(expectedOptions);
+    expect(resolvingAddOptions).toMatchObject(expectedOptions);
+    expect(followingAddOptions).toMatchObject(expectedOptions);
 
     expect(results).toMatchObject({
       default: [
@@ -761,7 +761,7 @@ describe('hooks', () => {
     });
   });
 
-  test('return queries from `pre` data hook', async () => {
+  test('return queries from `before` data hook', async () => {
     const mockFetchNew: typeof fetch = async (input: string | URL | Request) => {
       mockResolvedRequestText = await (input as Request).text();
 
@@ -811,16 +811,16 @@ describe('hooks', () => {
       });
     };
 
-    const accountHooks = { afterAdd: () => undefined };
-    const accountHooksSpy = spyOn(accountHooks, 'afterAdd');
+    const accountHooks = { followingAdd: () => undefined };
+    const accountHooksSpy = spyOn(accountHooks, 'followingAdd');
 
-    const spaceHooks = { afterAdd: () => undefined };
-    const spaceHooksSpy = spyOn(spaceHooks, 'afterAdd');
+    const spaceHooks = { followingAdd: () => undefined };
+    const spaceHooksSpy = spyOn(spaceHooks, 'followingAdd');
 
     const { batch, add } = createSyntaxFactory({
       hooks: {
         member: {
-          preAdd(query) {
+          beforeAdd(query) {
             const accountQuery: Query = {
               add: {
                 account: {
@@ -899,7 +899,7 @@ describe('hooks', () => {
     );
   });
 
-  test('return queries from `post` data hook', async () => {
+  test('return queries from `after` data hook', async () => {
     const mockFetchNew: typeof fetch = async (input: string | URL | Request) => {
       mockResolvedRequestText = await (input as Request).text();
 
@@ -949,16 +949,16 @@ describe('hooks', () => {
       });
     };
 
-    const memberHooks = { afterAdd: () => undefined };
-    const memberHooksSpy = spyOn(memberHooks, 'afterAdd');
+    const memberHooks = { followingAdd: () => undefined };
+    const memberHooksSpy = spyOn(memberHooks, 'followingAdd');
 
-    const appHooks = { afterAdd: () => undefined };
-    const appHooksSpy = spyOn(appHooks, 'afterAdd');
+    const appHooks = { followingAdd: () => undefined };
+    const appHooksSpy = spyOn(appHooks, 'followingAdd');
 
     const { batch, add } = createSyntaxFactory({
       hooks: {
         space: {
-          postAdd(query) {
+          afterAdd(query) {
             const memberQuery: Query = {
               add: {
                 member: {
@@ -997,7 +997,7 @@ describe('hooks', () => {
     });
 
     // We're using a batch to be able to check whether the results of the queries
-    // returned from the `post` data hook are being excluded correctly.
+    // returned from the `after` data hook are being excluded correctly.
     const results = await batch(() => [
       add.space.with.handle('company'),
       add.product.with({
