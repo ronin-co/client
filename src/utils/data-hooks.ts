@@ -550,7 +550,9 @@ export const runQueriesWithHooks = async <T extends ResultRecord>(
         { ...hookCallerOptions, database },
       );
 
-      queryList[index].query = hookResults.queries![0];
+      if (hookResults.queries && hookResults.queries.length > 0) {
+        queryList[index].query = hookResults.queries[0];
+      }
     }),
   );
 
