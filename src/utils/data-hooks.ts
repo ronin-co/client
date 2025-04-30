@@ -166,15 +166,6 @@ export type CreateHook = DuringHook<'create'>;
 export type AlterHook = DuringHook<'alter'>;
 export type DropHook = DuringHook<'drop'>;
 
-export type ResolvingGetHook<TSchema = unknown> = ResolvingHook<'get', TSchema>;
-export type ResolvingSetHook<TSchema = unknown> = ResolvingHook<'set', TSchema>;
-export type ResolvingAddHook<TSchema = unknown> = ResolvingHook<'add', TSchema>;
-export type ResolvingRemoveHook<TSchema = unknown> = ResolvingHook<'remove', TSchema>;
-export type ResolvingCountHook<TSchema = unknown> = ResolvingHook<'count', TSchema>;
-export type ResolvingCreateHook<TSchema = unknown> = ResolvingHook<'create', TSchema>;
-export type ResolvingAlterHook<TSchema = unknown> = ResolvingHook<'alter', TSchema>;
-export type ResolvingDropHook<TSchema = unknown> = ResolvingHook<'drop', TSchema>;
-
 export type AfterGetHook = AfterHook<'get'>;
 export type AfterSetHook = AfterHook<'set'>;
 export type AfterAddHook = AfterHook<'add'>;
@@ -183,6 +174,15 @@ export type AfterCountHook = AfterHook<'count'>;
 export type AfterCreateHook = AfterHook<'create'>;
 export type AfterAlterHook = AfterHook<'alter'>;
 export type AfterDropHook = AfterHook<'drop'>;
+
+export type ResolvingGetHook<TSchema = unknown> = ResolvingHook<'get', TSchema>;
+export type ResolvingSetHook<TSchema = unknown> = ResolvingHook<'set', TSchema>;
+export type ResolvingAddHook<TSchema = unknown> = ResolvingHook<'add', TSchema>;
+export type ResolvingRemoveHook<TSchema = unknown> = ResolvingHook<'remove', TSchema>;
+export type ResolvingCountHook<TSchema = unknown> = ResolvingHook<'count', TSchema>;
+export type ResolvingCreateHook<TSchema = unknown> = ResolvingHook<'create', TSchema>;
+export type ResolvingAlterHook<TSchema = unknown> = ResolvingHook<'alter', TSchema>;
+export type ResolvingDropHook<TSchema = unknown> = ResolvingHook<'drop', TSchema>;
 
 export type FollowingGetHook<TSchema = unknown> = FollowingHook<'get', TSchema>;
 export type FollowingSetHook<TSchema = unknown> = FollowingHook<'set', TSchema>;
