@@ -1,45 +1,54 @@
 export type {
   // Add Hooks
+  PreAddHook,
   AddHook,
   BeforeAddHook,
   PostAddHook,
   AfterAddHook,
   // Get Hooks
+  PreGetHook,
   GetHook,
   BeforeGetHook,
   PostGetHook,
   AfterGetHook,
   // Set Hooks
+  PreSetHook,
   SetHook,
   BeforeSetHook,
   PostSetHook,
   AfterSetHook,
   // Remove Hooks
+  PreRemoveHook,
   RemoveHook,
   BeforeRemoveHook,
   PostRemoveHook,
   AfterRemoveHook,
   // Count Hooks
+  PreCountHook,
   CountHook,
   BeforeCountHook,
   PostCountHook,
   AfterCountHook,
   // Create Hooks
+  PreCreateHook,
   CreateHook,
   BeforeCreateHook,
   PostCreateHook,
   AfterCreateHook,
   // Alter Hooks
+  PreAlterHook,
   AlterHook,
   BeforeAlterHook,
   PostAlterHook,
   AfterAlterHook,
   // Drop Hooks
+  PreDropHook,
   DropHook,
   BeforeDropHook,
   PostDropHook,
   AfterDropHook,
   // Hook Handlers
+  PreHookHandler,
   BeforeHookHandler,
   AfterHookHandler,
   PostHookHandler,
