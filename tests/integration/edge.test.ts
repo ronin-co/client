@@ -55,7 +55,7 @@ describe('edge runtime', () => {
     global.process = oldProcess;
 
     expect(error?.message).toMatch(
-      `In the case that the "ronin" package receives a value for its \`hooks\` option, it must also receive a value for its \`waitUntil\` option. This requirement only applies when using an edge runtime and ensures that the edge worker continues to execute until all "after" hooks have been executed.`,
+      `In the case that the "ronin" package receives a value for its \`hooks\` option, it must also receive a value for its \`waitUntil\` option. This requirement only applies when using an edge runtime and ensures that the edge worker continues to execute until all "following" hooks have been executed.`,
     );
   });
 
@@ -94,7 +94,7 @@ describe('edge runtime', () => {
         },
         hooks: {
           account: {
-            afterAdd: async () => {
+            followingAdd: async () => {
               // Sleep for 50 milliseconds to simulate an asynchronous action.
               await new Promise((resolve) => setTimeout(resolve, 50));
 
@@ -114,7 +114,7 @@ describe('edge runtime', () => {
 
     expect(promisesToAwait.length).toBeGreaterThan(0);
 
-    // Wait for asynchronous "after" data hooks to finish.
+    // Wait for asynchronous "following" data hooks to finish.
     expect(hookInvocationHappened).not.toHaveBeenCalled();
     await Promise.all(promisesToAwait);
     expect(hookInvocationHappened).toHaveBeenCalled();
@@ -153,7 +153,7 @@ describe('edge runtime', () => {
         },
         hooks: {
           account: {
-            afterAdd: () => {
+            followingAdd: () => {
               throw new Error(errorText);
             },
           },
@@ -168,7 +168,7 @@ describe('edge runtime', () => {
     // Restore the old runtime.
     global.process = oldProcess;
 
-    // Wait for asynchronous "after" data hooks to finish.
+    // Wait for asynchronous "following" data hooks to finish.
     expect(promisesToAwait[0]).rejects.toThrow(errorText);
   });
 
@@ -204,7 +204,7 @@ describe('edge runtime', () => {
         },
         hooks: {
           account: {
-            afterAdd: async () => {
+            followingAdd: async () => {
               // Sleep for 50 milliseconds to simulate an asynchronous action.
               await new Promise((resolve) => setTimeout(resolve, 50));
             },
@@ -220,12 +220,12 @@ describe('edge runtime', () => {
     // Restore the old runtime.
     global.process = oldProcess;
 
-    // Wait for asynchronous "after" data hooks to finish.
+    // Wait for asynchronous "following" data hooks to finish.
     const result = await Promise.all(promisesToAwait);
 
     // Ensure that the internal results of the hook run are not being exposed.
     // In other words, the promises handed to `waitUntil` must not resolve with
-    // any value, since their purpose is to run asynchronous "after" hooks.
+    // any value, since their purpose is to run asynchronous "following" hooks.
     expect(result).toMatchObject([undefined]);
   });
 });

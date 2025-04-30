@@ -6,9 +6,9 @@ import { createSyntaxFactory } from '@/src/index';
 import { runQueriesWithStorageAndHooks } from '@/src/queries';
 import {
   type AddHook,
-  type AfterAddHook,
   type BeforeAddHook,
   type FilteredHookQuery,
+  type FollowingAddHook,
   runQueriesWithHooks,
 } from '@/src/utils/data-hooks';
 import type { CombinedInstructions, Query, QueryType } from '@ronin/compiler';
@@ -205,7 +205,7 @@ describe('hooks', () => {
     );
   });
 
-  test('run `create` query through factory containing `after` data hook', async () => {
+  test('run `create` query through factory containing `following` data hook', async () => {
     let finalQuery: FilteredHookQuery<QueryType> | undefined;
     let finalMultiple: boolean | undefined;
     let finalBeforeResult: unknown;
@@ -229,7 +229,7 @@ describe('hooks', () => {
       },
       hooks: {
         model: {
-          afterCreate(query, multiple, beforeResult, afterResult) {
+          followingCreate(query, multiple, beforeResult, afterResult) {
             finalQuery = query;
             finalMultiple = multiple;
             finalBeforeResult = beforeResult;
@@ -305,7 +305,7 @@ describe('hooks', () => {
       },
       hooks: {
         model: {
-          afterAlter(query, multiple, beforeResult, afterResult) {
+          followingAlter(query, multiple, beforeResult, afterResult) {
             finalQuery = query;
             finalMultiple = multiple;
             finalBeforeResult = beforeResult;
@@ -375,7 +375,7 @@ describe('hooks', () => {
       },
       hooks: {
         model: {
-          afterDrop(query, multiple, beforeResult, afterResult) {
+          followingDrop(query, multiple, beforeResult, afterResult) {
             finalQuery = query;
             finalMultiple = multiple;
             finalBeforeResult = beforeResult;
@@ -427,7 +427,7 @@ describe('hooks', () => {
       },
       hooks: {
         account: {
-          afterRemove(_query, _multiple, beforeResult, afterResult) {
+          followingRemove(_query, _multiple, beforeResult, afterResult) {
             finalBeforeResult = beforeResult;
             finalAfterResult = afterResult;
           },
@@ -489,7 +489,7 @@ describe('hooks', () => {
       },
       hooks: {
         account: {
-          afterSet(query, multiple, beforeResult, afterResult) {
+          followingSet(query, multiple, beforeResult, afterResult) {
             finalQuery = query;
             finalMultiple = multiple;
             finalBeforeResult = beforeResult;
@@ -712,7 +712,7 @@ describe('hooks', () => {
 
     let beforeAddOptions: Parameters<BeforeAddHook>[2] | undefined;
     let duringAddOptions: Parameters<AddHook>[2] | undefined;
-    let afterAddOptions: Parameters<AfterAddHook>[4] | undefined;
+    let followingAddOptions: Parameters<FollowingAddHook>[4] | undefined;
 
     const results = await runQueriesWithStorageAndHooks(
       {
@@ -732,8 +732,8 @@ describe('hooks', () => {
               duringAddOptions = options;
               return query.with;
             },
-            afterAdd: (_query, _multiple, _beforeResult, _afterResult, options) => {
-              afterAddOptions = options;
+            followingAdd: (_query, _multiple, _beforeResult, _afterResult, options) => {
+              followingAddOptions = options;
             },
           },
         },
@@ -745,7 +745,7 @@ describe('hooks', () => {
 
     expect(beforeAddOptions).toMatchObject(expectedOptions);
     expect(duringAddOptions).toMatchObject(expectedOptions);
-    expect(afterAddOptions).toMatchObject(expectedOptions);
+    expect(followingAddOptions).toMatchObject(expectedOptions);
 
     expect(results).toMatchObject({
       default: [
@@ -811,11 +811,11 @@ describe('hooks', () => {
       });
     };
 
-    const accountHooks = { afterAdd: () => undefined };
-    const accountHooksSpy = spyOn(accountHooks, 'afterAdd');
+    const accountHooks = { followingAdd: () => undefined };
+    const accountHooksSpy = spyOn(accountHooks, 'followingAdd');
 
-    const spaceHooks = { afterAdd: () => undefined };
-    const spaceHooksSpy = spyOn(spaceHooks, 'afterAdd');
+    const spaceHooks = { followingAdd: () => undefined };
+    const spaceHooksSpy = spyOn(spaceHooks, 'followingAdd');
 
     const { batch, add } = createSyntaxFactory({
       hooks: {
@@ -949,11 +949,11 @@ describe('hooks', () => {
       });
     };
 
-    const memberHooks = { afterAdd: () => undefined };
-    const memberHooksSpy = spyOn(memberHooks, 'afterAdd');
+    const memberHooks = { followingAdd: () => undefined };
+    const memberHooksSpy = spyOn(memberHooks, 'followingAdd');
 
-    const appHooks = { afterAdd: () => undefined };
-    const appHooksSpy = spyOn(appHooks, 'afterAdd');
+    const appHooks = { followingAdd: () => undefined };
+    const appHooksSpy = spyOn(appHooks, 'followingAdd');
 
     const { batch, add } = createSyntaxFactory({
       hooks: {
