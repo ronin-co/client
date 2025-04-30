@@ -82,10 +82,7 @@ export const createSyntaxFactory = (
 
   list: DeepCallable<ListQuery>;
   create: DeepCallable<CreateQuery, Model>;
-  alter: DeepCallable<
-    AlterQuery,
-    Model | ModelField | ModelIndex | ModelPreset
-  >;
+  alter: DeepCallable<AlterQuery, Model | ModelField | ModelIndex | ModelPreset>;
   drop: DeepCallable<DropQuery, Model>;
 
   batch: <T extends [Promise<any>, ...Array<Promise<any>>] | Array<Promise<any>>>(
@@ -146,10 +143,11 @@ export const createSyntaxFactory = (
       callback,
       replacer,
     }),
-    alter: getSyntaxProxy<
-      AlterQuery,
-      Model | ModelField | ModelIndex | ModelPreset
-    >({ root: `${QUERY_SYMBOLS.QUERY}.alter`, callback, replacer }),
+    alter: getSyntaxProxy<AlterQuery, Model | ModelField | ModelIndex | ModelPreset>({
+      root: `${QUERY_SYMBOLS.QUERY}.alter`,
+      callback,
+      replacer,
+    }),
     drop: getSyntaxProxy<DropQuery, Model>({
       root: `${QUERY_SYMBOLS.QUERY}.drop`,
       callback,

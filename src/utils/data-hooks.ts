@@ -48,6 +48,15 @@ export type FilteredHookQuery<
               : never
   >;
 
+export type PreHookHandler<
+  TType extends QueryType,
+  TQuery extends FilteredHookQuery<TType> = FilteredHookQuery<TType>,
+> = (
+  query: TQuery,
+  multipleRecords: boolean,
+  options: DataHookOptions,
+) => Array<Query> | Promise<Array<Query>>;
+
 export type BeforeHookHandler<
   TType extends QueryType,
   TQuery extends FilteredHookQuery<TType> = FilteredHookQuery<TType>,
@@ -82,12 +91,13 @@ export type AfterHookHandler<TType extends QueryType, TSchema = unknown> = (
 
 // The order of these types is important, as they determine the order in which
 // data hooks are run (the "data hook lifecycle").
-const HOOK_TYPES = ['before', 'during', 'post', 'after'] as const;
+const HOOK_TYPES = ['pre', 'before', 'during', 'post', 'after'] as const;
 
 type HookType = (typeof HOOK_TYPES)[number];
 
 type HookKeys = (
   | { [K in QueryType]: K }
+  | { [K in QueryType]: `pre${Capitalize<K>}` }
   | { [K in QueryType]: `before${Capitalize<K>}` }
   | { [K in QueryType]: `post${Capitalize<K>}` }
   | { [K in QueryType]: `after${Capitalize<K>}` }
@@ -97,28 +107,33 @@ type Hook<
   TStage extends HookType,
   TType extends QueryType,
   TSchema extends TStage extends 'before' ? never : unknown = never,
-> = TStage extends 'before'
-  ? BeforeHookHandler<TType>
-  : TStage extends 'during'
-    ? DuringHookHandler<TType, TSchema>
-    : TStage extends 'post'
-      ? PostHookHandler<TType>
-      : TStage extends 'after'
-        ? AfterHookHandler<TType, TSchema>
-        : never;
+> = TStage extends 'pre'
+  ? PreHookHandler<TType>
+  : TStage extends 'before'
+    ? BeforeHookHandler<TType>
+    : TStage extends 'during'
+      ? DuringHookHandler<TType, TSchema>
+      : TStage extends 'post'
+        ? PostHookHandler<TType>
+        : TStage extends 'after'
+          ? AfterHookHandler<TType, TSchema>
+          : never;
 
 type HookList<TSchema = unknown> = {
-  [K in HookKeys]?: K extends 'before' | `before${string}`
-    ? BeforeHookHandler<QueryType>
-    : K extends 'post' | `post${string}`
-      ? PostHookHandler<QueryType>
-      : K extends 'after' | `after${string}`
-        ? AfterHookHandler<QueryType, TSchema>
-        : DuringHookHandler<QueryType, TSchema>;
+  [K in HookKeys]?: K extends 'pre' | `pre${string}`
+    ? PreHookHandler<QueryType>
+    : K extends 'before' | `before${string}`
+      ? BeforeHookHandler<QueryType>
+      : K extends 'post' | `post${string}`
+        ? PostHookHandler<QueryType>
+        : K extends 'after' | `after${string}`
+          ? AfterHookHandler<QueryType, TSchema>
+          : DuringHookHandler<QueryType, TSchema>;
 };
 
 export type Hooks<TSchema = unknown> = Record<string, HookList<TSchema>>;
 
+type PreHook<TType extends QueryType> = Hook<'pre', TType>;
 type BeforeHook<TType extends QueryType> = Hook<'before', TType>;
 type DuringHook<TType extends QueryType, TSchema = unknown> = Hook<
   'during',
@@ -131,6 +146,15 @@ type AfterHook<TType extends QueryType, TSchema = unknown> = Hook<
   TType,
   TSchema
 >;
+
+export type PreGetHook = PreHook<'get'>;
+export type PreSetHook = PreHook<'set'>;
+export type PreAddHook = PreHook<'add'>;
+export type PreRemoveHook = PreHook<'remove'>;
+export type PreCountHook = PreHook<'count'>;
+export type PreCreateHook = PreHook<'create'>;
+export type PreAlterHook = PreHook<'alter'>;
+export type PreDropHook = PreHook<'drop'>;
 
 export type BeforeGetHook = BeforeHook<'get'>;
 export type BeforeSetHook = BeforeHook<'set'>;
@@ -268,7 +292,7 @@ const invokeHooks = async (
   query: Query;
   /** The result of a query provided by a "during" hook. */
   result?: FormattedResults<unknown>[number] | symbol;
-  /** A list of queries provided by a "post" hook. */
+  /** A list of queries provided by a "pre" or "post" hook. */
   resultQueries?: Array<Query>;
 }> => {
   const { hooks, asyncContext } = options;
@@ -391,6 +415,13 @@ const invokeHooks = async (
       },
     );
 
+    // If the hook returned multiple queries that should be run before the original query,
+    // we want to return those queries.
+    if (hookType === 'pre') {
+      const queries = hookResult as Array<Query>;
+      return { query, resultQueries: queries };
+    }
+
     // If the hook returned a query, we want to replace the original query with
     // the one returned by the hook.
     if (hookType === 'before') {
@@ -487,11 +518,31 @@ export const runQueriesWithHooks = async <T extends ResultRecord>(
       /** Whether the query is a diff query for another query. */
       diffForIndex?: number;
       /** Whether the query was generated in a "post" hook for another query. */
-      postForIndex?: number;
+      auxiliaryForIndex?: number;
     }
   > = queries.map(({ query, database }) => ({ query, result: EMPTY, database }));
 
   const hookCallerOptions = { hooks, asyncContext };
+
+  // Invoke `preAdd`, `postGet`, `postSet`, `postRemove`, and `postCount`.
+  await Promise.all(
+    queryList.map(async ({ query, database }, index) => {
+      const hookResults = await invokeHooks(
+        'pre',
+        { query },
+        { ...hookCallerOptions, database },
+      );
+
+      const queriesToInsert = (hookResults.resultQueries || []).map((query) => ({
+        query,
+        result: EMPTY,
+        database,
+        auxiliaryForIndex: index,
+      }));
+
+      queryList.splice(index + 1, 0, ...queriesToInsert);
+    }),
+  );
 
   // Invoke `beforeAdd`, `beforeGet`, `beforeSet`, `beforeRemove`, and `beforeCount`.
   await Promise.all(
@@ -575,7 +626,7 @@ export const runQueriesWithHooks = async <T extends ResultRecord>(
         query,
         result: EMPTY,
         database,
-        postForIndex: index,
+        auxiliaryForIndex: index,
       }));
 
       queryList.splice(index + 1, 0, ...queriesToInsert);
@@ -647,12 +698,12 @@ export const runQueriesWithHooks = async <T extends ResultRecord>(
 
   // Filter the list of queries to remove any potential queries used for "diffing"
   // (retrieving the previous value of a record) and any potential queries resulting from
-  // "post" hooks. Then return only the results of the queries.
+  // "pre" or "post" hooks. Then return only the results of the queries.
   return queryList
     .filter(
       (query) =>
         typeof query.diffForIndex === 'undefined' &&
-        typeof query.postForIndex === 'undefined',
+        typeof query.auxiliaryForIndex === 'undefined',
     )
     .map(({ result, database }) => ({
       result: result as FormattedResults<T>[number],
