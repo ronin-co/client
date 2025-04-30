@@ -540,7 +540,7 @@ export const runQueriesWithHooks = async <T extends ResultRecord>(
         auxiliaryForIndex: index,
       }));
 
-      queryList.splice(index + 1, 0, ...queriesToInsert);
+      queryList.splice(index, 0, ...queriesToInsert);
     }),
   );
 
