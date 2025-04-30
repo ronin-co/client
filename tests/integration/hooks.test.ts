@@ -613,7 +613,7 @@ describe('hooks', () => {
       },
       hooks: {
         account: {
-          async add() {
+          async resolvingAdd() {
             // If an infinite recursion is detected, we need to exit
             // immediately instead of performing a test assertion, because the
             // code will otherwise run forever (until memory is exceeded).
@@ -761,7 +761,7 @@ describe('hooks', () => {
     });
   });
 
-  test('return queries from `pre` data hook', async () => {
+  test('return queries from `before` data hook', async () => {
     const mockFetchNew: typeof fetch = async (input: string | URL | Request) => {
       mockResolvedRequestText = await (input as Request).text();
 
@@ -820,7 +820,7 @@ describe('hooks', () => {
     const { batch, add } = createSyntaxFactory({
       hooks: {
         member: {
-          preAdd(query) {
+          beforeAdd(query) {
             const accountQuery: Query = {
               add: {
                 account: {
