@@ -899,7 +899,7 @@ describe('hooks', () => {
     );
   });
 
-  test('return queries from `post` data hook', async () => {
+  test('return queries from `after` data hook', async () => {
     const mockFetchNew: typeof fetch = async (input: string | URL | Request) => {
       mockResolvedRequestText = await (input as Request).text();
 
@@ -958,7 +958,7 @@ describe('hooks', () => {
     const { batch, add } = createSyntaxFactory({
       hooks: {
         space: {
-          postAdd(query) {
+          afterAdd(query) {
             const memberQuery: Query = {
               add: {
                 member: {
@@ -997,7 +997,7 @@ describe('hooks', () => {
     });
 
     // We're using a batch to be able to check whether the results of the queries
-    // returned from the `post` data hook are being excluded correctly.
+    // returned from the `after` data hook are being excluded correctly.
     const results = await batch(() => [
       add.space.with.handle('company'),
       add.product.with({
