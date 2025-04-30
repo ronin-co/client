@@ -6,9 +6,9 @@ import { createSyntaxFactory } from '@/src/index';
 import { runQueriesWithStorageAndHooks } from '@/src/queries';
 import {
   type AddHook,
-  type BeforeAddHook,
   type FilteredHookQuery,
   type FollowingAddHook,
+  type ResolvingAddHook,
   runQueriesWithHooks,
 } from '@/src/utils/data-hooks';
 import type { CombinedInstructions, Query, QueryType } from '@ronin/compiler';
@@ -65,11 +65,11 @@ describe('hooks', () => {
     expect(query.get.accounts.with).not.toHaveProperty('handle');
   });
 
-  test('run `get` query through factory containing `before` data hook', async () => {
+  test('run `get` query through factory containing `during` data hook', async () => {
     const { get } = createSyntaxFactory({
       hooks: {
         account: {
-          beforeGet(query, multiple) {
+          get(query, multiple) {
             if (multiple) {
               query.with = {
                 email: {
@@ -103,11 +103,11 @@ describe('hooks', () => {
     );
   });
 
-  test('return full query from `before` data hook', async () => {
+  test('return full query from `during` data hook', async () => {
     const { get } = createSyntaxFactory({
       hooks: {
         account: {
-          beforeGet(query) {
+          get(query) {
             const fullQuery: Query = {
               get: {
                 team: query,
@@ -132,7 +132,7 @@ describe('hooks', () => {
     const { get } = createSyntaxFactory(() => ({
       hooks: {
         account: {
-          beforeGet(query, multiple) {
+          get(query, multiple) {
             if (multiple) {
               query.with = {
                 email: {
@@ -652,7 +652,7 @@ describe('hooks', () => {
         token: 'supertoken',
         hooks: {
           // @ts-expect-error - We are deliberately causing an error.
-          beforeAdd: () => undefined,
+          add: () => undefined,
         },
       });
 
@@ -710,8 +710,8 @@ describe('hooks', () => {
       },
     ];
 
-    let beforeAddOptions: Parameters<BeforeAddHook>[2] | undefined;
-    let resolvingAddOptions: Parameters<AddHook>[2] | undefined;
+    let duringAddOptions: Parameters<AddHook>[2] | undefined;
+    let resolvingAddOptions: Parameters<ResolvingAddHook>[2] | undefined;
     let followingAddOptions: Parameters<FollowingAddHook>[4] | undefined;
 
     const results = await runQueriesWithStorageAndHooks(
@@ -724,8 +724,8 @@ describe('hooks', () => {
         token: 'takashitoken',
         hooks: {
           sink: {
-            beforeAdd: (query, _multiple, options) => {
-              beforeAddOptions = options;
+            add: (query, _multiple, options) => {
+              duringAddOptions = options;
               return query;
             },
             resolvingAdd: (query, _multiple, options) => {
@@ -743,7 +743,7 @@ describe('hooks', () => {
 
     const expectedOptions = { model: 'someProduct', database: 'secondary' };
 
-    expect(beforeAddOptions).toMatchObject(expectedOptions);
+    expect(duringAddOptions).toMatchObject(expectedOptions);
     expect(resolvingAddOptions).toMatchObject(expectedOptions);
     expect(followingAddOptions).toMatchObject(expectedOptions);
 

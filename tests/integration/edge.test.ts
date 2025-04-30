@@ -41,7 +41,7 @@ describe('edge runtime', () => {
         token: 'supertoken',
         hooks: {
           // @ts-expect-error - We are deliberately causing an error.
-          beforeAdd: () => undefined,
+          add: () => undefined,
         },
         asyncContext: new AsyncLocalStorage(),
       });

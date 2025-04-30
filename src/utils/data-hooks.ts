@@ -57,7 +57,7 @@ export type PreHookHandler<
   options: DataHookOptions,
 ) => Array<Query> | Promise<Array<Query>>;
 
-export type BeforeHookHandler<
+export type DuringHookHandler<
   TType extends QueryType,
   TQuery extends FilteredHookQuery<TType> = FilteredHookQuery<TType>,
 > = (
@@ -118,9 +118,9 @@ type Hook<
 > = TStage extends 'pre'
   ? PreHookHandler<TType>
   : TStage extends 'before'
-    ? BeforeHookHandler<TType>
+    ? DuringHookHandler<TType>
     : TStage extends 'during'
-      ? BeforeHookHandler<TType>
+      ? DuringHookHandler<TType>
       : TStage extends 'resolving'
         ? ResolvingHookHandler<TType, TSchema>
         : TStage extends 'after'
@@ -133,7 +133,7 @@ type HookList<TSchema = unknown> = {
   [K in HookKeys]?: K extends 'pre' | `pre${string}`
     ? PreHookHandler<QueryType>
     : K extends 'before' | `before${string}`
-      ? BeforeHookHandler<QueryType>
+      ? DuringHookHandler<QueryType>
       : K extends 'after' | `after${string}`
         ? AfterHookHandler<QueryType>
         : K extends 'resolving' | `resolving${string}`
@@ -146,7 +146,7 @@ type HookList<TSchema = unknown> = {
 export type Hooks<TSchema = unknown> = Record<string, HookList<TSchema>>;
 
 type PreHook<TType extends QueryType> = Hook<'pre', TType>;
-type BeforeHook<TType extends QueryType> = Hook<'before', TType>;
+type DuringHook<TType extends QueryType> = Hook<'before', TType>;
 type ResolvingHook<TType extends QueryType, TSchema = unknown> = Hook<
   'resolving',
   TType,
@@ -168,23 +168,23 @@ export type PreCreateHook = PreHook<'create'>;
 export type PreAlterHook = PreHook<'alter'>;
 export type PreDropHook = PreHook<'drop'>;
 
-export type BeforeGetHook = BeforeHook<'get'>;
-export type BeforeSetHook = BeforeHook<'set'>;
-export type BeforeAddHook = BeforeHook<'add'>;
-export type BeforeRemoveHook = BeforeHook<'remove'>;
-export type BeforeCountHook = BeforeHook<'count'>;
-export type BeforeCreateHook = BeforeHook<'create'>;
-export type BeforeAlterHook = BeforeHook<'alter'>;
-export type BeforeDropHook = BeforeHook<'drop'>;
+export type GetHook = DuringHook<'get'>;
+export type SetHook = DuringHook<'set'>;
+export type AddHook = DuringHook<'add'>;
+export type RemoveHook = DuringHook<'remove'>;
+export type CountHook = DuringHook<'count'>;
+export type CreateHook = DuringHook<'create'>;
+export type AlterHook = DuringHook<'alter'>;
+export type DropHook = DuringHook<'drop'>;
 
-export type GetHook<TSchema = unknown> = ResolvingHook<'get', TSchema>;
-export type SetHook<TSchema = unknown> = ResolvingHook<'set', TSchema>;
-export type AddHook<TSchema = unknown> = ResolvingHook<'add', TSchema>;
-export type RemoveHook<TSchema = unknown> = ResolvingHook<'remove', TSchema>;
-export type CountHook<TSchema = unknown> = ResolvingHook<'count', TSchema>;
-export type CreateHook<TSchema = unknown> = ResolvingHook<'create', TSchema>;
-export type AlterHook<TSchema = unknown> = ResolvingHook<'alter', TSchema>;
-export type DropHook<TSchema = unknown> = ResolvingHook<'drop', TSchema>;
+export type ResolvingGetHook<TSchema = unknown> = ResolvingHook<'get', TSchema>;
+export type ResolvingSetHook<TSchema = unknown> = ResolvingHook<'set', TSchema>;
+export type ResolvingAddHook<TSchema = unknown> = ResolvingHook<'add', TSchema>;
+export type ResolvingRemoveHook<TSchema = unknown> = ResolvingHook<'remove', TSchema>;
+export type ResolvingCountHook<TSchema = unknown> = ResolvingHook<'count', TSchema>;
+export type ResolvingCreateHook<TSchema = unknown> = ResolvingHook<'create', TSchema>;
+export type ResolvingAlterHook<TSchema = unknown> = ResolvingHook<'alter', TSchema>;
+export type ResolvingDropHook<TSchema = unknown> = ResolvingHook<'drop', TSchema>;
 
 export type AfterGetHook = AfterHook<'get'>;
 export type AfterSetHook = AfterHook<'set'>;
@@ -419,7 +419,7 @@ const invokeHooks = async (
           );
         }
 
-        return (hook as BeforeHook<QueryType> | ResolvingHook<QueryType>)(
+        return (hook as DuringHook<QueryType> | ResolvingHook<QueryType>)(
           queryInstruction,
           multipleRecords,
           hookOptions,
@@ -436,7 +436,7 @@ const invokeHooks = async (
 
     // If the hook returned a query, we want to replace the original query with
     // the one returned by the hook.
-    if (hookType === 'before') {
+    if (hookType === 'during') {
       const result = hookResult as null | Query | CombinedInstructions;
       let newQuery: Query = query;
 
@@ -457,18 +457,18 @@ const invokeHooks = async (
       return { query: newQuery, result: EMPTY };
     }
 
-    // If the hook returned a record (or multiple), we want to set the query's
-    // result to the value returned by the hook.
-    if (hookType === 'resolving') {
-      const result = hookResult as FormattedResults<unknown>[number];
-      return { query, result };
-    }
-
     // If the hook returned multiple queries that should be run after the original query,
     // we want to return those queries.
     if (hookType === 'after') {
       const queries = hookResult as Array<Query>;
       return { query, resultQueries: queries };
+    }
+
+    // If the hook returned a record (or multiple), we want to set the query's
+    // result to the value returned by the hook.
+    if (hookType === 'resolving') {
+      const result = hookResult as FormattedResults<unknown>[number];
+      return { query, result };
     }
 
     // In the case of "following" hooks, we don't need to do anything, because they
@@ -556,11 +556,11 @@ export const runQueriesWithHooks = async <T extends ResultRecord>(
     }),
   );
 
-  // Invoke `beforeAdd`, `beforeGet`, `beforeSet`, `beforeRemove`, and `beforeCount`.
+  // Invoke `add`, `get`, `set`, `remove`, and `count`.
   await Promise.all(
     queryList.map(async ({ query, database }, index) => {
       const hookResults = await invokeHooks(
-        'before',
+        'during',
         { query },
         { ...hookCallerOptions, database },
       );
