@@ -52,7 +52,7 @@ export type {
   BeforeHookHandler,
   FollowingHookHandler,
   PostHookHandler,
-  DuringHookHandler,
+  ResolvingHookHandler,
   // Async Context surrounding Hooks
   HookContext,
 } from '@/src/utils/data-hooks';

@@ -55,7 +55,7 @@ describe('hooks', () => {
     await runQueriesWithHooks([{ query }], {
       hooks: {
         account: {
-          get: mockHook as any,
+          resolvingGet: mockHook as any,
         },
       },
       asyncContext: new AsyncLocalStorage(),
@@ -166,11 +166,11 @@ describe('hooks', () => {
     );
   });
 
-  test('run `get` query through factory containing `during` data hook', async () => {
+  test('run `get` query through factory containing `resolving` data hook', async () => {
     const { get } = createSyntaxFactory({
       hooks: {
         schema: {
-          get(_query, multiple) {
+          resolvingGet(_query, multiple) {
             if (multiple)
               return [
                 {
@@ -535,7 +535,7 @@ describe('hooks', () => {
     expect(finalMultiple).toBe(true);
   });
 
-  test('run normal queries alongside queries that are handled by `during` hook', async () => {
+  test('run normal queries alongside queries that are handled by `resolving` hook', async () => {
     let finalQuery: FilteredHookQuery<QueryType> | undefined;
     let finalMultiple: boolean | undefined;
     let mockResolvedRequestText: string | undefined;
@@ -554,7 +554,7 @@ describe('hooks', () => {
       },
       hooks: {
         account: {
-          get(query, multiple) {
+          resolvingGet(query, multiple) {
             finalQuery = query;
             finalMultiple = multiple;
 
@@ -575,7 +575,7 @@ describe('hooks', () => {
     ]);
 
     // Make sure only one request is sent to the server and the request which
-    // was handled by the "during" "get" hook is dropped out.
+    // was handled by the "resolving" "get" hook is dropped out.
     expect(mockResolvedRequestText).toEqual('{"queries":[{"get":{"members":{}}}]}');
 
     expect(result.length).toBe(2);
@@ -711,7 +711,7 @@ describe('hooks', () => {
     ];
 
     let beforeAddOptions: Parameters<BeforeAddHook>[2] | undefined;
-    let duringAddOptions: Parameters<AddHook>[2] | undefined;
+    let resolvingAddOptions: Parameters<AddHook>[2] | undefined;
     let followingAddOptions: Parameters<FollowingAddHook>[4] | undefined;
 
     const results = await runQueriesWithStorageAndHooks(
@@ -728,8 +728,8 @@ describe('hooks', () => {
               beforeAddOptions = options;
               return query;
             },
-            add: (query, _multiple, options) => {
-              duringAddOptions = options;
+            resolvingAdd: (query, _multiple, options) => {
+              resolvingAddOptions = options;
               return query.with;
             },
             followingAdd: (_query, _multiple, _beforeResult, _afterResult, options) => {
@@ -744,7 +744,7 @@ describe('hooks', () => {
     const expectedOptions = { model: 'someProduct', database: 'secondary' };
 
     expect(beforeAddOptions).toMatchObject(expectedOptions);
-    expect(duringAddOptions).toMatchObject(expectedOptions);
+    expect(resolvingAddOptions).toMatchObject(expectedOptions);
     expect(followingAddOptions).toMatchObject(expectedOptions);
 
     expect(results).toMatchObject({

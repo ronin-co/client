@@ -66,7 +66,7 @@ export type BeforeHookHandler<
   options: DataHookOptions,
 ) => TQuery | Promise<TQuery> | Query;
 
-export type DuringHookHandler<TType extends QueryType, TSchema = unknown> = (
+export type ResolvingHookHandler<TType extends QueryType, TSchema = unknown> = (
   query: FilteredHookQuery<TType>,
   multipleRecords: boolean,
   options: DataHookOptions,
@@ -91,7 +91,7 @@ export type FollowingHookHandler<TType extends QueryType, TSchema = unknown> = (
 
 // The order of these types is important, as they determine the order in which
 // data hooks are run (the "data hook lifecycle").
-const HOOK_TYPES = ['pre', 'before', 'during', 'post', 'following'] as const;
+const HOOK_TYPES = ['pre', 'before', 'during', 'post', 'resolving', 'following'] as const;
 
 type HookType = (typeof HOOK_TYPES)[number];
 
@@ -100,6 +100,7 @@ type HookKeys = (
   | { [K in QueryType]: `pre${Capitalize<K>}` }
   | { [K in QueryType]: `before${Capitalize<K>}` }
   | { [K in QueryType]: `post${Capitalize<K>}` }
+  | { [K in QueryType]: `resolving${Capitalize<K>}` }
   | { [K in QueryType]: `following${Capitalize<K>}` }
 )[QueryType];
 
@@ -112,12 +113,14 @@ type Hook<
   : TStage extends 'before'
     ? BeforeHookHandler<TType>
     : TStage extends 'during'
-      ? DuringHookHandler<TType, TSchema>
-      : TStage extends 'post'
-        ? PostHookHandler<TType>
-        : TStage extends 'following'
-          ? FollowingHookHandler<TType, TSchema>
-          : never;
+      ? BeforeHookHandler<TType>
+      : TStage extends 'resolving'
+        ? ResolvingHookHandler<TType, TSchema>
+        : TStage extends 'post'
+          ? PostHookHandler<TType>
+          : TStage extends 'following'
+            ? FollowingHookHandler<TType, TSchema>
+            : never;
 
 type HookList<TSchema = unknown> = {
   [K in HookKeys]?: K extends 'pre' | `pre${string}`
@@ -126,17 +129,19 @@ type HookList<TSchema = unknown> = {
       ? BeforeHookHandler<QueryType>
       : K extends 'post' | `post${string}`
         ? PostHookHandler<QueryType>
-        : K extends 'following' | `following${string}`
-          ? FollowingHookHandler<QueryType, TSchema>
-          : DuringHookHandler<QueryType, TSchema>;
+        : K extends 'resolving' | `resolving${string}`
+          ? ResolvingHookHandler<QueryType, TSchema>
+          : K extends 'following' | `following${string}`
+            ? FollowingHookHandler<QueryType, TSchema>
+            : ResolvingHookHandler<QueryType, TSchema>;
 };
 
 export type Hooks<TSchema = unknown> = Record<string, HookList<TSchema>>;
 
 type PreHook<TType extends QueryType> = Hook<'pre', TType>;
 type BeforeHook<TType extends QueryType> = Hook<'before', TType>;
-type DuringHook<TType extends QueryType, TSchema = unknown> = Hook<
-  'during',
+type ResolvingHook<TType extends QueryType, TSchema = unknown> = Hook<
+  'resolving',
   TType,
   TSchema
 >;
@@ -165,14 +170,14 @@ export type BeforeCreateHook = BeforeHook<'create'>;
 export type BeforeAlterHook = BeforeHook<'alter'>;
 export type BeforeDropHook = BeforeHook<'drop'>;
 
-export type GetHook<TSchema = unknown> = DuringHook<'get', TSchema>;
-export type SetHook<TSchema = unknown> = DuringHook<'set', TSchema>;
-export type AddHook<TSchema = unknown> = DuringHook<'add', TSchema>;
-export type RemoveHook<TSchema = unknown> = DuringHook<'remove', TSchema>;
-export type CountHook<TSchema = unknown> = DuringHook<'count', TSchema>;
-export type CreateHook<TSchema = unknown> = DuringHook<'create', TSchema>;
-export type AlterHook<TSchema = unknown> = DuringHook<'alter', TSchema>;
-export type DropHook<TSchema = unknown> = DuringHook<'drop', TSchema>;
+export type GetHook<TSchema = unknown> = ResolvingHook<'get', TSchema>;
+export type SetHook<TSchema = unknown> = ResolvingHook<'set', TSchema>;
+export type AddHook<TSchema = unknown> = ResolvingHook<'add', TSchema>;
+export type RemoveHook<TSchema = unknown> = ResolvingHook<'remove', TSchema>;
+export type CountHook<TSchema = unknown> = ResolvingHook<'count', TSchema>;
+export type CreateHook<TSchema = unknown> = ResolvingHook<'create', TSchema>;
+export type AlterHook<TSchema = unknown> = ResolvingHook<'alter', TSchema>;
+export type DropHook<TSchema = unknown> = ResolvingHook<'drop', TSchema>;
 
 export type PostGetHook = PostHook<'get'>;
 export type PostSetHook = PostHook<'set'>;
@@ -268,7 +273,7 @@ export interface HookContext {
 /**
  * Invokes a particular hook (such as `followingAdd`) and handles its output.
  * In the case of an "before" hook, a query is returned from the hook, which
- * must replace the original query in the list of queries. For a "during" hook,
+ * must replace the original query in the list of queries. For a "resolving" hook,
  * the results of the query are returned and must therefore be merged into the
  * final list of results. In the case of an "following" hook, nothing must be done
  * because no output is returned by the hook.
@@ -407,7 +412,7 @@ const invokeHooks = async (
           );
         }
 
-        return (hook as BeforeHook<QueryType> | DuringHook<QueryType>)(
+        return (hook as BeforeHook<QueryType> | ResolvingHook<QueryType>)(
           queryInstruction,
           multipleRecords,
           hookOptions,
@@ -447,7 +452,7 @@ const invokeHooks = async (
 
     // If the hook returned a record (or multiple), we want to set the query's
     // result to the value returned by the hook.
-    if (hookType === 'during') {
+    if (hookType === 'resolving') {
       const result = hookResult as FormattedResults<unknown>[number];
       return { query, result };
     }
@@ -601,11 +606,12 @@ export const runQueriesWithHooks = async <T extends ResultRecord>(
     return [details];
   });
 
-  // Invoke `get`, `set`, `add`, `remove`, and `count`.
+  // Invoke `resolvingGet`, `resolvingSet`, `resolvingAdd`, `resolvingRemove`,
+  // and `resolvingCount`.
   await Promise.all(
     queryList.map(async ({ query, database }, index) => {
       const hookResults = await invokeHooks(
-        'during',
+        'resolving',
         { query },
         { ...hookCallerOptions, database },
       );
