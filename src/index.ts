@@ -13,7 +13,6 @@ import {
   type ModelField,
   type ModelIndex,
   type ModelPreset,
-  type ModelTrigger,
   QUERY_SYMBOLS,
   type Query,
   type RemoveQuery,
@@ -83,10 +82,7 @@ export const createSyntaxFactory = (
 
   list: DeepCallable<ListQuery>;
   create: DeepCallable<CreateQuery, Model>;
-  alter: DeepCallable<
-    AlterQuery,
-    Model | ModelField | ModelIndex | ModelTrigger | ModelPreset
-  >;
+  alter: DeepCallable<AlterQuery, Model | ModelField | ModelIndex | ModelPreset>;
   drop: DeepCallable<DropQuery, Model>;
 
   batch: <T extends [Promise<any>, ...Array<Promise<any>>] | Array<Promise<any>>>(
@@ -147,10 +143,11 @@ export const createSyntaxFactory = (
       callback,
       replacer,
     }),
-    alter: getSyntaxProxy<
-      AlterQuery,
-      Model | ModelField | ModelIndex | ModelTrigger | ModelPreset
-    >({ root: `${QUERY_SYMBOLS.QUERY}.alter`, callback, replacer }),
+    alter: getSyntaxProxy<AlterQuery, Model | ModelField | ModelIndex | ModelPreset>({
+      root: `${QUERY_SYMBOLS.QUERY}.alter`,
+      callback,
+      replacer,
+    }),
     drop: getSyntaxProxy<DropQuery, Model>({
       root: `${QUERY_SYMBOLS.QUERY}.drop`,
       callback,
@@ -198,7 +195,7 @@ export const list = factory.list as DeepCallable<ListQuery>;
 export const create = factory.create as DeepCallable<CreateQuery, Model>;
 export const alter = factory.alter as DeepCallable<
   AlterQuery,
-  Model | ModelField | ModelIndex | ModelTrigger | ModelPreset
+  Model | ModelField | ModelIndex | ModelPreset
 >;
 export const drop = factory.drop as DeepCallable<DropQuery, Model>;
 

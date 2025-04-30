@@ -761,6 +761,144 @@ describe('hooks', () => {
     });
   });
 
+  test('return queries from `pre` data hook', async () => {
+    const mockFetchNew: typeof fetch = async (input: string | URL | Request) => {
+      mockResolvedRequestText = await (input as Request).text();
+
+      return Response.json({
+        default: {
+          results: [
+            {
+              record: {
+                handle: 'elaine',
+              },
+              modelFields: {
+                handle: 'string',
+              },
+            },
+            {
+              record: {
+                handle: 'company',
+              },
+              modelFields: {
+                handle: 'string',
+              },
+            },
+            {
+              record: {
+                account: '1234',
+                space: '1234',
+                role: 'owner',
+              },
+              modelFields: {
+                account: 'link',
+                space: 'link',
+                role: 'string',
+              },
+            },
+            {
+              record: {
+                name: 'MacBook',
+                color: 'Space Black',
+              },
+              modelFields: {
+                name: 'string',
+                color: 'string',
+              },
+            },
+          ],
+        },
+      });
+    };
+
+    const accountHooks = { afterAdd: () => undefined };
+    const accountHooksSpy = spyOn(accountHooks, 'afterAdd');
+
+    const spaceHooks = { afterAdd: () => undefined };
+    const spaceHooksSpy = spyOn(spaceHooks, 'afterAdd');
+
+    const { batch, add } = createSyntaxFactory({
+      hooks: {
+        member: {
+          preAdd(query) {
+            const accountQuery: Query = {
+              add: {
+                account: {
+                  with: (query.with as { account: Record<string, string> }).account,
+                },
+              },
+            };
+
+            const spaceQuery: Query = {
+              add: {
+                space: {
+                  with: (query.with as { space: Record<string, string> }).space,
+                },
+              },
+            };
+
+            return [accountQuery, spaceQuery];
+          },
+        },
+
+        account: accountHooks,
+        space: spaceHooks,
+      },
+      fetch: mockFetchNew,
+      asyncContext: new AsyncLocalStorage(),
+    });
+
+    // We're using a batch to be able to check whether the results of the queries
+    // returned from the `pre` data hook are being excluded correctly.
+    const results = await batch(() => [
+      add.member.with({
+        account: { handle: 'elaine' },
+        space: { handle: 'company' },
+        role: 'owner',
+      }),
+      add.product.with({
+        name: 'MacBook',
+        color: 'Space Black',
+      }),
+    ]);
+
+    expect(results).toEqual([
+      {
+        account: '1234',
+        space: '1234',
+        role: 'owner',
+      },
+      {
+        name: 'MacBook',
+        color: 'Space Black',
+      },
+    ]);
+
+    expect(accountHooksSpy).toHaveBeenCalled();
+    expect(spaceHooksSpy).toHaveBeenCalled();
+
+    expect(mockResolvedRequestText).toEqual(
+      JSON.stringify({
+        queries: [
+          { add: { account: { with: { handle: 'elaine' } } } },
+          { add: { space: { with: { handle: 'company' } } } },
+          {
+            add: {
+              member: {
+                with: {
+                  account: { handle: 'elaine' },
+                  space: { handle: 'company' },
+                  role: 'owner',
+                },
+              },
+            },
+          },
+          { add: { product: { with: { name: 'MacBook', color: 'Space Black' } } } },
+        ],
+      }),
+    );
+  });
+
   test('return queries from `post` data hook', async () => {
     const mockFetchNew: typeof fetch = async (input: string | URL | Request) => {
       mockResolvedRequestText = await (input as Request).text();
