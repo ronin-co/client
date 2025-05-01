@@ -3,14 +3,14 @@ import { AsyncLocalStorage } from 'node:async_hooks';
 import { beforeEach, describe, expect, mock, spyOn, test } from 'bun:test';
 
 import { createSyntaxFactory } from '@/src/index';
-import { runQueriesWithStorageAndHooks } from '@/src/queries';
+import { runQueriesWithStorageAndEffects } from '@/src/queries';
 import {
-  type AddHook,
-  type FilteredHookQuery,
-  type FollowingAddHook,
-  type ResolvingAddHook,
-  runQueriesWithHooks,
-} from '@/src/utils/data-hooks';
+  type AddEffect,
+  type FilteredEffectQuery,
+  type FollowingAddEffect,
+  type ResolvingAddEffect,
+  runQueriesWithEffects,
+} from '@/src/utils/effects';
 import type { CombinedInstructions, Query, QueryType } from '@ronin/compiler';
 
 let mockResolvedRequestText: any;
@@ -25,14 +25,14 @@ const mockFetch = mock(async (request) => {
 
 global.fetch = mockFetch;
 
-describe('hooks', () => {
+describe('effects', () => {
   beforeEach(() => {
     mockFetch.mockClear();
 
     mockResolvedRequestText = undefined;
   });
 
-  test('run `get` query with a hook and ensure the hook does not modify the original query', async () => {
+  test('run `get` query with a effect and ensure the effect does not modify the original query', async () => {
     const query = {
       get: {
         accounts: {
@@ -45,29 +45,29 @@ describe('hooks', () => {
       },
     };
 
-    const mockHook = mock((query: CombinedInstructions) => {
+    const mockEffect = mock((query: CombinedInstructions) => {
       query.with = {
         handle: 'juri',
       };
       return {};
     });
 
-    await runQueriesWithHooks([{ query }], {
-      hooks: {
+    await runQueriesWithEffects([{ query }], {
+      effects: {
         account: {
-          resolvingGet: mockHook as any,
+          resolvingGet: mockEffect as any,
         },
       },
       asyncContext: new AsyncLocalStorage(),
     });
 
-    expect(mockHook).toHaveBeenCalled();
+    expect(mockEffect).toHaveBeenCalled();
     expect(query.get.accounts.with).not.toHaveProperty('handle');
   });
 
-  test('run `get` query through factory containing `during` data hook', async () => {
+  test('run `get` query through factory containing `during` effect', async () => {
     const { get } = createSyntaxFactory({
-      hooks: {
+      effects: {
         account: {
           get(query, multiple) {
             if (multiple) {
@@ -103,9 +103,9 @@ describe('hooks', () => {
     );
   });
 
-  test('return full query from `during` data hook', async () => {
+  test('return full query from `during` effect', async () => {
     const { get } = createSyntaxFactory({
-      hooks: {
+      effects: {
         account: {
           get(query) {
             const fullQuery: Query = {
@@ -130,7 +130,7 @@ describe('hooks', () => {
 
   test('run `get` query through factory with dynamically generated config', async () => {
     const { get } = createSyntaxFactory(() => ({
-      hooks: {
+      effects: {
         account: {
           get(query, multiple) {
             if (multiple) {
@@ -166,9 +166,9 @@ describe('hooks', () => {
     );
   });
 
-  test('run `get` query through factory containing `resolving` data hook', async () => {
+  test('run `get` query through factory containing `resolving` effect', async () => {
     const { get } = createSyntaxFactory({
-      hooks: {
+      effects: {
         schema: {
           resolvingGet(_query, multiple) {
             if (multiple)
@@ -205,8 +205,8 @@ describe('hooks', () => {
     );
   });
 
-  test('run `create` query through factory containing `following` data hook', async () => {
-    let finalQuery: FilteredHookQuery<QueryType> | undefined;
+  test('run `create` query through factory containing `following` effect', async () => {
+    let finalQuery: FilteredEffectQuery<QueryType> | undefined;
     let finalMultiple: boolean | undefined;
     let finalBeforeResult: unknown;
     let finalAfterResult: unknown;
@@ -227,7 +227,7 @@ describe('hooks', () => {
           ],
         });
       },
-      hooks: {
+      effects: {
         model: {
           followingCreate(query, multiple, beforeResult, afterResult) {
             finalQuery = query;
@@ -264,8 +264,8 @@ describe('hooks', () => {
     expect(finalMultiple).toBe(false);
   });
 
-  test('run `alter` query through factory containing `after` data hook', async () => {
-    let finalQuery: FilteredHookQuery<QueryType> | undefined;
+  test('run `alter` query through factory containing `after` effect', async () => {
+    let finalQuery: FilteredEffectQuery<QueryType> | undefined;
     let finalMultiple: boolean | undefined;
     let finalBeforeResult: unknown;
     let finalAfterResult: unknown;
@@ -303,7 +303,7 @@ describe('hooks', () => {
           ],
         });
       },
-      hooks: {
+      effects: {
         model: {
           followingAlter(query, multiple, beforeResult, afterResult) {
             finalQuery = query;
@@ -351,8 +351,8 @@ describe('hooks', () => {
     expect(finalMultiple).toBe(false);
   });
 
-  test('run `drop` query through factory containing `after` data hook', async () => {
-    let finalQuery: FilteredHookQuery<QueryType> | undefined;
+  test('run `drop` query through factory containing `after` effect', async () => {
+    let finalQuery: FilteredEffectQuery<QueryType> | undefined;
     let finalMultiple: boolean | undefined;
     let finalBeforeResult: unknown;
     let finalAfterResult: unknown;
@@ -373,7 +373,7 @@ describe('hooks', () => {
           ],
         });
       },
-      hooks: {
+      effects: {
         model: {
           followingDrop(query, multiple, beforeResult, afterResult) {
             finalQuery = query;
@@ -406,7 +406,7 @@ describe('hooks', () => {
     expect(finalMultiple).toBe(false);
   });
 
-  test('run `remove` query through factory containing `after` data hook', async () => {
+  test('run `remove` query through factory containing `after` effect', async () => {
     let finalBeforeResult: unknown;
     let finalAfterResult: unknown;
 
@@ -425,7 +425,7 @@ describe('hooks', () => {
           ],
         });
       },
-      hooks: {
+      effects: {
         account: {
           followingRemove(_query, _multiple, beforeResult, afterResult) {
             finalBeforeResult = beforeResult;
@@ -453,8 +453,8 @@ describe('hooks', () => {
     expect(finalAfterResult).toMatchObject([]);
   });
 
-  test('run `set` query affecting multiple accounts through factory containing `after` data hook', async () => {
-    let finalQuery: FilteredHookQuery<QueryType> | undefined;
+  test('run `set` query affecting multiple accounts through factory containing `after` effect', async () => {
+    let finalQuery: FilteredEffectQuery<QueryType> | undefined;
     let finalMultiple: boolean | undefined;
     let finalBeforeResult: unknown;
     let finalAfterResult: unknown;
@@ -487,7 +487,7 @@ describe('hooks', () => {
           results: [{ records: previousAccounts }, { records: nextAccounts }],
         });
       },
-      hooks: {
+      effects: {
         account: {
           followingSet(query, multiple, beforeResult, afterResult) {
             finalQuery = query;
@@ -535,8 +535,8 @@ describe('hooks', () => {
     expect(finalMultiple).toBe(true);
   });
 
-  test('run normal queries alongside queries that are handled by `resolving` hook', async () => {
-    let finalQuery: FilteredHookQuery<QueryType> | undefined;
+  test('run normal queries alongside queries that are handled by `resolving` effect', async () => {
+    let finalQuery: FilteredEffectQuery<QueryType> | undefined;
     let finalMultiple: boolean | undefined;
     let mockResolvedRequestText: string | undefined;
 
@@ -552,7 +552,7 @@ describe('hooks', () => {
           ],
         });
       },
-      hooks: {
+      effects: {
         account: {
           resolvingGet(query, multiple) {
             finalQuery = query;
@@ -575,7 +575,7 @@ describe('hooks', () => {
     ]);
 
     // Make sure only one request is sent to the server and the request which
-    // was handled by the "resolving" "get" hook is dropped out.
+    // was handled by the "resolving" "get" effect is dropped out.
     expect(mockResolvedRequestText).toEqual('{"queries":[{"get":{"members":{}}}]}');
 
     expect(result.length).toBe(2);
@@ -594,7 +594,7 @@ describe('hooks', () => {
     expect(finalMultiple).toBe(false);
   });
 
-  test('receive options for sink hook', async () => {
+  test('receive options for sink effect', async () => {
     const mockFetchNew = mock(() => {
       return Response.json({
         default: {
@@ -628,7 +628,7 @@ describe('hooks', () => {
       {
         add: {
           // We are purposefully using camel-case here in order to ensure that the final
-          // data hook options are formatted correctly.
+          // effect options are formatted correctly.
           someProduct: {
             with: {
               name: 'MacBook Pro',
@@ -638,11 +638,11 @@ describe('hooks', () => {
       },
     ];
 
-    let duringAddOptions: Parameters<AddHook>[2] | undefined;
-    let resolvingAddOptions: Parameters<ResolvingAddHook>[2] | undefined;
-    let followingAddOptions: Parameters<FollowingAddHook>[4] | undefined;
+    let duringAddOptions: Parameters<AddEffect>[2] | undefined;
+    let resolvingAddOptions: Parameters<ResolvingAddEffect>[2] | undefined;
+    let followingAddOptions: Parameters<FollowingAddEffect>[4] | undefined;
 
-    const results = await runQueriesWithStorageAndHooks(
+    const results = await runQueriesWithStorageAndEffects(
       {
         default: defaultQueries,
         secondary: secondaryQueries,
@@ -650,7 +650,7 @@ describe('hooks', () => {
       {
         fetch: async () => mockFetchNew(),
         token: 'takashitoken',
-        hooks: {
+        effects: {
           sink: {
             add: (query, _multiple, options) => {
               duringAddOptions = options;
@@ -689,7 +689,7 @@ describe('hooks', () => {
     });
   });
 
-  test('return queries from `before` data hook', async () => {
+  test('return queries from `before` effect', async () => {
     const mockFetchNew: typeof fetch = async (input: string | URL | Request) => {
       mockResolvedRequestText = await (input as Request).text();
 
@@ -739,14 +739,14 @@ describe('hooks', () => {
       });
     };
 
-    const accountHooks = { followingAdd: () => undefined };
-    const accountHooksSpy = spyOn(accountHooks, 'followingAdd');
+    const accountEffects = { followingAdd: () => undefined };
+    const accountEffectsSpy = spyOn(accountEffects, 'followingAdd');
 
-    const spaceHooks = { followingAdd: () => undefined };
-    const spaceHooksSpy = spyOn(spaceHooks, 'followingAdd');
+    const spaceEffects = { followingAdd: () => undefined };
+    const spaceEffectsSpy = spyOn(spaceEffects, 'followingAdd');
 
     const { batch, add } = createSyntaxFactory({
-      hooks: {
+      effects: {
         member: {
           beforeAdd(query) {
             const accountQuery: Query = {
@@ -769,15 +769,15 @@ describe('hooks', () => {
           },
         },
 
-        account: accountHooks,
-        space: spaceHooks,
+        account: accountEffects,
+        space: spaceEffects,
       },
       fetch: mockFetchNew,
       asyncContext: new AsyncLocalStorage(),
     });
 
     // We're using a batch to be able to check whether the results of the queries
-    // returned from the `pre` data hook are being excluded correctly.
+    // returned from the `pre` effect are being excluded correctly.
     const results = await batch(() => [
       add.member.with({
         account: { handle: 'elaine' },
@@ -802,8 +802,8 @@ describe('hooks', () => {
       },
     ]);
 
-    expect(accountHooksSpy).toHaveBeenCalled();
-    expect(spaceHooksSpy).toHaveBeenCalled();
+    expect(accountEffectsSpy).toHaveBeenCalled();
+    expect(spaceEffectsSpy).toHaveBeenCalled();
 
     expect(mockResolvedRequestText).toEqual(
       JSON.stringify({
@@ -827,7 +827,7 @@ describe('hooks', () => {
     );
   });
 
-  test('return queries from `after` data hook', async () => {
+  test('return queries from `after` effect', async () => {
     const mockFetchNew: typeof fetch = async (input: string | URL | Request) => {
       mockResolvedRequestText = await (input as Request).text();
 
@@ -877,14 +877,14 @@ describe('hooks', () => {
       });
     };
 
-    const memberHooks = { followingAdd: () => undefined };
-    const memberHooksSpy = spyOn(memberHooks, 'followingAdd');
+    const memberEffects = { followingAdd: () => undefined };
+    const memberEffectsSpy = spyOn(memberEffects, 'followingAdd');
 
-    const appHooks = { followingAdd: () => undefined };
-    const appHooksSpy = spyOn(appHooks, 'followingAdd');
+    const appEffects = { followingAdd: () => undefined };
+    const appEffectsSpy = spyOn(appEffects, 'followingAdd');
 
     const { batch, add } = createSyntaxFactory({
-      hooks: {
+      effects: {
         space: {
           afterAdd(query) {
             const memberQuery: Query = {
@@ -917,15 +917,15 @@ describe('hooks', () => {
           },
         },
 
-        member: memberHooks,
-        app: appHooks,
+        member: memberEffects,
+        app: appEffects,
       },
       fetch: mockFetchNew,
       asyncContext: new AsyncLocalStorage(),
     });
 
     // We're using a batch to be able to check whether the results of the queries
-    // returned from the `after` data hook are being excluded correctly.
+    // returned from the `after` effect are being excluded correctly.
     const results = await batch(() => [
       add.space.with.handle('company'),
       add.product.with({
@@ -944,8 +944,8 @@ describe('hooks', () => {
       },
     ]);
 
-    expect(memberHooksSpy).toHaveBeenCalled();
-    expect(appHooksSpy).toHaveBeenCalled();
+    expect(memberEffectsSpy).toHaveBeenCalled();
+    expect(appEffectsSpy).toHaveBeenCalled();
 
     expect(mockResolvedRequestText).toEqual(
       JSON.stringify({

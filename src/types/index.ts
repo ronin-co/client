@@ -1,61 +1,61 @@
 export type {
-  // Add Hooks
-  BeforeAddHook,
-  ResolvingAddHook,
-  AddHook,
-  AfterAddHook,
-  FollowingAddHook,
-  // Get Hooks
-  BeforeGetHook,
-  ResolvingGetHook,
-  GetHook,
-  AfterGetHook,
-  FollowingGetHook,
-  // Set Hooks
-  BeforeSetHook,
-  ResolvingSetHook,
-  SetHook,
-  AfterSetHook,
-  FollowingSetHook,
-  // Remove Hooks
-  BeforeRemoveHook,
-  ResolvingRemoveHook,
-  RemoveHook,
-  AfterRemoveHook,
-  FollowingRemoveHook,
-  // Count Hooks
-  BeforeCountHook,
-  ResolvingCountHook,
-  CountHook,
-  AfterCountHook,
-  FollowingCountHook,
-  // Create Hooks
-  BeforeCreateHook,
-  ResolvingCreateHook,
-  CreateHook,
-  AfterCreateHook,
-  FollowingCreateHook,
-  // Alter Hooks
-  BeforeAlterHook,
-  ResolvingAlterHook,
-  AlterHook,
-  AfterAlterHook,
-  FollowingAlterHook,
-  // Drop Hooks
-  BeforeDropHook,
-  ResolvingDropHook,
-  DropHook,
-  AfterDropHook,
-  FollowingDropHook,
-  // Hook Handlers
-  BeforeHookHandler,
-  DuringHookHandler,
-  FollowingHookHandler,
-  AfterHookHandler,
-  ResolvingHookHandler,
-  // Async Context surrounding Hooks
-  HookContext,
-} from '@/src/utils/data-hooks';
+  // Add Effects
+  BeforeAddEffect,
+  ResolvingAddEffect,
+  AddEffect,
+  AfterAddEffect,
+  FollowingAddEffect,
+  // Get Effects
+  BeforeGetEffect,
+  ResolvingGetEffect,
+  GetEffect,
+  AfterGetEffect,
+  FollowingGetEffect,
+  // Set Effects
+  BeforeSetEffect,
+  ResolvingSetEffect,
+  SetEffect,
+  AfterSetEffect,
+  FollowingSetEffect,
+  // Remove Effects
+  BeforeRemoveEffect,
+  ResolvingRemoveEffect,
+  RemoveEffect,
+  AfterRemoveEffect,
+  FollowingRemoveEffect,
+  // Count Effects
+  BeforeCountEffect,
+  ResolvingCountEffect,
+  CountEffect,
+  AfterCountEffect,
+  FollowingCountEffect,
+  // Create Effects
+  BeforeCreateEffect,
+  ResolvingCreateEffect,
+  CreateEffect,
+  AfterCreateEffect,
+  FollowingCreateEffect,
+  // Alter Effects
+  BeforeAlterEffect,
+  ResolvingAlterEffect,
+  AlterEffect,
+  AfterAlterEffect,
+  FollowingAlterEffect,
+  // Drop Effects
+  BeforeDropEffect,
+  ResolvingDropEffect,
+  DropEffect,
+  AfterDropEffect,
+  FollowingDropEffect,
+  // Effect Handlers
+  BeforeEffectHandler,
+  DuringEffectHandler,
+  FollowingEffectHandler,
+  AfterEffectHandler,
+  ResolvingEffectHandler,
+  // Async Context surrounding Effects
+  EffectContext,
+} from '@/src/utils/effects';
 
 export type {
   // Queries
