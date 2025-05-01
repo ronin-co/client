@@ -7,7 +7,7 @@ import type {
   RegularFormattedResult,
 } from '@/src/types/utils';
 import { WRITE_QUERY_TYPES } from '@/src/utils/constants';
-import { runQueriesWithHooks } from '@/src/utils/data-hooks';
+import { runQueriesWithEffects } from '@/src/utils/effects';
 import { getResponseBody } from '@/src/utils/errors';
 import { formatDateFields } from '@/src/utils/helpers';
 import type {
@@ -142,12 +142,12 @@ export const runQueries = async <T extends ResultRecord>(
   return formattedResults;
 };
 
-export async function runQueriesWithStorageAndHooks<T extends ResultRecord>(
+export async function runQueriesWithStorageAndEffects<T extends ResultRecord>(
   queries: Array<Query>,
   options: QueryHandlerOptions,
 ): Promise<FormattedResults<T>>;
 
-export async function runQueriesWithStorageAndHooks<T extends ResultRecord>(
+export async function runQueriesWithStorageAndEffects<T extends ResultRecord>(
   queries: Record<string, Array<Query>>,
   options: QueryHandlerOptions,
 ): Promise<Record<string, FormattedResults<T>>>;
@@ -160,7 +160,7 @@ export async function runQueriesWithStorageAndHooks<T extends ResultRecord>(
  *
  * @returns The results of the queries that were passed.
  */
-export async function runQueriesWithStorageAndHooks<T extends ResultRecord>(
+export async function runQueriesWithStorageAndEffects<T extends ResultRecord>(
   queries: Array<Query> | Record<string, Array<Query>>,
   options: QueryHandlerOptions = {},
 ): Promise<FormattedResults<T> | Record<string, FormattedResults<T>>> {
@@ -188,7 +188,7 @@ export async function runQueriesWithStorageAndHooks<T extends ResultRecord>(
     )
   ).flat();
 
-  const results = await runQueriesWithHooks<T>(queriesWithReferences, options);
+  const results = await runQueriesWithEffects<T>(queriesWithReferences, options);
 
   // If only a single database is being addressed, return the results of that database.
   if (singleDatabase)

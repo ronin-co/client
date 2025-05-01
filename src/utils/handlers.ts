@@ -1,4 +1,4 @@
-import { runQueries, runQueriesWithStorageAndHooks } from '@/src/queries';
+import { runQueries, runQueriesWithStorageAndEffects } from '@/src/queries';
 import type { QueryHandlerOptions } from '@/src/types/utils';
 import type { Query, Statement } from '@ronin/compiler';
 
@@ -64,12 +64,12 @@ export const queriesHandler = async (
 
   if (options.database) {
     const queryList = { [options.database]: queries };
-    const result = await runQueriesWithStorageAndHooks(queryList, options);
+    const result = await runQueriesWithStorageAndEffects(queryList, options);
 
     return result[options.database];
   }
 
-  return runQueriesWithStorageAndHooks(queries, options);
+  return runQueriesWithStorageAndEffects(queries, options);
 };
 
 /**

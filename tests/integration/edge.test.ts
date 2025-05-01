@@ -3,7 +3,7 @@ import { AsyncLocalStorage } from 'node:async_hooks';
 import { describe, expect, spyOn, test } from 'bun:test';
 
 import createSyntaxFactory from '@/src/index';
-import { runQueriesWithHooks } from '@/src/utils/data-hooks';
+import { runQueriesWithEffects } from '@/src/utils/effects';
 
 describe('edge runtime', () => {
   test('invoke `ronin` from an edge runtime without passing a token', async () => {
@@ -39,7 +39,7 @@ describe('edge runtime', () => {
     try {
       const factory = createSyntaxFactory({
         token: 'supertoken',
-        hooks: {
+        effects: {
           // @ts-expect-error - We are deliberately causing an error.
           add: () => undefined,
         },
@@ -55,7 +55,7 @@ describe('edge runtime', () => {
     global.process = oldProcess;
 
     expect(error?.message).toMatch(
-      `In the case that the "ronin" package receives a value for its \`hooks\` option, it must also receive a value for its \`waitUntil\` option. This requirement only applies when using an edge runtime and ensures that the edge worker continues to execute until all "following" hooks have been executed.`,
+      `In the case that the "ronin" package receives a value for its \`effects\` option, it must also receive a value for its \`waitUntil\` option. This requirement only applies when using an edge runtime and ensures that the edge worker continues to execute until all "following" effects have been executed.`,
     );
   });
 
@@ -66,8 +66,8 @@ describe('edge runtime', () => {
       },
     ];
 
-    const hookInvocation = { happened: () => true };
-    const hookInvocationHappened = spyOn(hookInvocation, 'happened');
+    const effectInvocation = { happened: () => true };
+    const effectInvocationHappened = spyOn(effectInvocation, 'happened');
 
     const promisesToAwait: Array<Promise<unknown>> = [];
 
@@ -75,7 +75,7 @@ describe('edge runtime', () => {
     const oldProcess = global.process;
     global.process = undefined as unknown as NodeJS.Process;
 
-    await runQueriesWithHooks(
+    await runQueriesWithEffects(
       queries.map((query) => ({ query })),
       {
         fetch: async () => {
@@ -92,13 +92,13 @@ describe('edge runtime', () => {
             ],
           });
         },
-        hooks: {
+        effects: {
           account: {
             followingAdd: async () => {
               // Sleep for 50 milliseconds to simulate an asynchronous action.
               await new Promise((resolve) => setTimeout(resolve, 50));
 
-              hookInvocation.happened();
+              effectInvocation.happened();
             },
           },
         },
@@ -114,10 +114,10 @@ describe('edge runtime', () => {
 
     expect(promisesToAwait.length).toBeGreaterThan(0);
 
-    // Wait for asynchronous "following" data hooks to finish.
-    expect(hookInvocationHappened).not.toHaveBeenCalled();
+    // Wait for asynchronous "following" effects to finish.
+    expect(effectInvocationHappened).not.toHaveBeenCalled();
     await Promise.all(promisesToAwait);
-    expect(hookInvocationHappened).toHaveBeenCalled();
+    expect(effectInvocationHappened).toHaveBeenCalled();
   });
 
   test('invoke `ronin` from an edge runtime with `waitUntil` set and error being thrown', async () => {
@@ -134,7 +134,7 @@ describe('edge runtime', () => {
     const oldProcess = global.process;
     global.process = undefined as unknown as NodeJS.Process;
 
-    await runQueriesWithHooks(
+    await runQueriesWithEffects(
       queries.map((query) => ({ query })),
       {
         fetch: async () => {
@@ -151,7 +151,7 @@ describe('edge runtime', () => {
             ],
           });
         },
-        hooks: {
+        effects: {
           account: {
             followingAdd: () => {
               throw new Error(errorText);
@@ -168,7 +168,7 @@ describe('edge runtime', () => {
     // Restore the old runtime.
     global.process = oldProcess;
 
-    // Wait for asynchronous "following" data hooks to finish.
+    // Wait for asynchronous "following" effects to finish.
     expect(promisesToAwait[0]).rejects.toThrow(errorText);
   });
 
@@ -185,7 +185,7 @@ describe('edge runtime', () => {
     const oldProcess = global.process;
     global.process = undefined as unknown as NodeJS.Process;
 
-    await runQueriesWithHooks(
+    await runQueriesWithEffects(
       queries.map((query) => ({ query })),
       {
         fetch: async () => {
@@ -202,7 +202,7 @@ describe('edge runtime', () => {
             ],
           });
         },
-        hooks: {
+        effects: {
           account: {
             followingAdd: async () => {
               // Sleep for 50 milliseconds to simulate an asynchronous action.
@@ -220,12 +220,12 @@ describe('edge runtime', () => {
     // Restore the old runtime.
     global.process = oldProcess;
 
-    // Wait for asynchronous "following" data hooks to finish.
+    // Wait for asynchronous "following" effects to finish.
     const result = await Promise.all(promisesToAwait);
 
-    // Ensure that the internal results of the hook run are not being exposed.
+    // Ensure that the internal results of the effect run are not being exposed.
     // In other words, the promises handed to `waitUntil` must not resolve with
-    // any value, since their purpose is to run asynchronous "following" hooks.
+    // any value, since their purpose is to run asynchronous "following" effects.
     expect(result).toMatchObject([undefined]);
   });
 });

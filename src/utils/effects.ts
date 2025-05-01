@@ -22,14 +22,14 @@ import {
 
 const EMPTY = Symbol('empty');
 
-interface DataHookOptions {
+interface EffectOptions {
   /** The model for which the query is being executed. */
   model?: string;
   /** The database for which the query is being executed. */
   database?: string;
 }
 
-export type FilteredHookQuery<
+export type FilteredEffectQuery<
   TType extends QueryType,
   TQuery extends CombinedInstructions = CombinedInstructions,
 > = RecursivePartial<TQuery> &
@@ -48,54 +48,54 @@ export type FilteredHookQuery<
               : never
   >;
 
-export type BeforeHookHandler<
+export type BeforeEffectHandler<
   TType extends QueryType,
-  TQuery extends FilteredHookQuery<TType> = FilteredHookQuery<TType>,
+  TQuery extends FilteredEffectQuery<TType> = FilteredEffectQuery<TType>,
 > = (
   query: TQuery,
   multipleRecords: boolean,
-  options: DataHookOptions,
+  options: EffectOptions,
 ) => Array<Query> | Promise<Array<Query>>;
 
-export type DuringHookHandler<
+export type DuringEffectHandler<
   TType extends QueryType,
-  TQuery extends FilteredHookQuery<TType> = FilteredHookQuery<TType>,
+  TQuery extends FilteredEffectQuery<TType> = FilteredEffectQuery<TType>,
 > = (
   query: TQuery,
   multipleRecords: boolean,
-  options: DataHookOptions,
+  options: EffectOptions,
 ) => TQuery | Promise<TQuery> | Query | Promise<Query>;
 
-export type AfterHookHandler<
+export type AfterEffectHandler<
   TType extends QueryType,
-  TQuery extends FilteredHookQuery<TType> = FilteredHookQuery<TType>,
+  TQuery extends FilteredEffectQuery<TType> = FilteredEffectQuery<TType>,
 > = (
   query: TQuery,
   multipleRecords: boolean,
-  options: DataHookOptions,
+  options: EffectOptions,
 ) => Array<Query> | Promise<Array<Query>>;
 
-export type ResolvingHookHandler<TType extends QueryType, TSchema = unknown> = (
-  query: FilteredHookQuery<TType>,
+export type ResolvingEffectHandler<TType extends QueryType, TSchema = unknown> = (
+  query: FilteredEffectQuery<TType>,
   multipleRecords: boolean,
-  options: DataHookOptions,
+  options: EffectOptions,
 ) => TSchema | Promise<TSchema>;
 
-export type FollowingHookHandler<TType extends QueryType, TSchema = unknown> = (
-  query: FilteredHookQuery<TType>,
+export type FollowingEffectHandler<TType extends QueryType, TSchema = unknown> = (
+  query: FilteredEffectQuery<TType>,
   multipleRecords: boolean,
   beforeResult: TSchema,
   afterResult: TSchema,
-  options: DataHookOptions,
+  options: EffectOptions,
 ) => void | Promise<void>;
 
 // The order of these types is important, as they determine the order in which
-// data hooks are run (the "data hook lifecycle").
-const HOOK_TYPES = ['before', 'during', 'after', 'resolving', 'following'] as const;
+// effects are run (the "effect lifecycle").
+const EFFECT_TYPES = ['before', 'during', 'after', 'resolving', 'following'] as const;
 
-type HookType = (typeof HOOK_TYPES)[number];
+type EffectType = (typeof EFFECT_TYPES)[number];
 
-type HookKeys = (
+type EffectKeys = (
   | { [K in QueryType]: `before${Capitalize<K>}` }
   | { [K in QueryType]: K }
   | { [K in QueryType]: `after${Capitalize<K>}` }
@@ -103,95 +103,95 @@ type HookKeys = (
   | { [K in QueryType]: `following${Capitalize<K>}` }
 )[QueryType];
 
-type Hook<
-  TStage extends HookType,
+type Effect<
+  TStage extends EffectType,
   TType extends QueryType,
   TSchema extends TStage extends 'before' | 'during' | 'after' ? never : unknown = never,
 > = TStage extends 'before'
-  ? BeforeHookHandler<TType>
+  ? BeforeEffectHandler<TType>
   : TStage extends 'during'
-    ? DuringHookHandler<TType>
+    ? DuringEffectHandler<TType>
     : TStage extends 'after'
-      ? AfterHookHandler<TType>
+      ? AfterEffectHandler<TType>
       : TStage extends 'resolving'
-        ? ResolvingHookHandler<TType, TSchema>
+        ? ResolvingEffectHandler<TType, TSchema>
         : TStage extends 'following'
-          ? FollowingHookHandler<TType, TSchema>
+          ? FollowingEffectHandler<TType, TSchema>
           : never;
 
-type HookList<TSchema = unknown> = {
-  [K in HookKeys]?: K extends 'before' | `before${string}`
-    ? BeforeHookHandler<QueryType>
+type EffectList<TSchema = unknown> = {
+  [K in EffectKeys]?: K extends 'before' | `before${string}`
+    ? BeforeEffectHandler<QueryType>
     : K extends 'after' | `after${string}`
-      ? AfterHookHandler<QueryType>
+      ? AfterEffectHandler<QueryType>
       : K extends 'resolving' | `resolving${string}`
-        ? ResolvingHookHandler<QueryType, TSchema>
+        ? ResolvingEffectHandler<QueryType, TSchema>
         : K extends 'following' | `following${string}`
-          ? FollowingHookHandler<QueryType, TSchema>
-          : DuringHookHandler<QueryType>;
+          ? FollowingEffectHandler<QueryType, TSchema>
+          : DuringEffectHandler<QueryType>;
 };
 
-export type Hooks<TSchema = unknown> = Record<string, HookList<TSchema>>;
+export type Effects<TSchema = unknown> = Record<string, EffectList<TSchema>>;
 
-type BeforeHook<TType extends QueryType> = Hook<'before', TType>;
-type DuringHook<TType extends QueryType> = Hook<'during', TType>;
-type AfterHook<TType extends QueryType> = Hook<'after', TType>;
+type BeforeEffect<TType extends QueryType> = Effect<'before', TType>;
+type DuringEffect<TType extends QueryType> = Effect<'during', TType>;
+type AfterEffect<TType extends QueryType> = Effect<'after', TType>;
 
-type ResolvingHook<TType extends QueryType, TSchema = unknown> = Hook<
+type ResolvingEffect<TType extends QueryType, TSchema = unknown> = Effect<
   'resolving',
   TType,
   TSchema
 >;
-type FollowingHook<TType extends QueryType, TSchema = unknown> = Hook<
+type FollowingEffect<TType extends QueryType, TSchema = unknown> = Effect<
   'following',
   TType,
   TSchema
 >;
 
-export type BeforeGetHook = BeforeHook<'get'>;
-export type BeforeSetHook = BeforeHook<'set'>;
-export type BeforeAddHook = BeforeHook<'add'>;
-export type BeforeRemoveHook = BeforeHook<'remove'>;
-export type BeforeCountHook = BeforeHook<'count'>;
-export type BeforeCreateHook = BeforeHook<'create'>;
-export type BeforeAlterHook = BeforeHook<'alter'>;
-export type BeforeDropHook = BeforeHook<'drop'>;
+export type BeforeGetEffect = BeforeEffect<'get'>;
+export type BeforeSetEffect = BeforeEffect<'set'>;
+export type BeforeAddEffect = BeforeEffect<'add'>;
+export type BeforeRemoveEffect = BeforeEffect<'remove'>;
+export type BeforeCountEffect = BeforeEffect<'count'>;
+export type BeforeCreateEffect = BeforeEffect<'create'>;
+export type BeforeAlterEffect = BeforeEffect<'alter'>;
+export type BeforeDropEffect = BeforeEffect<'drop'>;
 
-export type GetHook = DuringHook<'get'>;
-export type SetHook = DuringHook<'set'>;
-export type AddHook = DuringHook<'add'>;
-export type RemoveHook = DuringHook<'remove'>;
-export type CountHook = DuringHook<'count'>;
-export type CreateHook = DuringHook<'create'>;
-export type AlterHook = DuringHook<'alter'>;
-export type DropHook = DuringHook<'drop'>;
+export type GetEffect = DuringEffect<'get'>;
+export type SetEffect = DuringEffect<'set'>;
+export type AddEffect = DuringEffect<'add'>;
+export type RemoveEffect = DuringEffect<'remove'>;
+export type CountEffect = DuringEffect<'count'>;
+export type CreateEffect = DuringEffect<'create'>;
+export type AlterEffect = DuringEffect<'alter'>;
+export type DropEffect = DuringEffect<'drop'>;
 
-export type AfterGetHook = AfterHook<'get'>;
-export type AfterSetHook = AfterHook<'set'>;
-export type AfterAddHook = AfterHook<'add'>;
-export type AfterRemoveHook = AfterHook<'remove'>;
-export type AfterCountHook = AfterHook<'count'>;
-export type AfterCreateHook = AfterHook<'create'>;
-export type AfterAlterHook = AfterHook<'alter'>;
-export type AfterDropHook = AfterHook<'drop'>;
+export type AfterGetEffect = AfterEffect<'get'>;
+export type AfterSetEffect = AfterEffect<'set'>;
+export type AfterAddEffect = AfterEffect<'add'>;
+export type AfterRemoveEffect = AfterEffect<'remove'>;
+export type AfterCountEffect = AfterEffect<'count'>;
+export type AfterCreateEffect = AfterEffect<'create'>;
+export type AfterAlterEffect = AfterEffect<'alter'>;
+export type AfterDropEffect = AfterEffect<'drop'>;
 
-export type ResolvingGetHook<TSchema = unknown> = ResolvingHook<'get', TSchema>;
-export type ResolvingSetHook<TSchema = unknown> = ResolvingHook<'set', TSchema>;
-export type ResolvingAddHook<TSchema = unknown> = ResolvingHook<'add', TSchema>;
-export type ResolvingRemoveHook<TSchema = unknown> = ResolvingHook<'remove', TSchema>;
-export type ResolvingCountHook<TSchema = unknown> = ResolvingHook<'count', TSchema>;
-export type ResolvingCreateHook<TSchema = unknown> = ResolvingHook<'create', TSchema>;
-export type ResolvingAlterHook<TSchema = unknown> = ResolvingHook<'alter', TSchema>;
-export type ResolvingDropHook<TSchema = unknown> = ResolvingHook<'drop', TSchema>;
+export type ResolvingGetEffect<TSchema = unknown> = ResolvingEffect<'get', TSchema>;
+export type ResolvingSetEffect<TSchema = unknown> = ResolvingEffect<'set', TSchema>;
+export type ResolvingAddEffect<TSchema = unknown> = ResolvingEffect<'add', TSchema>;
+export type ResolvingRemoveEffect<TSchema = unknown> = ResolvingEffect<'remove', TSchema>;
+export type ResolvingCountEffect<TSchema = unknown> = ResolvingEffect<'count', TSchema>;
+export type ResolvingCreateEffect<TSchema = unknown> = ResolvingEffect<'create', TSchema>;
+export type ResolvingAlterEffect<TSchema = unknown> = ResolvingEffect<'alter', TSchema>;
+export type ResolvingDropEffect<TSchema = unknown> = ResolvingEffect<'drop', TSchema>;
 
-export type FollowingGetHook<TSchema = unknown> = FollowingHook<'get', TSchema>;
-export type FollowingSetHook<TSchema = unknown> = FollowingHook<'set', TSchema>;
-export type FollowingAddHook<TSchema = unknown> = FollowingHook<'add', TSchema>;
-export type FollowingRemoveHook<TSchema = unknown> = FollowingHook<'remove', TSchema>;
-export type FollowingCountHook<TSchema = unknown> = FollowingHook<'count', TSchema>;
-export type FollowingCreateHook<TSchema = unknown> = FollowingHook<'create', TSchema>;
-export type FollowingAlterHook<TSchema = unknown> = FollowingHook<'alter', TSchema>;
-export type FollowingDropHook<TSchema = unknown> = FollowingHook<'drop', TSchema>;
+export type FollowingGetEffect<TSchema = unknown> = FollowingEffect<'get', TSchema>;
+export type FollowingSetEffect<TSchema = unknown> = FollowingEffect<'set', TSchema>;
+export type FollowingAddEffect<TSchema = unknown> = FollowingEffect<'add', TSchema>;
+export type FollowingRemoveEffect<TSchema = unknown> = FollowingEffect<'remove', TSchema>;
+export type FollowingCountEffect<TSchema = unknown> = FollowingEffect<'count', TSchema>;
+export type FollowingCreateEffect<TSchema = unknown> = FollowingEffect<'create', TSchema>;
+export type FollowingAlterEffect<TSchema = unknown> = FollowingEffect<'alter', TSchema>;
+export type FollowingDropEffect<TSchema = unknown> = FollowingEffect<'drop', TSchema>;
 
 const getModel = (
   instruction: QuerySchemaType,
@@ -220,25 +220,25 @@ const getModel = (
 };
 
 /**
- * Constructs the method name used for a particular type of hook and query.
- * For example, if `hookType` is "following" and `queryType` is "add", the
+ * Constructs the method name used for a particular type of effect and query.
+ * For example, if `effectType` is "following" and `queryType` is "add", the
  * resulting method name would be `followingAdd`.
  *
- * @param hookType - The type of hook.
+ * @param effectType - The type of effect.
  * @param queryType - The type of query.
  *
- * @returns The method name constructed from the hook and query types.
+ * @returns The method name constructed from the effect and query types.
  */
-const getMethodName = (hookType: HookType, queryType: QueryType): string => {
+const getMethodName = (effectType: EffectType, queryType: QueryType): string => {
   const capitalizedQueryType = queryType[0].toUpperCase() + queryType.slice(1);
-  return hookType === 'during' ? queryType : hookType + capitalizedQueryType;
+  return effectType === 'during' ? queryType : effectType + capitalizedQueryType;
 };
 
 /**
  * Takes the result of a query and normalizes it to an array, to avoid
  * developers having to conditionally support both arrays and objects inside
- * the data hooks. Furthermore, the result is cloned to allow for modifying it
- * within data hooks without affecting the original query result that is being
+ * the effects. Furthermore, the result is cloned to allow for modifying it
+ * within effects without affecting the original query result that is being
  * returned from the client.
  *
  * @param result - The result of a query.
@@ -250,50 +250,50 @@ const normalizeResults = (result: unknown) => {
   return structuredClone(value);
 };
 
-interface HookCallerOptions extends Omit<QueryHandlerOptions, 'hooks'> {
-  hooks: NonNullable<QueryHandlerOptions['hooks']>;
+interface EffectCallerOptions extends Omit<QueryHandlerOptions, 'effects'> {
+  effects: NonNullable<QueryHandlerOptions['effects']>;
   /**
-   * If the hooks are being called for a custom database, the identifier of the database
+   * If the effects are being called for a custom database, the identifier of the database
    * would be provided here.
    */
   database?: string;
 }
 
-export interface HookContext {
-  hookType: HookType;
+export interface EffectContext {
+  effectType: EffectType;
   queryType: QueryType;
   queryModel: string;
 }
 
 /**
- * Invokes a particular hook (such as `followingAdd`) and handles its output.
- * In the case of an "before" hook, a query is returned from the hook, which
- * must replace the original query in the list of queries. For a "resolving" hook,
+ * Invokes a particular effect (such as `followingAdd`) and handles its output.
+ * In the case of an "before" effect, a query is returned from the effect, which
+ * must replace the original query in the list of queries. For a "resolving" effect,
  * the results of the query are returned and must therefore be merged into the
- * final list of results. In the case of an "following" hook, nothing must be done
- * because no output is returned by the hook.
+ * final list of results. In the case of an "following" effect, nothing must be done
+ * because no output is returned by the effect.
  *
- * @param hookType - The type of hook.
+ * @param effectType - The type of effect.
  * @param definition - The definition and other details of a query that is being run.
  * @param options - A list of options to change how the queries are executed.
  *
  * @returns The modified query and its results, if any are available.
  */
-const invokeHooks = async (
-  hookType: HookType,
+const invokeEffects = async (
+  effectType: EffectType,
   definition: {
     query: Query;
     resultBefore?: unknown;
     resultAfter?: unknown;
   },
-  options: HookCallerOptions,
+  options: EffectCallerOptions,
 ): Promise<{
-  /** A list of queries provided by the data hook. */
+  /** A list of queries provided by the effect. */
   queries?: Array<Query>;
-  /** The result of a query provided by the data hook. */
+  /** The result of a query provided by the effect. */
   result?: FormattedResults<unknown>[number] | symbol;
 }> => {
-  const { hooks } = options;
+  const { effects } = options;
   const { query } = definition;
 
   const queryType = Object.keys(query)[0] as QueryType;
@@ -322,64 +322,64 @@ const invokeHooks = async (
     oldInstruction = queryInstructions[queryModel];
   }
 
-  // If the hooks are being executed for a custom database, all hooks must be located
+  // If the effects are being executed for a custom database, all effects must be located
   // inside a file named `sink.ts`, which catches the queries for all other databases.
   //
-  // If the hooks are *not* being executed for a custom database, the hook file name
+  // If the effects are *not* being executed for a custom database, the effect file name
   // matches the model that is being addressed by the query.
-  const hookFile = options.database ? 'sink' : queryModelDashed;
-  const hooksForModel = hooks[hookFile];
-  const hookName = getMethodName(hookType, queryType);
+  const effectFile = options.database ? 'sink' : queryModelDashed;
+  const effectsForModel = effects[effectFile];
+  const effectName = getMethodName(effectType, queryType);
 
   // If `oldInstruction` is falsy (e.g. `null`), we want to default to `{}`.
   // This would happen in cases where all records of a particular model are
   // retrieved. For example, the query `get.members();` would trigger this.
   //
-  // It's important to provide an object to hooks, as people might otherwise
+  // It's important to provide an object to effects, as people might otherwise
   // try to set properties on a value that's not an object, which would cause
-  // the hook to crash with an exception.
+  // the effect to crash with an exception.
   //
   // It's also extremely important to clone both of the variables below, as the
-  // hooks will otherwise modify the original that was passed from the outside.
+  // effects will otherwise modify the original that was passed from the outside.
   const queryInstruction = oldInstruction
     ? structuredClone<CombinedInstructions>(oldInstruction as CombinedInstructions)
     : ({} as CombinedInstructions);
 
-  if (hooksForModel && hookName in hooksForModel) {
-    const hook = hooksForModel[hookName as keyof typeof hooksForModel];
-    const hookOptions =
-      hookFile === 'sink' ? { model: queryModel, database: options.database } : {};
+  if (effectsForModel && effectName in effectsForModel) {
+    const effect = effectsForModel[effectName as keyof typeof effectsForModel];
+    const effectOptions =
+      effectFile === 'sink' ? { model: queryModel, database: options.database } : {};
 
-    // For data hooks of type "following" (such as `followingAdd`), we want to pass
+    // For effects of type "following" (such as `followingAdd`), we want to pass
     // special function arguments that contain the value of the affected records
     // before and after the query was executed.
-    const hookResult = await (hookType === 'following'
-      ? (hook as FollowingHook<QueryType, unknown>)(
+    const effectResult = await (effectType === 'following'
+      ? (effect as FollowingEffect<QueryType, unknown>)(
           queryInstruction,
           multipleRecords,
           normalizeResults(definition.resultBefore),
           normalizeResults(definition.resultAfter),
-          hookOptions,
+          effectOptions,
         )
-      : (hook as DuringHook<QueryType> | ResolvingHook<QueryType>)(
+      : (effect as DuringEffect<QueryType> | ResolvingEffect<QueryType>)(
           queryInstruction,
           multipleRecords,
-          hookOptions,
+          effectOptions,
         ));
 
-    // If the hook returned multiple queries that should be run before the original query,
+    // If the effect returned multiple queries that should be run before the original query,
     // we want to return those queries.
-    if (hookType === 'before') {
-      return { queries: hookResult as Array<Query> };
+    if (effectType === 'before') {
+      return { queries: effectResult as Array<Query> };
     }
 
-    // If the hook returned a query, we want to replace the original query with
-    // the one returned by the hook.
-    if (hookType === 'during') {
-      const result = hookResult as null | Query | CombinedInstructions;
+    // If the effect returned a query, we want to replace the original query with
+    // the one returned by the effect.
+    if (effectType === 'during') {
+      const result = effectResult as null | Query | CombinedInstructions;
       let newQuery: Query = query;
 
-      // If a full query was returned by the "before" hook, use the query as-is.
+      // If a full query was returned by the "before" effect, use the query as-is.
       if (result && QUERY_TYPES.some((type) => type in result)) {
         newQuery = result as Query;
       }
@@ -396,20 +396,20 @@ const invokeHooks = async (
       return { queries: [newQuery] };
     }
 
-    // If the hook returned multiple queries that should be run after the original query,
+    // If the effect returned multiple queries that should be run after the original query,
     // we want to return those queries.
-    if (hookType === 'after') {
-      return { queries: hookResult as Array<Query> };
+    if (effectType === 'after') {
+      return { queries: effectResult as Array<Query> };
     }
 
-    // If the hook returned a record (or multiple), we want to set the query's
-    // result to the value returned by the hook.
-    if (hookType === 'resolving') {
-      const result = hookResult as FormattedResults<unknown>[number];
+    // If the effect returned a record (or multiple), we want to set the query's
+    // result to the value returned by the effect.
+    if (effectType === 'resolving') {
+      const result = effectResult as FormattedResults<unknown>[number];
       return { queries: [], result };
     }
 
-    // In the case of "following" hooks, we don't need to do anything, because they
+    // In the case of "following" effects, we don't need to do anything, because they
     // are run asynchronously and aren't expected to return anything.
   }
 
@@ -417,30 +417,30 @@ const invokeHooks = async (
 };
 
 /**
- * Executes queries and also invokes any potential hooks (such as `followingAdd`)
- * that might have been provided as part of `options.hooks`.
+ * Executes queries and also invokes any potential effects (such as `followingAdd`)
+ * that might have been provided as part of `options.effects`.
  *
  * @param queries - A list of queries to execute.
  * @param options - A list of options to change how the queries are executed. To
- * run hooks, the `options.hooks` property must contain a map of hooks.
+ * run effects, the `options.effects` property must contain a map of effects.
  *
  * @returns The results of the queries that were passed.
  */
-export const runQueriesWithHooks = async <T extends ResultRecord>(
+export const runQueriesWithEffects = async <T extends ResultRecord>(
   queries: QueriesPerDatabase,
   options: QueryHandlerOptions = {},
 ): Promise<ResultsPerDatabase<T>> => {
-  const { hooks, waitUntil } = options;
+  const { effects, waitUntil } = options;
 
-  // If no hooks were provided, we can just run all the queries and return the results.
-  if (!hooks) return runQueries<T>(queries, options);
+  // If no effects were provided, we can just run all the queries and return the results.
+  if (!effects) return runQueries<T>(queries, options);
 
   if (typeof process === 'undefined' && !waitUntil) {
     let message = 'In the case that the "ronin" package receives a value for';
-    message += ' its `hooks` option, it must also receive a value for its';
+    message += ' its `effects` option, it must also receive a value for its';
     message += ' `waitUntil` option. This requirement only applies when using';
     message += ' an edge runtime and ensures that the edge worker continues to';
-    message += ' execute until all "following" hooks have been executed.';
+    message += ' execute until all "following" effects have been executed.';
 
     throw new Error(message);
   }
@@ -458,9 +458,13 @@ export const runQueriesWithHooks = async <T extends ResultRecord>(
   // Invoke `beforeAdd`, `beforeGet`, `beforeSet`, `beforeRemove`, and `beforeCount`.
   await Promise.all(
     queryList.map(async ({ query, database }, index) => {
-      const hookResults = await invokeHooks('before', { query }, { hooks, database });
+      const effectResults = await invokeEffects(
+        'before',
+        { query },
+        { effects, database },
+      );
 
-      const queriesToInsert = hookResults.queries!.map((query) => ({
+      const queriesToInsert = effectResults.queries!.map((query) => ({
         query,
         result: EMPTY,
         database,
@@ -474,10 +478,14 @@ export const runQueriesWithHooks = async <T extends ResultRecord>(
   // Invoke `add`, `get`, `set`, `remove`, and `count`.
   await Promise.all(
     queryList.map(async ({ query, database }, index) => {
-      const hookResults = await invokeHooks('during', { query }, { hooks, database });
+      const effectResults = await invokeEffects(
+        'during',
+        { query },
+        { effects, database },
+      );
 
-      if (hookResults.queries && hookResults.queries.length > 0) {
-        queryList[index].query = hookResults.queries[0];
+      if (effectResults.queries && effectResults.queries.length > 0) {
+        queryList[index].query = effectResults.queries[0];
       }
     }),
   );
@@ -485,9 +493,13 @@ export const runQueriesWithHooks = async <T extends ResultRecord>(
   // Invoke `afterAdd`, `afterGet`, `afterSet`, `afterRemove`, and `afterCount`.
   await Promise.all(
     queryList.map(async ({ query, database }, index) => {
-      const hookResults = await invokeHooks('after', { query }, { hooks, database });
+      const effectResults = await invokeEffects(
+        'after',
+        { query },
+        { effects, database },
+      );
 
-      const queriesToInsert = hookResults.queries!.map((query) => ({
+      const queriesToInsert = effectResults.queries!.map((query) => ({
         query,
         result: EMPTY,
         database,
@@ -498,8 +510,8 @@ export const runQueriesWithHooks = async <T extends ResultRecord>(
     }),
   );
 
-  // If data hooks are enabled, we want to send a separate `get` query for every `set`
-  // and `alter` query (in the same transaction), so that we can provide the data hooks
+  // If effects are enabled, we want to send a separate `get` query for every `set`
+  // and `alter` query (in the same transaction), so that we can provide the effects
   // with a "before and after" of the modified records.
   //
   // The version of the record *after* the modification is already available without the
@@ -547,8 +559,12 @@ export const runQueriesWithHooks = async <T extends ResultRecord>(
   // and `resolvingCount`.
   await Promise.all(
     queryList.map(async ({ query, database }, index) => {
-      const hookResults = await invokeHooks('resolving', { query }, { hooks, database });
-      queryList[index].result = hookResults.result as FormattedResults<T>[number];
+      const effectResults = await invokeEffects(
+        'resolving',
+        { query },
+        { effects, database },
+      );
+      queryList[index].result = effectResults.result as FormattedResults<T>[number];
     }),
   );
 
@@ -557,7 +573,7 @@ export const runQueriesWithHooks = async <T extends ResultRecord>(
     .filter((query) => query.result === EMPTY);
 
   // If queries are remaining that don't have any results that were provided by above by
-  // data hooks, we need to run those queries against the database.
+  // effects, we need to run those queries against the database.
   if (queriesWithoutResults.length > 0) {
     const resultsFromDatabase = await runQueries<T>(queriesWithoutResults, options);
 
@@ -576,7 +592,7 @@ export const runQueriesWithHooks = async <T extends ResultRecord>(
     const { query, result, database } = queryList[index];
     const queryType = Object.keys(query)[0] as QueryType;
 
-    // "following" hooks should only fire for writes — not reads.
+    // "following" effects should only fire for writes — not reads.
     if (!(WRITE_QUERY_TYPES as ReadonlyArray<string>).includes(queryType)) continue;
 
     const diffMatch = queryList.find((item) => item.diffForIndex === index);
@@ -587,20 +603,20 @@ export const runQueriesWithHooks = async <T extends ResultRecord>(
     // For queries of type "remove" and "drop", we want to set `resultBefore` to the
     // result of the query (which contains the record), because the record will no longer
     // exist after the query has been executed, so it wouldn't make sense to expose the
-    // record as `resultAfter` in the data hooks.
+    // record as `resultAfter` in the effects.
     if (queryType === 'remove' || queryType === 'drop') {
       resultBefore = result;
       resultAfter = EMPTY;
     }
 
-    // Run the actual hook functions.
-    const promise = invokeHooks(
+    // Run the actual effect functions.
+    const promise = invokeEffects(
       'following',
       { query, resultBefore, resultAfter },
-      { hooks, database },
+      { effects, database },
     );
 
-    // The result of the hook should not be made available, otherwise
+    // The result of the effect should not be made available, otherwise
     // developers might start relying on it. Only errors should be propagated.
     const clearPromise = promise.then(
       () => {},
@@ -609,7 +625,7 @@ export const runQueriesWithHooks = async <T extends ResultRecord>(
 
     // If the configuration option for extending the lifetime of the edge
     // worker invocation was passed, provide it with the resulting promise of
-    // the hook invocation above. This will ensure that the worker will
+    // the effect invocation above. This will ensure that the worker will
     // continue to be executed until all of the asynchronous actions
     // (non-awaited promises) have been resolved.
     if (waitUntil) waitUntil(clearPromise);
@@ -617,7 +633,7 @@ export const runQueriesWithHooks = async <T extends ResultRecord>(
 
   // Filter the list of queries to remove any potential queries used for "diffing"
   // (retrieving the previous value of a record) and any potential queries resulting from
-  // "before" or "after" hooks. Then return only the results of the queries.
+  // "before" or "after" effects. Then return only the results of the queries.
   return queryList
     .filter(
       (query) =>

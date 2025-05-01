@@ -1,14 +1,14 @@
 import type { AsyncLocalStorage } from 'node:async_hooks';
 
-import type { Hooks } from '@/src/utils/data-hooks';
+import type { Effects } from '@/src/utils/effects';
 
 import type { Model, Result, ResultRecord } from '@ronin/compiler';
 
 export interface QueryHandlerOptions {
   /**
-   * Object containing data hooks for defined schemas.
+   * Object containing effects for defined schemas.
    */
-  hooks?: Hooks;
+  effects?: Effects;
 
   /**
    * Token used to authenticate against RONIN. By default,
@@ -26,14 +26,14 @@ export interface QueryHandlerOptions {
 
   /**
    * Allows for extending the lifetime of the edge worker invocation until the
-   * provided promise has been resolved. If the `hooks` option is provided on
+   * provided promise has been resolved. If the `effects` option is provided on
    * an edge runtime, this option is required.
    */
   waitUntil?: (promise: Promise<unknown>) => void;
 
   /**
-   * Allows for preventing recursions when running queries from data hooks
-   * provided with the `hooks` option. If the `hooks` option is provided, this
+   * Allows for preventing recursions when running queries from effects
+   * provided with the `effects` option. If the `effects` option is provided, this
    * option is required.
    */
   asyncContext?: AsyncLocalStorage<any>;
