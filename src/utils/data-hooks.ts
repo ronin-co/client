@@ -353,20 +353,19 @@ const invokeHooks = async (
     // For data hooks of type "following" (such as `followingAdd`), we want to pass
     // special function arguments that contain the value of the affected records
     // before and after the query was executed.
-    const hookResult =
-      hookType === 'following'
-        ? (hook as FollowingHook<QueryType, unknown>)(
-            queryInstruction,
-            multipleRecords,
-            normalizeResults(definition.resultBefore),
-            normalizeResults(definition.resultAfter),
-            hookOptions,
-          )
-        : (hook as DuringHook<QueryType> | ResolvingHook<QueryType>)(
-            queryInstruction,
-            multipleRecords,
-            hookOptions,
-          );
+    const hookResult = await (hookType === 'following'
+      ? (hook as FollowingHook<QueryType, unknown>)(
+          queryInstruction,
+          multipleRecords,
+          normalizeResults(definition.resultBefore),
+          normalizeResults(definition.resultAfter),
+          hookOptions,
+        )
+      : (hook as DuringHook<QueryType> | ResolvingHook<QueryType>)(
+          queryInstruction,
+          multipleRecords,
+          hookOptions,
+        ));
 
     // If the hook returned multiple queries that should be run before the original query,
     // we want to return those queries.
