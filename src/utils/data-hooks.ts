@@ -91,7 +91,7 @@ export type FollowingHookHandler<TType extends QueryType, TSchema = unknown> = (
 
 // The order of these types is important, as they determine the order in which
 // data hooks are run (the "data hook lifecycle").
-const HOOK_TYPES = ['before', 'during', 'after', 'resolving', 'following'] as const;
+const HOOK_TYPES = ['before', 'during', 'resolving', 'after', 'following'] as const;
 
 type HookType = (typeof HOOK_TYPES)[number];
 
