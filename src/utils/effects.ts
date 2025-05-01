@@ -91,9 +91,9 @@ export type FollowingEffectHandler<TType extends QueryType, TSchema = unknown> =
 
 // The order of these types is important, as they determine the order in which
 // effects are run (the "effect lifecycle").
-const HOOK_TYPES = ['before', 'during', 'after', 'resolving', 'following'] as const;
+const EFFECT_TYPES = ['before', 'during', 'after', 'resolving', 'following'] as const;
 
-type EffectType = (typeof HOOK_TYPES)[number];
+type EffectType = (typeof EFFECT_TYPES)[number];
 
 type EffectKeys = (
   | { [K in QueryType]: `before${Capitalize<K>}` }
