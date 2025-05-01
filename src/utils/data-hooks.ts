@@ -250,9 +250,8 @@ const normalizeResults = (result: unknown) => {
   return structuredClone(value);
 };
 
-interface HookCallerOptions extends Omit<QueryHandlerOptions, 'hooks' | 'asyncContext'> {
+interface HookCallerOptions extends Omit<QueryHandlerOptions, 'hooks'> {
   hooks: NonNullable<QueryHandlerOptions['hooks']>;
-  asyncContext: NonNullable<QueryHandlerOptions['asyncContext']>;
   /**
    * If the hooks are being called for a custom database, the identifier of the database
    * would be provided here.
@@ -294,7 +293,7 @@ const invokeHooks = async (
   /** The result of a query provided by the data hook. */
   result?: FormattedResults<unknown>[number] | symbol;
 }> => {
-  const { hooks, asyncContext } = options;
+  const { hooks } = options;
   const { query } = definition;
 
   const queryType = Object.keys(query)[0] as QueryType;
@@ -346,73 +345,27 @@ const invokeHooks = async (
     ? structuredClone<CombinedInstructions>(oldInstruction as CombinedInstructions)
     : ({} as CombinedInstructions);
 
-  // To prevent recursions in data hooks, we have to only execute data hooks
-  // that come after the lifecycle level of the current data hook (1).
-  //
-  // Additionally, no data hooks should be called for queries inside data hooks
-  // that are addressing the same model as the surrounding data hook (2).
-  //
-  // For queries that target a model that has "during" data hooks defined,
-  // however, this behavior should not apply (3).
-  //
-  // **EXAMPLES**
-  //
-  // 1. If a query targeting the `customer` model is executed in the
-  // `beforeAdd` data hook of the `account` model, only data hooks after
-  // the "before" lifecycle level (such as `set`, `followingSet`, `add`,
-  // `followingAdd` etc.) will be executed for the `customer` query.
-  //
-  // 2. If a query targeting the `customer` model is executed in the
-  // `beforeAdd` data hook of the `customer` model, no data hooks will be
-  // executed for the `customer` query.
-  //
-  // 3. If a query targeting the `customer` model is executed and that model
-  // contains data hooks of the "during" lifecycle level, all data hooks of
-  // that target model will be executed and none will be skipped.
-  const parentHook = asyncContext.getStore();
-  const shouldSkip =
-    hooksForModel &&
-    QUERY_TYPES.some((type) => type in hooksForModel) &&
-    parentHook &&
-    hookFile !== parentHook.hookFile
-      ? false
-      : parentHook &&
-        (HOOK_TYPES.indexOf(hookType) <= HOOK_TYPES.indexOf(parentHook.hookType) ||
-          (hookFile === parentHook.hookFile &&
-            HOOK_TYPES.indexOf(hookType) > HOOK_TYPES.indexOf(parentHook.hookType)));
-
-  if (hooksForModel && hookName in hooksForModel && !shouldSkip) {
+  if (hooksForModel && hookName in hooksForModel) {
     const hook = hooksForModel[hookName as keyof typeof hooksForModel];
     const hookOptions =
       hookFile === 'sink' ? { model: queryModel, database: options.database } : {};
 
-    const hookResult = await asyncContext.run(
-      {
-        hookType,
-        queryType,
-        hookFile,
-      },
-      () => {
-        // For data hooks of type "following" (such as `followingAdd`), we want to pass
-        // special function arguments that contain the value of the affected records
-        // before and after the query was executed.
-        if (hookType === 'following') {
-          return (hook as FollowingHook<QueryType, unknown>)(
-            queryInstruction,
-            multipleRecords,
-            normalizeResults(definition.resultBefore),
-            normalizeResults(definition.resultAfter),
-            hookOptions,
-          );
-        }
-
-        return (hook as DuringHook<QueryType> | ResolvingHook<QueryType>)(
+    // For data hooks of type "following" (such as `followingAdd`), we want to pass
+    // special function arguments that contain the value of the affected records
+    // before and after the query was executed.
+    const hookResult = await (hookType === 'following'
+      ? (hook as FollowingHook<QueryType, unknown>)(
+          queryInstruction,
+          multipleRecords,
+          normalizeResults(definition.resultBefore),
+          normalizeResults(definition.resultAfter),
+          hookOptions,
+        )
+      : (hook as DuringHook<QueryType> | ResolvingHook<QueryType>)(
           queryInstruction,
           multipleRecords,
           hookOptions,
-        );
-      },
-    );
+        ));
 
     // If the hook returned multiple queries that should be run before the original query,
     // we want to return those queries.
@@ -477,7 +430,7 @@ export const runQueriesWithHooks = async <T extends ResultRecord>(
   queries: QueriesPerDatabase,
   options: QueryHandlerOptions = {},
 ): Promise<ResultsPerDatabase<T>> => {
-  const { hooks, waitUntil, asyncContext } = options;
+  const { hooks, waitUntil } = options;
 
   // If no hooks were provided, we can just run all the queries and return the results.
   if (!hooks) return runQueries<T>(queries, options);
@@ -492,23 +445,6 @@ export const runQueriesWithHooks = async <T extends ResultRecord>(
     throw new Error(message);
   }
 
-  // We can't import `AsyncLocalStorage` directly inside the package, because
-  // that would require either importing it from a separate entrypoint of the
-  // package (in which case people would need to import that separate
-  // entrypoint, making the import statement longer) or importing it
-  // conditionally from the top-level, which would require top-level `await`,
-  // which, at the time of writing, doesn't work in certain ESM environments,
-  // like Next.js Server Actions. We could also import it from inside a
-  // function, but then the module would be booted the first time that function
-  // is called, thereby slowing down the function.
-  if (!asyncContext) {
-    let message = 'In the case that the "ronin" package receives a value for';
-    message += ' its `hooks` option, it must also receive a value for its';
-    message += ' `asyncContext` option.';
-
-    throw new Error(message);
-  }
-
   let queryList: Array<
     QueriesPerDatabase[number] & {
       result: FormattedResults<T>[number] | symbol;
@@ -519,16 +455,10 @@ export const runQueriesWithHooks = async <T extends ResultRecord>(
     }
   > = queries.map(({ query, database }) => ({ query, result: EMPTY, database }));
 
-  const hookCallerOptions = { hooks, asyncContext };
-
   // Invoke `beforeAdd`, `beforeGet`, `beforeSet`, `beforeRemove`, and `beforeCount`.
   await Promise.all(
     queryList.map(async ({ query, database }, index) => {
-      const hookResults = await invokeHooks(
-        'before',
-        { query },
-        { ...hookCallerOptions, database },
-      );
+      const hookResults = await invokeHooks('before', { query }, { hooks, database });
 
       const queriesToInsert = hookResults.queries!.map((query) => ({
         query,
@@ -544,11 +474,7 @@ export const runQueriesWithHooks = async <T extends ResultRecord>(
   // Invoke `add`, `get`, `set`, `remove`, and `count`.
   await Promise.all(
     queryList.map(async ({ query, database }, index) => {
-      const hookResults = await invokeHooks(
-        'during',
-        { query },
-        { ...hookCallerOptions, database },
-      );
+      const hookResults = await invokeHooks('during', { query }, { hooks, database });
 
       if (hookResults.queries && hookResults.queries.length > 0) {
         queryList[index].query = hookResults.queries[0];
@@ -559,11 +485,7 @@ export const runQueriesWithHooks = async <T extends ResultRecord>(
   // Invoke `afterAdd`, `afterGet`, `afterSet`, `afterRemove`, and `afterCount`.
   await Promise.all(
     queryList.map(async ({ query, database }, index) => {
-      const hookResults = await invokeHooks(
-        'after',
-        { query },
-        { ...hookCallerOptions, database },
-      );
+      const hookResults = await invokeHooks('after', { query }, { hooks, database });
 
       const queriesToInsert = hookResults.queries!.map((query) => ({
         query,
@@ -625,11 +547,7 @@ export const runQueriesWithHooks = async <T extends ResultRecord>(
   // and `resolvingCount`.
   await Promise.all(
     queryList.map(async ({ query, database }, index) => {
-      const hookResults = await invokeHooks(
-        'resolving',
-        { query },
-        { ...hookCallerOptions, database },
-      );
+      const hookResults = await invokeHooks('resolving', { query }, { hooks, database });
       queryList[index].result = hookResults.result as FormattedResults<T>[number];
     }),
   );
@@ -679,7 +597,7 @@ export const runQueriesWithHooks = async <T extends ResultRecord>(
     const promise = invokeHooks(
       'following',
       { query, resultBefore, resultAfter },
-      { ...hookCallerOptions, database },
+      { hooks, database },
     );
 
     // The result of the hook should not be made available, otherwise
