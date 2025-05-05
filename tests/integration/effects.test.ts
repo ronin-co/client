@@ -739,10 +739,20 @@ describe('effects', () => {
       });
     };
 
-    const accountEffects = { followingAdd: () => undefined };
+    let accountEffectsOptions: Parameters<FollowingAddEffect>[4] = {};
+    const accountEffects: { followingAdd: FollowingAddEffect } = {
+      followingAdd: (_query, _multiple, _before_, _after, options) => {
+        accountEffectsOptions = options;
+      },
+    };
     const accountEffectsSpy = spyOn(accountEffects, 'followingAdd');
 
-    const spaceEffects = { followingAdd: () => undefined };
+    let spaceEffectsOptions: Parameters<FollowingAddEffect>[4] = {};
+    const spaceEffects: { followingAdd: FollowingAddEffect } = {
+      followingAdd: (_query, _multiple, _before_, _after, options) => {
+        spaceEffectsOptions = options;
+      },
+    };
     const spaceEffectsSpy = spyOn(spaceEffects, 'followingAdd');
 
     const { batch, add } = createSyntaxFactory({
@@ -801,6 +811,9 @@ describe('effects', () => {
         color: 'Space Black',
       },
     ]);
+
+    expect(accountEffectsOptions).toEqual({ headless: false });
+    expect(spaceEffectsOptions).toEqual({ headless: false });
 
     expect(accountEffectsSpy).toHaveBeenCalled();
     expect(spaceEffectsSpy).toHaveBeenCalled();
