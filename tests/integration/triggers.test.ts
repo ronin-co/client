@@ -3,14 +3,14 @@ import { AsyncLocalStorage } from 'node:async_hooks';
 import { beforeEach, describe, expect, mock, spyOn, test } from 'bun:test';
 
 import { createSyntaxFactory } from '@/src/index';
-import { runQueriesWithStorageAndEffects } from '@/src/queries';
+import { runQueriesWithStorageAndTriggers } from '@/src/queries';
 import {
-  type AddEffect,
-  type FilteredEffectQuery,
-  type FollowingAddEffect,
-  type ResolvingAddEffect,
-  runQueriesWithEffects,
-} from '@/src/utils/effects';
+  type AddTrigger,
+  type FilteredTriggerQuery,
+  type FollowingAddTrigger,
+  type ResolvingAddTrigger,
+  runQueriesWithTriggers,
+} from '@/src/utils/triggers';
 import type { CombinedInstructions, Query, QueryType } from '@ronin/compiler';
 
 let mockResolvedRequestText: any;
@@ -25,14 +25,14 @@ const mockFetch = mock(async (request) => {
 
 global.fetch = mockFetch;
 
-describe('effects', () => {
+describe('triggers', () => {
   beforeEach(() => {
     mockFetch.mockClear();
 
     mockResolvedRequestText = undefined;
   });
 
-  test('run `get` query with a effect and ensure the effect does not modify the original query', async () => {
+  test('run `get` query with a trigger and ensure the trigger does not modify the original query', async () => {
     const query = {
       get: {
         accounts: {
@@ -45,29 +45,29 @@ describe('effects', () => {
       },
     };
 
-    const mockEffect = mock((query: CombinedInstructions) => {
+    const mockTrigger = mock((query: CombinedInstructions) => {
       query.with = {
         handle: 'juri',
       };
       return {};
     });
 
-    await runQueriesWithEffects([{ query }], {
-      effects: {
+    await runQueriesWithTriggers([{ query }], {
+      triggers: {
         account: {
-          resolvingGet: mockEffect as any,
+          resolvingGet: mockTrigger as any,
         },
       },
       asyncContext: new AsyncLocalStorage(),
     });
 
-    expect(mockEffect).toHaveBeenCalled();
+    expect(mockTrigger).toHaveBeenCalled();
     expect(query.get.accounts.with).not.toHaveProperty('handle');
   });
 
-  test('run `get` query through factory containing `during` effect', async () => {
+  test('run `get` query through factory containing `during` trigger', async () => {
     const { get } = createSyntaxFactory({
-      effects: {
+      triggers: {
         account: {
           get(query, multiple) {
             if (multiple) {
@@ -103,9 +103,9 @@ describe('effects', () => {
     );
   });
 
-  test('return full query from `during` effect', async () => {
+  test('return full query from `during` trigger', async () => {
     const { get } = createSyntaxFactory({
-      effects: {
+      triggers: {
         account: {
           get(query) {
             const fullQuery: Query = {
@@ -130,7 +130,7 @@ describe('effects', () => {
 
   test('run `get` query through factory with dynamically generated config', async () => {
     const { get } = createSyntaxFactory(() => ({
-      effects: {
+      triggers: {
         account: {
           get(query, multiple) {
             if (multiple) {
@@ -166,9 +166,9 @@ describe('effects', () => {
     );
   });
 
-  test('run `get` query through factory containing `resolving` effect', async () => {
+  test('run `get` query through factory containing `resolving` trigger', async () => {
     const { get } = createSyntaxFactory({
-      effects: {
+      triggers: {
         schema: {
           resolvingGet(_query, multiple) {
             if (multiple)
@@ -205,8 +205,8 @@ describe('effects', () => {
     );
   });
 
-  test('run `create` query through factory containing `following` effect', async () => {
-    let finalQuery: FilteredEffectQuery<QueryType> | undefined;
+  test('run `create` query through factory containing `following` trigger', async () => {
+    let finalQuery: FilteredTriggerQuery<QueryType> | undefined;
     let finalMultiple: boolean | undefined;
     let finalBeforeResult: unknown;
     let finalAfterResult: unknown;
@@ -227,7 +227,7 @@ describe('effects', () => {
           ],
         });
       },
-      effects: {
+      triggers: {
         model: {
           followingCreate(query, multiple, beforeResult, afterResult) {
             finalQuery = query;
@@ -264,8 +264,8 @@ describe('effects', () => {
     expect(finalMultiple).toBe(false);
   });
 
-  test('run `alter` query through factory containing `after` effect', async () => {
-    let finalQuery: FilteredEffectQuery<QueryType> | undefined;
+  test('run `alter` query through factory containing `after` trigger', async () => {
+    let finalQuery: FilteredTriggerQuery<QueryType> | undefined;
     let finalMultiple: boolean | undefined;
     let finalBeforeResult: unknown;
     let finalAfterResult: unknown;
@@ -303,7 +303,7 @@ describe('effects', () => {
           ],
         });
       },
-      effects: {
+      triggers: {
         model: {
           followingAlter(query, multiple, beforeResult, afterResult) {
             finalQuery = query;
@@ -351,8 +351,8 @@ describe('effects', () => {
     expect(finalMultiple).toBe(false);
   });
 
-  test('run `drop` query through factory containing `after` effect', async () => {
-    let finalQuery: FilteredEffectQuery<QueryType> | undefined;
+  test('run `drop` query through factory containing `after` trigger', async () => {
+    let finalQuery: FilteredTriggerQuery<QueryType> | undefined;
     let finalMultiple: boolean | undefined;
     let finalBeforeResult: unknown;
     let finalAfterResult: unknown;
@@ -373,7 +373,7 @@ describe('effects', () => {
           ],
         });
       },
-      effects: {
+      triggers: {
         model: {
           followingDrop(query, multiple, beforeResult, afterResult) {
             finalQuery = query;
@@ -406,7 +406,7 @@ describe('effects', () => {
     expect(finalMultiple).toBe(false);
   });
 
-  test('run `remove` query through factory containing `after` effect', async () => {
+  test('run `remove` query through factory containing `after` trigger', async () => {
     let finalBeforeResult: unknown;
     let finalAfterResult: unknown;
 
@@ -425,7 +425,7 @@ describe('effects', () => {
           ],
         });
       },
-      effects: {
+      triggers: {
         account: {
           followingRemove(_query, _multiple, beforeResult, afterResult) {
             finalBeforeResult = beforeResult;
@@ -453,8 +453,8 @@ describe('effects', () => {
     expect(finalAfterResult).toMatchObject([]);
   });
 
-  test('run `set` query affecting multiple accounts through factory containing `after` effect', async () => {
-    let finalQuery: FilteredEffectQuery<QueryType> | undefined;
+  test('run `set` query affecting multiple accounts through factory containing `after` trigger', async () => {
+    let finalQuery: FilteredTriggerQuery<QueryType> | undefined;
     let finalMultiple: boolean | undefined;
     let finalBeforeResult: unknown;
     let finalAfterResult: unknown;
@@ -487,7 +487,7 @@ describe('effects', () => {
           results: [{ records: previousAccounts }, { records: nextAccounts }],
         });
       },
-      effects: {
+      triggers: {
         account: {
           followingSet(query, multiple, beforeResult, afterResult) {
             finalQuery = query;
@@ -535,8 +535,8 @@ describe('effects', () => {
     expect(finalMultiple).toBe(true);
   });
 
-  test('run normal queries alongside queries that are handled by `resolving` effect', async () => {
-    let finalQuery: FilteredEffectQuery<QueryType> | undefined;
+  test('run normal queries alongside queries that are handled by `resolving` trigger', async () => {
+    let finalQuery: FilteredTriggerQuery<QueryType> | undefined;
     let finalMultiple: boolean | undefined;
     let mockResolvedRequestText: string | undefined;
 
@@ -552,7 +552,7 @@ describe('effects', () => {
           ],
         });
       },
-      effects: {
+      triggers: {
         account: {
           resolvingGet(query, multiple) {
             finalQuery = query;
@@ -575,7 +575,7 @@ describe('effects', () => {
     ]);
 
     // Make sure only one request is sent to the server and the request which
-    // was handled by the "resolving" "get" effect is dropped out.
+    // was handled by the "resolving" "get" trigger is dropped out.
     expect(mockResolvedRequestText).toEqual('{"queries":[{"get":{"members":{}}}]}');
 
     expect(result.length).toBe(2);
@@ -594,7 +594,7 @@ describe('effects', () => {
     expect(finalMultiple).toBe(false);
   });
 
-  test('receive options for sink effect', async () => {
+  test('receive options for sink trigger', async () => {
     const mockFetchNew = mock(() => {
       return Response.json({
         default: {
@@ -628,7 +628,7 @@ describe('effects', () => {
       {
         add: {
           // We are purposefully using camel-case here in order to ensure that the final
-          // effect options are formatted correctly.
+          // trigger options are formatted correctly.
           someProduct: {
             with: {
               name: 'MacBook Pro',
@@ -638,11 +638,11 @@ describe('effects', () => {
       },
     ];
 
-    let duringAddOptions: Parameters<AddEffect>[2] | undefined;
-    let resolvingAddOptions: Parameters<ResolvingAddEffect>[2] | undefined;
-    let followingAddOptions: Parameters<FollowingAddEffect>[4] | undefined;
+    let duringAddOptions: Parameters<AddTrigger>[2] | undefined;
+    let resolvingAddOptions: Parameters<ResolvingAddTrigger>[2] | undefined;
+    let followingAddOptions: Parameters<FollowingAddTrigger>[4] | undefined;
 
-    const results = await runQueriesWithStorageAndEffects(
+    const results = await runQueriesWithStorageAndTriggers(
       {
         default: defaultQueries,
         secondary: secondaryQueries,
@@ -650,7 +650,7 @@ describe('effects', () => {
       {
         fetch: async () => mockFetchNew(),
         token: 'takashitoken',
-        effects: {
+        triggers: {
           sink: {
             add: (query, _multiple, options) => {
               duringAddOptions = options;
@@ -689,7 +689,7 @@ describe('effects', () => {
     });
   });
 
-  test('return queries from `before` effect', async () => {
+  test('return queries from `before` trigger', async () => {
     const mockFetchNew: typeof fetch = async (input: string | URL | Request) => {
       mockResolvedRequestText = await (input as Request).text();
 
@@ -739,24 +739,24 @@ describe('effects', () => {
       });
     };
 
-    let accountEffectsOptions: Parameters<FollowingAddEffect>[4] = {};
-    const accountEffects: { followingAdd: FollowingAddEffect } = {
+    let accountTriggersOptions: Parameters<FollowingAddTrigger>[4] = {};
+    const accountTriggers: { followingAdd: FollowingAddTrigger } = {
       followingAdd: (_query, _multiple, _before_, _after, options) => {
-        accountEffectsOptions = options;
+        accountTriggersOptions = options;
       },
     };
-    const accountEffectsSpy = spyOn(accountEffects, 'followingAdd');
+    const accountTriggersSpy = spyOn(accountTriggers, 'followingAdd');
 
-    let spaceEffectsOptions: Parameters<FollowingAddEffect>[4] = {};
-    const spaceEffects: { followingAdd: FollowingAddEffect } = {
+    let spaceTriggersOptions: Parameters<FollowingAddTrigger>[4] = {};
+    const spaceTriggers: { followingAdd: FollowingAddTrigger } = {
       followingAdd: (_query, _multiple, _before_, _after, options) => {
-        spaceEffectsOptions = options;
+        spaceTriggersOptions = options;
       },
     };
-    const spaceEffectsSpy = spyOn(spaceEffects, 'followingAdd');
+    const spaceTriggersSpy = spyOn(spaceTriggers, 'followingAdd');
 
     const { batch, add } = createSyntaxFactory({
-      effects: {
+      triggers: {
         member: {
           beforeAdd(query) {
             const accountQuery: Query = {
@@ -779,15 +779,15 @@ describe('effects', () => {
           },
         },
 
-        account: accountEffects,
-        space: spaceEffects,
+        account: accountTriggers,
+        space: spaceTriggers,
       },
       fetch: mockFetchNew,
       asyncContext: new AsyncLocalStorage(),
     });
 
     // We're using a batch to be able to check whether the results of the queries
-    // returned from the `pre` effect are being excluded correctly.
+    // returned from the `pre` trigger are being excluded correctly.
     const results = await batch(() => [
       add.member.with({
         account: { handle: 'elaine' },
@@ -812,11 +812,11 @@ describe('effects', () => {
       },
     ]);
 
-    expect(accountEffectsOptions).toEqual({ implicit: true });
-    expect(spaceEffectsOptions).toEqual({ implicit: true });
+    expect(accountTriggersOptions).toEqual({ implicit: true });
+    expect(spaceTriggersOptions).toEqual({ implicit: true });
 
-    expect(accountEffectsSpy).toHaveBeenCalled();
-    expect(spaceEffectsSpy).toHaveBeenCalled();
+    expect(accountTriggersSpy).toHaveBeenCalled();
+    expect(spaceTriggersSpy).toHaveBeenCalled();
 
     expect(mockResolvedRequestText).toEqual(
       JSON.stringify({
@@ -840,7 +840,7 @@ describe('effects', () => {
     );
   });
 
-  test('return queries from `after` effect', async () => {
+  test('return queries from `after` trigger', async () => {
     const mockFetchNew: typeof fetch = async (input: string | URL | Request) => {
       mockResolvedRequestText = await (input as Request).text();
 
@@ -890,14 +890,14 @@ describe('effects', () => {
       });
     };
 
-    const memberEffects = { followingAdd: () => undefined };
-    const memberEffectsSpy = spyOn(memberEffects, 'followingAdd');
+    const memberTriggers = { followingAdd: () => undefined };
+    const memberTriggersSpy = spyOn(memberTriggers, 'followingAdd');
 
-    const appEffects = { followingAdd: () => undefined };
-    const appEffectsSpy = spyOn(appEffects, 'followingAdd');
+    const appTriggers = { followingAdd: () => undefined };
+    const appTriggersSpy = spyOn(appTriggers, 'followingAdd');
 
     const { batch, add } = createSyntaxFactory({
-      effects: {
+      triggers: {
         space: {
           afterAdd(query) {
             const memberQuery: Query = {
@@ -930,15 +930,15 @@ describe('effects', () => {
           },
         },
 
-        member: memberEffects,
-        app: appEffects,
+        member: memberTriggers,
+        app: appTriggers,
       },
       fetch: mockFetchNew,
       asyncContext: new AsyncLocalStorage(),
     });
 
     // We're using a batch to be able to check whether the results of the queries
-    // returned from the `after` effect are being excluded correctly.
+    // returned from the `after` trigger are being excluded correctly.
     const results = await batch(() => [
       add.space.with.handle('company'),
       add.product.with({
@@ -957,8 +957,8 @@ describe('effects', () => {
       },
     ]);
 
-    expect(memberEffectsSpy).toHaveBeenCalled();
-    expect(appEffectsSpy).toHaveBeenCalled();
+    expect(memberTriggersSpy).toHaveBeenCalled();
+    expect(appTriggersSpy).toHaveBeenCalled();
 
     expect(mockResolvedRequestText).toEqual(
       JSON.stringify({

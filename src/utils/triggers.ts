@@ -22,16 +22,16 @@ import {
 
 const EMPTY = Symbol('empty');
 
-interface EffectOptions {
+interface TriggerOptions {
   /** The model for which the query is being executed. */
   model?: string;
   /** The database for which the query is being executed. */
   database?: string;
-  /** Whether the query was generated implicitly by an effect. */
+  /** Whether the query was generated implicitly by an trigger. */
   implicit?: boolean;
 }
 
-export type FilteredEffectQuery<
+export type FilteredTriggerQuery<
   TType extends QueryType,
   TQuery extends CombinedInstructions = CombinedInstructions,
 > = RecursivePartial<TQuery> &
@@ -50,54 +50,54 @@ export type FilteredEffectQuery<
               : never
   >;
 
-export type BeforeEffectHandler<
+export type BeforeTriggerHandler<
   TType extends QueryType,
-  TQuery extends FilteredEffectQuery<TType> = FilteredEffectQuery<TType>,
+  TQuery extends FilteredTriggerQuery<TType> = FilteredTriggerQuery<TType>,
 > = (
   query: TQuery,
   multipleRecords: boolean,
-  options: EffectOptions,
+  options: TriggerOptions,
 ) => Array<Query> | Promise<Array<Query>>;
 
-export type DuringEffectHandler<
+export type DuringTriggerHandler<
   TType extends QueryType,
-  TQuery extends FilteredEffectQuery<TType> = FilteredEffectQuery<TType>,
+  TQuery extends FilteredTriggerQuery<TType> = FilteredTriggerQuery<TType>,
 > = (
   query: TQuery,
   multipleRecords: boolean,
-  options: EffectOptions,
+  options: TriggerOptions,
 ) => TQuery | Promise<TQuery> | Query | Promise<Query>;
 
-export type AfterEffectHandler<
+export type AfterTriggerHandler<
   TType extends QueryType,
-  TQuery extends FilteredEffectQuery<TType> = FilteredEffectQuery<TType>,
+  TQuery extends FilteredTriggerQuery<TType> = FilteredTriggerQuery<TType>,
 > = (
   query: TQuery,
   multipleRecords: boolean,
-  options: EffectOptions,
+  options: TriggerOptions,
 ) => Array<Query> | Promise<Array<Query>>;
 
-export type ResolvingEffectHandler<TType extends QueryType, TSchema = unknown> = (
-  query: FilteredEffectQuery<TType>,
+export type ResolvingTriggerHandler<TType extends QueryType, TSchema = unknown> = (
+  query: FilteredTriggerQuery<TType>,
   multipleRecords: boolean,
-  options: EffectOptions,
+  options: TriggerOptions,
 ) => TSchema | Promise<TSchema>;
 
-export type FollowingEffectHandler<TType extends QueryType, TSchema = unknown> = (
-  query: FilteredEffectQuery<TType>,
+export type FollowingTriggerHandler<TType extends QueryType, TSchema = unknown> = (
+  query: FilteredTriggerQuery<TType>,
   multipleRecords: boolean,
   beforeResult: TSchema,
   afterResult: TSchema,
-  options: EffectOptions,
+  options: TriggerOptions,
 ) => void | Promise<void>;
 
 // The order of these types is important, as they determine the order in which
-// effects are run (the "effect lifecycle").
-const EFFECT_TYPES = ['before', 'during', 'after', 'resolving', 'following'] as const;
+// triggers are run (the "trigger lifecycle").
+const TRIGGER_TYPES = ['before', 'during', 'after', 'resolving', 'following'] as const;
 
-type EffectType = (typeof EFFECT_TYPES)[number];
+type TriggerType = (typeof TRIGGER_TYPES)[number];
 
-type EffectKeys = (
+type TriggerKeys = (
   | { [K in QueryType]: `before${Capitalize<K>}` }
   | { [K in QueryType]: K }
   | { [K in QueryType]: `after${Capitalize<K>}` }
@@ -105,95 +105,107 @@ type EffectKeys = (
   | { [K in QueryType]: `following${Capitalize<K>}` }
 )[QueryType];
 
-type Effect<
-  TStage extends EffectType,
+type Trigger<
+  TStage extends TriggerType,
   TType extends QueryType,
   TSchema extends TStage extends 'before' | 'during' | 'after' ? never : unknown = never,
 > = TStage extends 'before'
-  ? BeforeEffectHandler<TType>
+  ? BeforeTriggerHandler<TType>
   : TStage extends 'during'
-    ? DuringEffectHandler<TType>
+    ? DuringTriggerHandler<TType>
     : TStage extends 'after'
-      ? AfterEffectHandler<TType>
+      ? AfterTriggerHandler<TType>
       : TStage extends 'resolving'
-        ? ResolvingEffectHandler<TType, TSchema>
+        ? ResolvingTriggerHandler<TType, TSchema>
         : TStage extends 'following'
-          ? FollowingEffectHandler<TType, TSchema>
+          ? FollowingTriggerHandler<TType, TSchema>
           : never;
 
-type EffectList<TSchema = unknown> = {
-  [K in EffectKeys]?: K extends 'before' | `before${string}`
-    ? BeforeEffectHandler<QueryType>
+type TriggerList<TSchema = unknown> = {
+  [K in TriggerKeys]?: K extends 'before' | `before${string}`
+    ? BeforeTriggerHandler<QueryType>
     : K extends 'after' | `after${string}`
-      ? AfterEffectHandler<QueryType>
+      ? AfterTriggerHandler<QueryType>
       : K extends 'resolving' | `resolving${string}`
-        ? ResolvingEffectHandler<QueryType, TSchema>
+        ? ResolvingTriggerHandler<QueryType, TSchema>
         : K extends 'following' | `following${string}`
-          ? FollowingEffectHandler<QueryType, TSchema>
-          : DuringEffectHandler<QueryType>;
+          ? FollowingTriggerHandler<QueryType, TSchema>
+          : DuringTriggerHandler<QueryType>;
 };
 
-export type Effects<TSchema = unknown> = Record<string, EffectList<TSchema>>;
+export type Triggers<TSchema = unknown> = Record<string, TriggerList<TSchema>>;
 
-type BeforeEffect<TType extends QueryType> = Effect<'before', TType>;
-type DuringEffect<TType extends QueryType> = Effect<'during', TType>;
-type AfterEffect<TType extends QueryType> = Effect<'after', TType>;
+type BeforeTrigger<TType extends QueryType> = Trigger<'before', TType>;
+type DuringTrigger<TType extends QueryType> = Trigger<'during', TType>;
+type AfterTrigger<TType extends QueryType> = Trigger<'after', TType>;
 
-type ResolvingEffect<TType extends QueryType, TSchema = unknown> = Effect<
+type ResolvingTrigger<TType extends QueryType, TSchema = unknown> = Trigger<
   'resolving',
   TType,
   TSchema
 >;
-type FollowingEffect<TType extends QueryType, TSchema = unknown> = Effect<
+type FollowingTrigger<TType extends QueryType, TSchema = unknown> = Trigger<
   'following',
   TType,
   TSchema
 >;
 
-export type BeforeGetEffect = BeforeEffect<'get'>;
-export type BeforeSetEffect = BeforeEffect<'set'>;
-export type BeforeAddEffect = BeforeEffect<'add'>;
-export type BeforeRemoveEffect = BeforeEffect<'remove'>;
-export type BeforeCountEffect = BeforeEffect<'count'>;
-export type BeforeCreateEffect = BeforeEffect<'create'>;
-export type BeforeAlterEffect = BeforeEffect<'alter'>;
-export type BeforeDropEffect = BeforeEffect<'drop'>;
+export type BeforeGetTrigger = BeforeTrigger<'get'>;
+export type BeforeSetTrigger = BeforeTrigger<'set'>;
+export type BeforeAddTrigger = BeforeTrigger<'add'>;
+export type BeforeRemoveTrigger = BeforeTrigger<'remove'>;
+export type BeforeCountTrigger = BeforeTrigger<'count'>;
+export type BeforeCreateTrigger = BeforeTrigger<'create'>;
+export type BeforeAlterTrigger = BeforeTrigger<'alter'>;
+export type BeforeDropTrigger = BeforeTrigger<'drop'>;
 
-export type GetEffect = DuringEffect<'get'>;
-export type SetEffect = DuringEffect<'set'>;
-export type AddEffect = DuringEffect<'add'>;
-export type RemoveEffect = DuringEffect<'remove'>;
-export type CountEffect = DuringEffect<'count'>;
-export type CreateEffect = DuringEffect<'create'>;
-export type AlterEffect = DuringEffect<'alter'>;
-export type DropEffect = DuringEffect<'drop'>;
+export type GetTrigger = DuringTrigger<'get'>;
+export type SetTrigger = DuringTrigger<'set'>;
+export type AddTrigger = DuringTrigger<'add'>;
+export type RemoveTrigger = DuringTrigger<'remove'>;
+export type CountTrigger = DuringTrigger<'count'>;
+export type CreateTrigger = DuringTrigger<'create'>;
+export type AlterTrigger = DuringTrigger<'alter'>;
+export type DropTrigger = DuringTrigger<'drop'>;
 
-export type AfterGetEffect = AfterEffect<'get'>;
-export type AfterSetEffect = AfterEffect<'set'>;
-export type AfterAddEffect = AfterEffect<'add'>;
-export type AfterRemoveEffect = AfterEffect<'remove'>;
-export type AfterCountEffect = AfterEffect<'count'>;
-export type AfterCreateEffect = AfterEffect<'create'>;
-export type AfterAlterEffect = AfterEffect<'alter'>;
-export type AfterDropEffect = AfterEffect<'drop'>;
+export type AfterGetTrigger = AfterTrigger<'get'>;
+export type AfterSetTrigger = AfterTrigger<'set'>;
+export type AfterAddTrigger = AfterTrigger<'add'>;
+export type AfterRemoveTrigger = AfterTrigger<'remove'>;
+export type AfterCountTrigger = AfterTrigger<'count'>;
+export type AfterCreateTrigger = AfterTrigger<'create'>;
+export type AfterAlterTrigger = AfterTrigger<'alter'>;
+export type AfterDropTrigger = AfterTrigger<'drop'>;
 
-export type ResolvingGetEffect<TSchema = unknown> = ResolvingEffect<'get', TSchema>;
-export type ResolvingSetEffect<TSchema = unknown> = ResolvingEffect<'set', TSchema>;
-export type ResolvingAddEffect<TSchema = unknown> = ResolvingEffect<'add', TSchema>;
-export type ResolvingRemoveEffect<TSchema = unknown> = ResolvingEffect<'remove', TSchema>;
-export type ResolvingCountEffect<TSchema = unknown> = ResolvingEffect<'count', TSchema>;
-export type ResolvingCreateEffect<TSchema = unknown> = ResolvingEffect<'create', TSchema>;
-export type ResolvingAlterEffect<TSchema = unknown> = ResolvingEffect<'alter', TSchema>;
-export type ResolvingDropEffect<TSchema = unknown> = ResolvingEffect<'drop', TSchema>;
+export type ResolvingGetTrigger<TSchema = unknown> = ResolvingTrigger<'get', TSchema>;
+export type ResolvingSetTrigger<TSchema = unknown> = ResolvingTrigger<'set', TSchema>;
+export type ResolvingAddTrigger<TSchema = unknown> = ResolvingTrigger<'add', TSchema>;
+export type ResolvingRemoveTrigger<TSchema = unknown> = ResolvingTrigger<
+  'remove',
+  TSchema
+>;
+export type ResolvingCountTrigger<TSchema = unknown> = ResolvingTrigger<'count', TSchema>;
+export type ResolvingCreateTrigger<TSchema = unknown> = ResolvingTrigger<
+  'create',
+  TSchema
+>;
+export type ResolvingAlterTrigger<TSchema = unknown> = ResolvingTrigger<'alter', TSchema>;
+export type ResolvingDropTrigger<TSchema = unknown> = ResolvingTrigger<'drop', TSchema>;
 
-export type FollowingGetEffect<TSchema = unknown> = FollowingEffect<'get', TSchema>;
-export type FollowingSetEffect<TSchema = unknown> = FollowingEffect<'set', TSchema>;
-export type FollowingAddEffect<TSchema = unknown> = FollowingEffect<'add', TSchema>;
-export type FollowingRemoveEffect<TSchema = unknown> = FollowingEffect<'remove', TSchema>;
-export type FollowingCountEffect<TSchema = unknown> = FollowingEffect<'count', TSchema>;
-export type FollowingCreateEffect<TSchema = unknown> = FollowingEffect<'create', TSchema>;
-export type FollowingAlterEffect<TSchema = unknown> = FollowingEffect<'alter', TSchema>;
-export type FollowingDropEffect<TSchema = unknown> = FollowingEffect<'drop', TSchema>;
+export type FollowingGetTrigger<TSchema = unknown> = FollowingTrigger<'get', TSchema>;
+export type FollowingSetTrigger<TSchema = unknown> = FollowingTrigger<'set', TSchema>;
+export type FollowingAddTrigger<TSchema = unknown> = FollowingTrigger<'add', TSchema>;
+export type FollowingRemoveTrigger<TSchema = unknown> = FollowingTrigger<
+  'remove',
+  TSchema
+>;
+export type FollowingCountTrigger<TSchema = unknown> = FollowingTrigger<'count', TSchema>;
+export type FollowingCreateTrigger<TSchema = unknown> = FollowingTrigger<
+  'create',
+  TSchema
+>;
+export type FollowingAlterTrigger<TSchema = unknown> = FollowingTrigger<'alter', TSchema>;
+export type FollowingDropTrigger<TSchema = unknown> = FollowingTrigger<'drop', TSchema>;
 
 const getModel = (
   instruction: QuerySchemaType,
@@ -222,25 +234,25 @@ const getModel = (
 };
 
 /**
- * Constructs the method name used for a particular type of effect and query.
- * For example, if `effectType` is "following" and `queryType` is "add", the
+ * Constructs the method name used for a particular type of trigger and query.
+ * For example, if `triggerType` is "following" and `queryType` is "add", the
  * resulting method name would be `followingAdd`.
  *
- * @param effectType - The type of effect.
+ * @param triggerType - The type of trigger.
  * @param queryType - The type of query.
  *
- * @returns The method name constructed from the effect and query types.
+ * @returns The method name constructed from the trigger and query types.
  */
-const getMethodName = (effectType: EffectType, queryType: QueryType): string => {
+const getMethodName = (triggerType: TriggerType, queryType: QueryType): string => {
   const capitalizedQueryType = queryType[0].toUpperCase() + queryType.slice(1);
-  return effectType === 'during' ? queryType : effectType + capitalizedQueryType;
+  return triggerType === 'during' ? queryType : triggerType + capitalizedQueryType;
 };
 
 /**
  * Takes the result of a query and normalizes it to an array, to avoid
  * developers having to conditionally support both arrays and objects inside
- * the effects. Furthermore, the result is cloned to allow for modifying it
- * within effects without affecting the original query result that is being
+ * the triggers. Furthermore, the result is cloned to allow for modifying it
+ * within triggers without affecting the original query result that is being
  * returned from the client.
  *
  * @param result - The result of a query.
@@ -252,56 +264,56 @@ const normalizeResults = (result: unknown) => {
   return structuredClone(value);
 };
 
-interface EffectCallerOptions extends Omit<QueryHandlerOptions, 'effects'> {
-  effects: NonNullable<QueryHandlerOptions['effects']>;
+interface TriggerCallerOptions extends Omit<QueryHandlerOptions, 'triggers'> {
+  triggers: NonNullable<QueryHandlerOptions['triggers']>;
   /**
-   * If the effects are being called for a custom database, the identifier of the database
+   * If the triggers are being called for a custom database, the identifier of the database
    * would be provided here.
    */
   database?: string;
 }
 
-export interface EffectContext {
-  effectType: EffectType;
+export interface TriggerContext {
+  triggerType: TriggerType;
   queryType: QueryType;
   queryModel: string;
 }
 
 /**
- * Invokes a particular effect (such as `followingAdd`) and handles its output.
- * In the case of an "before" effect, a query is returned from the effect, which
- * must replace the original query in the list of queries. For a "resolving" effect,
+ * Invokes a particular trigger (such as `followingAdd`) and handles its output.
+ * In the case of an "before" trigger, a query is returned from the trigger, which
+ * must replace the original query in the list of queries. For a "resolving" trigger,
  * the results of the query are returned and must therefore be merged into the
- * final list of results. In the case of an "following" effect, nothing must be done
- * because no output is returned by the effect.
+ * final list of results. In the case of an "following" trigger, nothing must be done
+ * because no output is returned by the trigger.
  *
- * @param effectType - The type of effect.
+ * @param triggerType - The type of trigger.
  * @param definition - The definition and other details of a query that is being run.
  * @param options - A list of options to change how the queries are executed.
  *
  * @returns The modified query and its results, if any are available.
  */
-const invokeEffects = async (
-  effectType: EffectType,
+const invokeTriggers = async (
+  triggerType: TriggerType,
   definition: {
     query: Query;
     resultBefore?: unknown;
     resultAfter?: unknown;
 
     /**
-     * If this option is set, the query was generated implicitly, through an effect,
+     * If this option is set, the query was generated implicitly, through an trigger,
      * instead of being explicitly passed to the client.
      */
     implicit?: boolean;
   },
-  options: EffectCallerOptions,
+  options: TriggerCallerOptions,
 ): Promise<{
-  /** A list of queries provided by the effect. */
+  /** A list of queries provided by the trigger. */
   queries?: Array<Query>;
-  /** The result of a query provided by the effect. */
+  /** The result of a query provided by the trigger. */
   result?: FormattedResults<unknown>[number] | symbol;
 }> => {
-  const { effects } = options;
+  const { triggers } = options;
   const { query } = definition;
 
   const queryType = Object.keys(query)[0] as QueryType;
@@ -330,67 +342,67 @@ const invokeEffects = async (
     oldInstruction = queryInstructions[queryModel];
   }
 
-  // If the effects are being executed for a custom database, all effects must be located
+  // If the triggers are being executed for a custom database, all triggers must be located
   // inside a file named `sink.ts`, which catches the queries for all other databases.
   //
-  // If the effects are *not* being executed for a custom database, the effect file name
+  // If the triggers are *not* being executed for a custom database, the trigger file name
   // matches the model that is being addressed by the query.
-  const effectFile = options.database ? 'sink' : queryModelDashed;
-  const effectsForModel = effects[effectFile];
-  const effectName = getMethodName(effectType, queryType);
+  const triggerFile = options.database ? 'sink' : queryModelDashed;
+  const triggersForModel = triggers[triggerFile];
+  const triggerName = getMethodName(triggerType, queryType);
 
   // If `oldInstruction` is falsy (e.g. `null`), we want to default to `{}`.
   // This would happen in cases where all records of a particular model are
   // retrieved. For example, the query `get.members();` would trigger this.
   //
-  // It's important to provide an object to effects, as people might otherwise
+  // It's important to provide an object to triggers, as people might otherwise
   // try to set properties on a value that's not an object, which would cause
-  // the effect to crash with an exception.
+  // the trigger to crash with an exception.
   //
   // It's also extremely important to clone both of the variables below, as the
-  // effects will otherwise modify the original that was passed from the outside.
+  // triggers will otherwise modify the original that was passed from the outside.
   const queryInstruction = oldInstruction
     ? structuredClone<CombinedInstructions>(oldInstruction as CombinedInstructions)
     : ({} as CombinedInstructions);
 
-  if (effectsForModel && effectName in effectsForModel) {
+  if (triggersForModel && triggerName in triggersForModel) {
     const implicit = definition.implicit ?? false;
-    const effect = effectsForModel[effectName as keyof typeof effectsForModel];
-    const effectOptions =
-      effectFile === 'sink'
+    const trigger = triggersForModel[triggerName as keyof typeof triggersForModel];
+    const triggerOptions =
+      triggerFile === 'sink'
         ? { model: queryModel, database: options.database, implicit }
         : { implicit };
 
-    // For effects of type "following" (such as `followingAdd`), we want to pass
+    // For triggers of type "following" (such as `followingAdd`), we want to pass
     // special function arguments that contain the value of the affected records
     // before and after the query was executed.
-    const effectResult = await (effectType === 'following'
-      ? (effect as FollowingEffect<QueryType, unknown>)(
+    const triggerResult = await (triggerType === 'following'
+      ? (trigger as FollowingTrigger<QueryType, unknown>)(
           queryInstruction,
           multipleRecords,
           normalizeResults(definition.resultBefore),
           normalizeResults(definition.resultAfter),
-          effectOptions,
+          triggerOptions,
         )
-      : (effect as DuringEffect<QueryType> | ResolvingEffect<QueryType>)(
+      : (trigger as DuringTrigger<QueryType> | ResolvingTrigger<QueryType>)(
           queryInstruction,
           multipleRecords,
-          effectOptions,
+          triggerOptions,
         ));
 
-    // If the effect returned multiple queries that should be run before the original query,
+    // If the trigger returned multiple queries that should be run before the original query,
     // we want to return those queries.
-    if (effectType === 'before') {
-      return { queries: effectResult as Array<Query> };
+    if (triggerType === 'before') {
+      return { queries: triggerResult as Array<Query> };
     }
 
-    // If the effect returned a query, we want to replace the original query with
-    // the one returned by the effect.
-    if (effectType === 'during') {
-      const result = effectResult as null | Query | CombinedInstructions;
+    // If the trigger returned a query, we want to replace the original query with
+    // the one returned by the trigger.
+    if (triggerType === 'during') {
+      const result = triggerResult as null | Query | CombinedInstructions;
       let newQuery: Query = query;
 
-      // If a full query was returned by the "before" effect, use the query as-is.
+      // If a full query was returned by the "before" trigger, use the query as-is.
       if (result && QUERY_TYPES.some((type) => type in result)) {
         newQuery = result as Query;
       }
@@ -407,20 +419,20 @@ const invokeEffects = async (
       return { queries: [newQuery] };
     }
 
-    // If the effect returned multiple queries that should be run after the original query,
+    // If the trigger returned multiple queries that should be run after the original query,
     // we want to return those queries.
-    if (effectType === 'after') {
-      return { queries: effectResult as Array<Query> };
+    if (triggerType === 'after') {
+      return { queries: triggerResult as Array<Query> };
     }
 
-    // If the effect returned a record (or multiple), we want to set the query's
-    // result to the value returned by the effect.
-    if (effectType === 'resolving') {
-      const result = effectResult as FormattedResults<unknown>[number];
+    // If the trigger returned a record (or multiple), we want to set the query's
+    // result to the value returned by the trigger.
+    if (triggerType === 'resolving') {
+      const result = triggerResult as FormattedResults<unknown>[number];
       return { queries: [], result };
     }
 
-    // In the case of "following" effects, we don't need to do anything, because they
+    // In the case of "following" triggers, we don't need to do anything, because they
     // are run asynchronously and aren't expected to return anything.
   }
 
@@ -428,30 +440,30 @@ const invokeEffects = async (
 };
 
 /**
- * Executes queries and also invokes any potential effects (such as `followingAdd`)
- * that might have been provided as part of `options.effects`.
+ * Executes queries and also invokes any potential triggers (such as `followingAdd`)
+ * that might have been provided as part of `options.triggers`.
  *
  * @param queries - A list of queries to execute.
  * @param options - A list of options to change how the queries are executed. To
- * run effects, the `options.effects` property must contain a map of effects.
+ * run triggers, the `options.triggers` property must contain a map of triggers.
  *
  * @returns The results of the queries that were passed.
  */
-export const runQueriesWithEffects = async <T extends ResultRecord>(
+export const runQueriesWithTriggers = async <T extends ResultRecord>(
   queries: QueriesPerDatabase,
   options: QueryHandlerOptions = {},
 ): Promise<ResultsPerDatabase<T>> => {
-  const { effects, waitUntil } = options;
+  const { triggers, waitUntil } = options;
 
-  // If no effects were provided, we can just run all the queries and return the results.
-  if (!effects) return runQueries<T>(queries, options);
+  // If no triggers were provided, we can just run all the queries and return the results.
+  if (!triggers) return runQueries<T>(queries, options);
 
   if (typeof process === 'undefined' && !waitUntil) {
     let message = 'In the case that the "ronin" package receives a value for';
-    message += ' its `effects` option, it must also receive a value for its';
+    message += ' its `triggers` option, it must also receive a value for its';
     message += ' `waitUntil` option. This requirement only applies when using';
     message += ' an edge runtime and ensures that the edge worker continues to';
-    message += ' execute until all "following" effects have been executed.';
+    message += ' execute until all "following" triggers have been executed.';
 
     throw new Error(message);
   }
@@ -463,7 +475,7 @@ export const runQueriesWithEffects = async <T extends ResultRecord>(
       diffForIndex?: number;
       /**
        * Whether the query is a implicit query for another query, and was therefore
-       * generated implicitly by an effect, instead of being explicitly passed to the
+       * generated implicitly by an trigger, instead of being explicitly passed to the
        * client from the outside.
        */
       implicit?: boolean;
@@ -473,13 +485,13 @@ export const runQueriesWithEffects = async <T extends ResultRecord>(
   // Invoke `beforeAdd`, `beforeGet`, `beforeSet`, `beforeRemove`, and `beforeCount`.
   await Promise.all(
     queryList.map(async ({ query, database, implicit }, index) => {
-      const effectResults = await invokeEffects(
+      const triggerResults = await invokeTriggers(
         'before',
         { query, implicit },
-        { effects, database },
+        { triggers, database },
       );
 
-      const queriesToInsert = effectResults.queries!.map((query) => ({
+      const queriesToInsert = triggerResults.queries!.map((query) => ({
         query,
         result: EMPTY,
         database,
@@ -493,14 +505,14 @@ export const runQueriesWithEffects = async <T extends ResultRecord>(
   // Invoke `add`, `get`, `set`, `remove`, and `count`.
   await Promise.all(
     queryList.map(async ({ query, database, implicit }, index) => {
-      const effectResults = await invokeEffects(
+      const triggerResults = await invokeTriggers(
         'during',
         { query, implicit },
-        { effects, database },
+        { triggers, database },
       );
 
-      if (effectResults.queries && effectResults.queries.length > 0) {
-        queryList[index].query = effectResults.queries[0];
+      if (triggerResults.queries && triggerResults.queries.length > 0) {
+        queryList[index].query = triggerResults.queries[0];
       }
     }),
   );
@@ -508,13 +520,13 @@ export const runQueriesWithEffects = async <T extends ResultRecord>(
   // Invoke `afterAdd`, `afterGet`, `afterSet`, `afterRemove`, and `afterCount`.
   await Promise.all(
     queryList.map(async ({ query, database, implicit }, index) => {
-      const effectResults = await invokeEffects(
+      const triggerResults = await invokeTriggers(
         'after',
         { query, implicit },
-        { effects, database },
+        { triggers, database },
       );
 
-      const queriesToInsert = effectResults.queries!.map((query) => ({
+      const queriesToInsert = triggerResults.queries!.map((query) => ({
         query,
         result: EMPTY,
         database,
@@ -525,8 +537,8 @@ export const runQueriesWithEffects = async <T extends ResultRecord>(
     }),
   );
 
-  // If effects are enabled, we want to send a separate `get` query for every `set`
-  // and `alter` query (in the same transaction), so that we can provide the effects
+  // If triggers are enabled, we want to send a separate `get` query for every `set`
+  // and `alter` query (in the same transaction), so that we can provide the triggers
   // with a "before and after" of the modified records.
   //
   // The version of the record *after* the modification is already available without the
@@ -574,12 +586,12 @@ export const runQueriesWithEffects = async <T extends ResultRecord>(
   // and `resolvingCount`.
   await Promise.all(
     queryList.map(async ({ query, database, implicit }, index) => {
-      const effectResults = await invokeEffects(
+      const triggerResults = await invokeTriggers(
         'resolving',
         { query, implicit },
-        { effects, database },
+        { triggers, database },
       );
-      queryList[index].result = effectResults.result as FormattedResults<T>[number];
+      queryList[index].result = triggerResults.result as FormattedResults<T>[number];
     }),
   );
 
@@ -588,7 +600,7 @@ export const runQueriesWithEffects = async <T extends ResultRecord>(
     .filter((query) => query.result === EMPTY);
 
   // If queries are remaining that don't have any results that were provided by above by
-  // effects, we need to run those queries against the database.
+  // triggers, we need to run those queries against the database.
   if (queriesWithoutResults.length > 0) {
     const resultsFromDatabase = await runQueries<T>(queriesWithoutResults, options);
 
@@ -607,7 +619,7 @@ export const runQueriesWithEffects = async <T extends ResultRecord>(
     const { query, result, database, implicit } = queryList[index];
     const queryType = Object.keys(query)[0] as QueryType;
 
-    // "following" effects should only fire for writes — not reads.
+    // "following" triggers should only fire for writes — not reads.
     if (!(WRITE_QUERY_TYPES as ReadonlyArray<string>).includes(queryType)) continue;
 
     const diffMatch = queryList.find((item) => item.diffForIndex === index);
@@ -618,20 +630,20 @@ export const runQueriesWithEffects = async <T extends ResultRecord>(
     // For queries of type "remove" and "drop", we want to set `resultBefore` to the
     // result of the query (which contains the record), because the record will no longer
     // exist after the query has been executed, so it wouldn't make sense to expose the
-    // record as `resultAfter` in the effects.
+    // record as `resultAfter` in the triggers.
     if (queryType === 'remove' || queryType === 'drop') {
       resultBefore = result;
       resultAfter = EMPTY;
     }
 
-    // Run the actual effect functions.
-    const promise = invokeEffects(
+    // Run the actual trigger functions.
+    const promise = invokeTriggers(
       'following',
       { query, resultBefore, resultAfter, implicit },
-      { effects, database },
+      { triggers, database },
     );
 
-    // The result of the effect should not be made available, otherwise
+    // The result of the trigger should not be made available, otherwise
     // developers might start relying on it. Only errors should be propagated.
     const clearPromise = promise.then(
       () => {},
@@ -640,7 +652,7 @@ export const runQueriesWithEffects = async <T extends ResultRecord>(
 
     // If the configuration option for extending the lifetime of the edge
     // worker invocation was passed, provide it with the resulting promise of
-    // the effect invocation above. This will ensure that the worker will
+    // the trigger invocation above. This will ensure that the worker will
     // continue to be executed until all of the asynchronous actions
     // (non-awaited promises) have been resolved.
     if (waitUntil) waitUntil(clearPromise);
@@ -648,7 +660,7 @@ export const runQueriesWithEffects = async <T extends ResultRecord>(
 
   // Filter the list of queries to remove any potential queries used for "diffing"
   // (retrieving the previous value of a record) and any potential queries resulting from
-  // "before" or "after" effects. Then return only the results of the queries.
+  // "before" or "after" triggers. Then return only the results of the queries.
   return queryList
     .filter(
       (query) =>
