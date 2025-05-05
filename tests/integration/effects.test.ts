@@ -812,8 +812,8 @@ describe('effects', () => {
       },
     ]);
 
-    expect(accountEffectsOptions).toEqual({ headless: false });
-    expect(spaceEffectsOptions).toEqual({ headless: false });
+    expect(accountEffectsOptions).toEqual({ headless: true });
+    expect(spaceEffectsOptions).toEqual({ headless: true });
 
     expect(accountEffectsSpy).toHaveBeenCalled();
     expect(spaceEffectsSpy).toHaveBeenCalled();
