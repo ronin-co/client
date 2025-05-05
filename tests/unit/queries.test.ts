@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, mock, spyOn, test } from 'bun:test';
 
-import { runQueriesWithStorageAndEffects } from '@/src/queries';
+import { runQueriesWithStorageAndTriggers } from '@/src/queries';
 import { queriesHandler } from '@/src/utils/handlers';
 import type { Query } from '@ronin/compiler';
 
@@ -206,7 +206,7 @@ describe('queries handler', () => {
       },
     ];
 
-    const results = await runQueriesWithStorageAndEffects(
+    const results = await runQueriesWithStorageAndTriggers(
       {
         default: defaultQueries,
         secondary: secondaryQueries,

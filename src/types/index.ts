@@ -1,61 +1,61 @@
 export type {
-  // Add Effects
-  BeforeAddEffect,
-  ResolvingAddEffect,
-  AddEffect,
-  AfterAddEffect,
-  FollowingAddEffect,
-  // Get Effects
-  BeforeGetEffect,
-  ResolvingGetEffect,
-  GetEffect,
-  AfterGetEffect,
-  FollowingGetEffect,
-  // Set Effects
-  BeforeSetEffect,
-  ResolvingSetEffect,
-  SetEffect,
-  AfterSetEffect,
-  FollowingSetEffect,
-  // Remove Effects
-  BeforeRemoveEffect,
-  ResolvingRemoveEffect,
-  RemoveEffect,
-  AfterRemoveEffect,
-  FollowingRemoveEffect,
-  // Count Effects
-  BeforeCountEffect,
-  ResolvingCountEffect,
-  CountEffect,
-  AfterCountEffect,
-  FollowingCountEffect,
-  // Create Effects
-  BeforeCreateEffect,
-  ResolvingCreateEffect,
-  CreateEffect,
-  AfterCreateEffect,
-  FollowingCreateEffect,
-  // Alter Effects
-  BeforeAlterEffect,
-  ResolvingAlterEffect,
-  AlterEffect,
-  AfterAlterEffect,
-  FollowingAlterEffect,
-  // Drop Effects
-  BeforeDropEffect,
-  ResolvingDropEffect,
-  DropEffect,
-  AfterDropEffect,
-  FollowingDropEffect,
-  // Effect Handlers
-  BeforeEffectHandler,
-  DuringEffectHandler,
-  FollowingEffectHandler,
-  AfterEffectHandler,
-  ResolvingEffectHandler,
-  // Async Context surrounding Effects
-  EffectContext,
-} from '@/src/utils/effects';
+  // Add Triggers
+  BeforeAddTrigger,
+  ResolvingAddTrigger,
+  AddTrigger,
+  AfterAddTrigger,
+  FollowingAddTrigger,
+  // Get Triggers
+  BeforeGetTrigger,
+  ResolvingGetTrigger,
+  GetTrigger,
+  AfterGetTrigger,
+  FollowingGetTrigger,
+  // Set Triggers
+  BeforeSetTrigger,
+  ResolvingSetTrigger,
+  SetTrigger,
+  AfterSetTrigger,
+  FollowingSetTrigger,
+  // Remove Triggers
+  BeforeRemoveTrigger,
+  ResolvingRemoveTrigger,
+  RemoveTrigger,
+  AfterRemoveTrigger,
+  FollowingRemoveTrigger,
+  // Count Triggers
+  BeforeCountTrigger,
+  ResolvingCountTrigger,
+  CountTrigger,
+  AfterCountTrigger,
+  FollowingCountTrigger,
+  // Create Triggers
+  BeforeCreateTrigger,
+  ResolvingCreateTrigger,
+  CreateTrigger,
+  AfterCreateTrigger,
+  FollowingCreateTrigger,
+  // Alter Triggers
+  BeforeAlterTrigger,
+  ResolvingAlterTrigger,
+  AlterTrigger,
+  AfterAlterTrigger,
+  FollowingAlterTrigger,
+  // Drop Triggers
+  BeforeDropTrigger,
+  ResolvingDropTrigger,
+  DropTrigger,
+  AfterDropTrigger,
+  FollowingDropTrigger,
+  // Trigger Handlers
+  BeforeTriggerHandler,
+  DuringTriggerHandler,
+  FollowingTriggerHandler,
+  AfterTriggerHandler,
+  ResolvingTriggerHandler,
+  // Async Context surrounding Triggers
+  TriggerContext,
+} from '@/src/utils/triggers';
 
 export type {
   // Queries
