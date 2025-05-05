@@ -27,6 +27,8 @@ interface EffectOptions {
   model?: string;
   /** The database for which the query is being executed. */
   database?: string;
+  /** Whether the query was generated implicitly by an effect. */
+  headless?: boolean;
 }
 
 export type FilteredEffectQuery<
@@ -285,6 +287,12 @@ const invokeEffects = async (
     query: Query;
     resultBefore?: unknown;
     resultAfter?: unknown;
+
+    /**
+     * If this option is set, the query was generated implicitly, through an effect,
+     * instead of being explicitly passed to the client.
+     */
+    headless?: boolean;
   },
   options: EffectCallerOptions,
 ): Promise<{
@@ -346,9 +354,12 @@ const invokeEffects = async (
     : ({} as CombinedInstructions);
 
   if (effectsForModel && effectName in effectsForModel) {
+    const headless = definition.headless ?? false;
     const effect = effectsForModel[effectName as keyof typeof effectsForModel];
     const effectOptions =
-      effectFile === 'sink' ? { model: queryModel, database: options.database } : {};
+      effectFile === 'sink'
+        ? { model: queryModel, database: options.database, headless }
+        : { headless };
 
     // For effects of type "following" (such as `followingAdd`), we want to pass
     // special function arguments that contain the value of the affected records
@@ -457,10 +468,10 @@ export const runQueriesWithEffects = async <T extends ResultRecord>(
 
   // Invoke `beforeAdd`, `beforeGet`, `beforeSet`, `beforeRemove`, and `beforeCount`.
   await Promise.all(
-    queryList.map(async ({ query, database }, index) => {
+    queryList.map(async ({ query, database, auxiliaryForIndex }, index) => {
       const effectResults = await invokeEffects(
         'before',
-        { query },
+        { query, headless: auxiliaryForIndex },
         { effects, database },
       );
 
@@ -477,10 +488,10 @@ export const runQueriesWithEffects = async <T extends ResultRecord>(
 
   // Invoke `add`, `get`, `set`, `remove`, and `count`.
   await Promise.all(
-    queryList.map(async ({ query, database }, index) => {
+    queryList.map(async ({ query, database, auxiliaryForIndex }, index) => {
       const effectResults = await invokeEffects(
         'during',
-        { query },
+        { query, headless: auxiliaryForIndex },
         { effects, database },
       );
 
@@ -492,10 +503,10 @@ export const runQueriesWithEffects = async <T extends ResultRecord>(
 
   // Invoke `afterAdd`, `afterGet`, `afterSet`, `afterRemove`, and `afterCount`.
   await Promise.all(
-    queryList.map(async ({ query, database }, index) => {
+    queryList.map(async ({ query, database, auxiliaryForIndex }, index) => {
       const effectResults = await invokeEffects(
         'after',
-        { query },
+        { query, headless: auxiliaryForIndex },
         { effects, database },
       );
 
@@ -558,10 +569,10 @@ export const runQueriesWithEffects = async <T extends ResultRecord>(
   // Invoke `resolvingGet`, `resolvingSet`, `resolvingAdd`, `resolvingRemove`,
   // and `resolvingCount`.
   await Promise.all(
-    queryList.map(async ({ query, database }, index) => {
+    queryList.map(async ({ query, database, auxiliaryForIndex }, index) => {
       const effectResults = await invokeEffects(
         'resolving',
-        { query },
+        { query, headless: auxiliaryForIndex },
         { effects, database },
       );
       queryList[index].result = effectResults.result as FormattedResults<T>[number];
@@ -589,7 +600,7 @@ export const runQueriesWithEffects = async <T extends ResultRecord>(
   // Asynchronously invoke `followingAdd`, `followingSet`, `followingRemove`,
   // `followingCreate`, `followingAlter`, and `followingDrop`.
   for (let index = 0; index < queryList.length; index++) {
-    const { query, result, database } = queryList[index];
+    const { query, result, database, auxiliaryForIndex } = queryList[index];
     const queryType = Object.keys(query)[0] as QueryType;
 
     // "following" effects should only fire for writes — not reads.
@@ -612,7 +623,7 @@ export const runQueriesWithEffects = async <T extends ResultRecord>(
     // Run the actual effect functions.
     const promise = invokeEffects(
       'following',
-      { query, resultBefore, resultAfter },
+      { query, resultBefore, resultAfter, headless: auxiliaryForIndex },
       { effects, database },
     );
 
