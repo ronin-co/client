@@ -466,16 +466,16 @@ export const runQueriesWithEffects = async <T extends ResultRecord>(
        * generated implicitly by an effect, instead of being explicitly passed to the
        * client from the outside.
        */
-      headlessForIndex?: number;
+      headless?: boolean;
     }
   > = queries.map(({ query, database }) => ({ query, result: EMPTY, database }));
 
   // Invoke `beforeAdd`, `beforeGet`, `beforeSet`, `beforeRemove`, and `beforeCount`.
   await Promise.all(
-    queryList.map(async ({ query, database, headlessForIndex }, index) => {
+    queryList.map(async ({ query, database, headless }, index) => {
       const effectResults = await invokeEffects(
         'before',
-        { query, headless: Boolean(headlessForIndex) },
+        { query, headless },
         { effects, database },
       );
 
@@ -483,7 +483,7 @@ export const runQueriesWithEffects = async <T extends ResultRecord>(
         query,
         result: EMPTY,
         database,
-        headlessForIndex: index,
+        headless: true,
       }));
 
       queryList.splice(index, 0, ...queriesToInsert);
@@ -492,10 +492,10 @@ export const runQueriesWithEffects = async <T extends ResultRecord>(
 
   // Invoke `add`, `get`, `set`, `remove`, and `count`.
   await Promise.all(
-    queryList.map(async ({ query, database, headlessForIndex }, index) => {
+    queryList.map(async ({ query, database, headless }, index) => {
       const effectResults = await invokeEffects(
         'during',
-        { query, headless: Boolean(headlessForIndex) },
+        { query, headless },
         { effects, database },
       );
 
@@ -507,10 +507,10 @@ export const runQueriesWithEffects = async <T extends ResultRecord>(
 
   // Invoke `afterAdd`, `afterGet`, `afterSet`, `afterRemove`, and `afterCount`.
   await Promise.all(
-    queryList.map(async ({ query, database, headlessForIndex }, index) => {
+    queryList.map(async ({ query, database, headless }, index) => {
       const effectResults = await invokeEffects(
         'after',
-        { query, headless: Boolean(headlessForIndex) },
+        { query, headless },
         { effects, database },
       );
 
@@ -518,7 +518,7 @@ export const runQueriesWithEffects = async <T extends ResultRecord>(
         query,
         result: EMPTY,
         database,
-        headlessForIndex: index,
+        headless: true,
       }));
 
       queryList.splice(index + 1, 0, ...queriesToInsert);
@@ -573,10 +573,10 @@ export const runQueriesWithEffects = async <T extends ResultRecord>(
   // Invoke `resolvingGet`, `resolvingSet`, `resolvingAdd`, `resolvingRemove`,
   // and `resolvingCount`.
   await Promise.all(
-    queryList.map(async ({ query, database, headlessForIndex }, index) => {
+    queryList.map(async ({ query, database, headless }, index) => {
       const effectResults = await invokeEffects(
         'resolving',
-        { query, headless: Boolean(headlessForIndex) },
+        { query, headless },
         { effects, database },
       );
       queryList[index].result = effectResults.result as FormattedResults<T>[number];
@@ -604,7 +604,7 @@ export const runQueriesWithEffects = async <T extends ResultRecord>(
   // Asynchronously invoke `followingAdd`, `followingSet`, `followingRemove`,
   // `followingCreate`, `followingAlter`, and `followingDrop`.
   for (let index = 0; index < queryList.length; index++) {
-    const { query, result, database, headlessForIndex } = queryList[index];
+    const { query, result, database, headless } = queryList[index];
     const queryType = Object.keys(query)[0] as QueryType;
 
     // "following" effects should only fire for writes — not reads.
@@ -627,7 +627,7 @@ export const runQueriesWithEffects = async <T extends ResultRecord>(
     // Run the actual effect functions.
     const promise = invokeEffects(
       'following',
-      { query, resultBefore, resultAfter, headless: Boolean(headlessForIndex) },
+      { query, resultBefore, resultAfter, headless },
       { effects, database },
     );
 
@@ -653,7 +653,7 @@ export const runQueriesWithEffects = async <T extends ResultRecord>(
     .filter(
       (query) =>
         typeof query.diffForIndex === 'undefined' &&
-        typeof query.headlessForIndex === 'undefined',
+        typeof query.headless === 'undefined',
     )
     .map(({ result, database }) => ({
       result: result as FormattedResults<T>[number],
