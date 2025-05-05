@@ -461,17 +461,21 @@ export const runQueriesWithEffects = async <T extends ResultRecord>(
       result: FormattedResults<T>[number] | symbol;
       /** Whether the query is a diff query for another query. */
       diffForIndex?: number;
-      /** Whether the query is an auxiliary query for another query. */
-      auxiliaryForIndex?: number;
+      /**
+       * Whether the query is a headless query for another query, and was therefore
+       * generated implicitly by an effect, instead of being explicitly passed to the
+       * client from the outside.
+       */
+      headlessForIndex?: number;
     }
   > = queries.map(({ query, database }) => ({ query, result: EMPTY, database }));
 
   // Invoke `beforeAdd`, `beforeGet`, `beforeSet`, `beforeRemove`, and `beforeCount`.
   await Promise.all(
-    queryList.map(async ({ query, database, auxiliaryForIndex }, index) => {
+    queryList.map(async ({ query, database, headlessForIndex }, index) => {
       const effectResults = await invokeEffects(
         'before',
-        { query, headless: auxiliaryForIndex },
+        { query, headless: Boolean(headlessForIndex) },
         { effects, database },
       );
 
@@ -479,7 +483,7 @@ export const runQueriesWithEffects = async <T extends ResultRecord>(
         query,
         result: EMPTY,
         database,
-        auxiliaryForIndex: index,
+        headlessForIndex: index,
       }));
 
       queryList.splice(index, 0, ...queriesToInsert);
@@ -488,10 +492,10 @@ export const runQueriesWithEffects = async <T extends ResultRecord>(
 
   // Invoke `add`, `get`, `set`, `remove`, and `count`.
   await Promise.all(
-    queryList.map(async ({ query, database, auxiliaryForIndex }, index) => {
+    queryList.map(async ({ query, database, headlessForIndex }, index) => {
       const effectResults = await invokeEffects(
         'during',
-        { query, headless: auxiliaryForIndex },
+        { query, headless: Boolean(headlessForIndex) },
         { effects, database },
       );
 
@@ -503,10 +507,10 @@ export const runQueriesWithEffects = async <T extends ResultRecord>(
 
   // Invoke `afterAdd`, `afterGet`, `afterSet`, `afterRemove`, and `afterCount`.
   await Promise.all(
-    queryList.map(async ({ query, database, auxiliaryForIndex }, index) => {
+    queryList.map(async ({ query, database, headlessForIndex }, index) => {
       const effectResults = await invokeEffects(
         'after',
-        { query, headless: auxiliaryForIndex },
+        { query, headless: Boolean(headlessForIndex) },
         { effects, database },
       );
 
@@ -514,7 +518,7 @@ export const runQueriesWithEffects = async <T extends ResultRecord>(
         query,
         result: EMPTY,
         database,
-        auxiliaryForIndex: index,
+        headlessForIndex: index,
       }));
 
       queryList.splice(index + 1, 0, ...queriesToInsert);
@@ -569,10 +573,10 @@ export const runQueriesWithEffects = async <T extends ResultRecord>(
   // Invoke `resolvingGet`, `resolvingSet`, `resolvingAdd`, `resolvingRemove`,
   // and `resolvingCount`.
   await Promise.all(
-    queryList.map(async ({ query, database, auxiliaryForIndex }, index) => {
+    queryList.map(async ({ query, database, headlessForIndex }, index) => {
       const effectResults = await invokeEffects(
         'resolving',
-        { query, headless: auxiliaryForIndex },
+        { query, headless: Boolean(headlessForIndex) },
         { effects, database },
       );
       queryList[index].result = effectResults.result as FormattedResults<T>[number];
@@ -600,7 +604,7 @@ export const runQueriesWithEffects = async <T extends ResultRecord>(
   // Asynchronously invoke `followingAdd`, `followingSet`, `followingRemove`,
   // `followingCreate`, `followingAlter`, and `followingDrop`.
   for (let index = 0; index < queryList.length; index++) {
-    const { query, result, database, auxiliaryForIndex } = queryList[index];
+    const { query, result, database, headlessForIndex } = queryList[index];
     const queryType = Object.keys(query)[0] as QueryType;
 
     // "following" effects should only fire for writes — not reads.
@@ -623,7 +627,7 @@ export const runQueriesWithEffects = async <T extends ResultRecord>(
     // Run the actual effect functions.
     const promise = invokeEffects(
       'following',
-      { query, resultBefore, resultAfter, headless: auxiliaryForIndex },
+      { query, resultBefore, resultAfter, headless: Boolean(headlessForIndex) },
       { effects, database },
     );
 
@@ -649,7 +653,7 @@ export const runQueriesWithEffects = async <T extends ResultRecord>(
     .filter(
       (query) =>
         typeof query.diffForIndex === 'undefined' &&
-        typeof query.auxiliaryForIndex === 'undefined',
+        typeof query.headlessForIndex === 'undefined',
     )
     .map(({ result, database }) => ({
       result: result as FormattedResults<T>[number],
