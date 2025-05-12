@@ -4,7 +4,7 @@
     "": {
       "name": "ronin",
       "dependencies": {
-        "@ronin/cli": "0.3.9",
+        "@ronin/cli": "0.3.10",
         "@ronin/compiler": "0.18.3",
         "@ronin/syntax": "0.2.38",
       },
@@ -173,7 +173,7 @@
 
     "@rollup/rollup-win32-x64-msvc": ["@rollup/rollup-win32-x64-msvc@4.40.2", "", { "os": "win32", "cpu": "x64" }, "sha512-bwspbWB04XJpeElvsp+DCylKfF4trJDa2Y9Go8O6A7YLX2LIKGcNK/CYImJN6ZP4DcuOHB4Utl3iCbnR62DudA=="],
 
-    "@ronin/cli": ["@ronin/cli@0.3.9", "", { "dependencies": { "@dprint/formatter": "0.4.1", "@dprint/typescript": "0.93.3", "@iarna/toml": "2.2.5", "@inquirer/prompts": "7.2.3", "@ronin/engine": "0.1.23", "chalk-template": "1.1.0", "get-port": "7.1.0", "ini": "5.0.0", "json5": "2.2.3", "open": "10.1.0", "ora": "8.1.1", "resolve-from": "5.0.0" } }, "sha512-24452AUa9yFCdD5t63N2nszw/q895Lnka1UyIiVV37qDcQhLrJ8gTAX6KrMYCKIKOHfGpueKnGqgboZ+GQg4iw=="],
+    "@ronin/cli": ["@ronin/cli@0.3.10", "", { "dependencies": { "@dprint/formatter": "0.4.1", "@dprint/typescript": "0.93.3", "@iarna/toml": "2.2.5", "@inquirer/prompts": "7.2.3", "@ronin/engine": "0.1.23", "chalk-template": "1.1.0", "get-port": "7.1.0", "ini": "5.0.0", "json5": "2.2.3", "open": "10.1.0", "ora": "8.1.1", "resolve-from": "5.0.0" } }, "sha512-uoVaR2Sugok/sF7ufuFVwCkyTbXjvuNqOxuugwG9Gtf4AkjeXkEdDOqWzegKXBDqJVFIoFY8mpJBDN0Em0iOWw=="],
 
     "@ronin/compiler": ["@ronin/compiler@0.18.3", "", {}, "sha512-t4Wdt/Hwz0j6ymaYNQduTyORJ7b35rAO7LAdSO+1ifQmW2C/tl4OMayaNIBrOLEbAvzdF5xwH7B4vn8pTHn3Hw=="],
 
