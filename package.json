@@ -72,14 +72,14 @@
     "node": ">=18.17.0"
   },
   "dependencies": {
-    "@ronin/cli": "0.3.13",
-    "@ronin/compiler": "0.18.5",
+    "@ronin/cli": "0.3.14",
+    "@ronin/compiler": "0.18.6",
     "@ronin/syntax": "0.2.39"
   },
   "devDependencies": {
     "@biomejs/biome": "1.9.4",
-    "@types/bun": "1.2.4",
-    "tsup": "8.4.0",
-    "typescript": "5.8.2"
+    "@types/bun": "1.2.15",
+    "tsup": "8.5.0",
+    "typescript": "5.8.3"
   }
 }
