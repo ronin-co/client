@@ -24,12 +24,15 @@ import {
 const EMPTY = Symbol('empty');
 
 interface TriggerOptions {
+  /** Whether the query was generated implicitly by an trigger. */
+  implicit: boolean;
+  /** An instance of the current client, which can be used for nested queries. */
+  client: ReturnType<typeof createSyntaxFactory>;
+
   /** The model for which the query is being executed. */
   model?: string;
   /** The database for which the query is being executed. */
   database?: string;
-  /** Whether the query was generated implicitly by an trigger. */
-  implicit?: boolean;
 }
 
 export type FilteredTriggerQuery<
@@ -317,7 +320,7 @@ const invokeTriggers = async (
   /** The result of a query provided by the trigger. */
   result?: FormattedResults<unknown>[number] | symbol;
 }> => {
-  const { triggers, database } = options;
+  const { triggers, database, client } = options;
   const { query } = definition;
 
   const queryType = Object.keys(query)[0] as QueryType;
@@ -372,8 +375,12 @@ const invokeTriggers = async (
   if (triggersForModel && triggerName in triggersForModel) {
     const implicit = definition.implicit ?? false;
     const trigger = triggersForModel[triggerName as keyof typeof triggersForModel];
-    const triggerOptions =
-      triggerFile === 'sink' ? { model: queryModel, database, implicit } : { implicit };
+
+    const triggerOptions = {
+      implicit,
+      client,
+      ...(triggerFile === 'sink' ? { model: queryModel, database } : {}),
+    };
 
     // For triggers of type "following" (such as `followingAdd`), we want to pass
     // special function arguments that contain the value of the affected records
@@ -456,10 +463,13 @@ export const runQueriesWithTriggers = async <T extends ResultRecord>(
   options: QueryHandlerOptions = {},
 ): Promise<ResultsPerDatabase<T>> => {
   const { triggers, waitUntil } = options;
-  const client = createSyntaxFactory(options);
 
   // If no triggers were provided, we can just run all the queries and return the results.
   if (!triggers) return runQueries<T>(queries, options);
+
+  // If triggers were provided, intialize a new client instance that can be used for
+  // nested queries within triggers.
+  const client = createSyntaxFactory(options);
 
   if (typeof process === 'undefined' && !waitUntil) {
     let message = 'In the case that the "ronin" package receives a value for';
