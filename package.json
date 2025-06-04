@@ -75,7 +75,7 @@
     "@ronin/cli": "0.3.17",
     "@ronin/compiler": "0.18.8",
     "@ronin/engine": "0.1.23",
-    "@ronin/syntax": "0.2.42"
+    "@ronin/syntax": "0.2.43"
   },
   "devDependencies": {
     "@biomejs/biome": "1.9.4",
