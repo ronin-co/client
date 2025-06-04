@@ -1,3 +1,4 @@
+import { createSyntaxFactory } from '@/src/index';
 import {
   type QueriesPerDatabase,
   type ResultsPerDatabase,
@@ -264,8 +265,11 @@ const normalizeResults = (result: unknown) => {
   return structuredClone(value);
 };
 
-interface TriggerCallerOptions extends Omit<QueryHandlerOptions, 'triggers'> {
+interface TriggerCallerOptions {
+  /** The list of trigger functions from which a particular trigger can be picked. */
   triggers: NonNullable<QueryHandlerOptions['triggers']>;
+  /** The instance of the current client, which will be provided to the triggers. */
+  client: ReturnType<typeof createSyntaxFactory>;
   /**
    * If the triggers are being called for a custom database, the identifier of the database
    * would be provided here.
@@ -452,6 +456,7 @@ export const runQueriesWithTriggers = async <T extends ResultRecord>(
   options: QueryHandlerOptions = {},
 ): Promise<ResultsPerDatabase<T>> => {
   const { triggers, waitUntil } = options;
+  const client = createSyntaxFactory(options);
 
   // If no triggers were provided, we can just run all the queries and return the results.
   if (!triggers) return runQueries<T>(queries, options);
@@ -486,7 +491,7 @@ export const runQueriesWithTriggers = async <T extends ResultRecord>(
       const triggerResults = await invokeTriggers(
         'before',
         { query, implicit },
-        { triggers, database },
+        { triggers, database, client },
       );
 
       const queriesToInsert = triggerResults.queries!.map((query) => ({
@@ -506,7 +511,7 @@ export const runQueriesWithTriggers = async <T extends ResultRecord>(
       const triggerResults = await invokeTriggers(
         'during',
         { query, implicit },
-        { triggers, database },
+        { triggers, database, client },
       );
 
       if (triggerResults.queries && triggerResults.queries.length > 0) {
@@ -521,7 +526,7 @@ export const runQueriesWithTriggers = async <T extends ResultRecord>(
       const triggerResults = await invokeTriggers(
         'after',
         { query, implicit },
-        { triggers, database },
+        { triggers, database, client },
       );
 
       const queriesToInsert = triggerResults.queries!.map((query) => ({
@@ -587,7 +592,7 @@ export const runQueriesWithTriggers = async <T extends ResultRecord>(
       const triggerResults = await invokeTriggers(
         'resolving',
         { query, implicit },
-        { triggers, database },
+        { triggers, database, client },
       );
       queryList[index].result = triggerResults.result as FormattedResults<T>[number];
     }),
@@ -638,7 +643,7 @@ export const runQueriesWithTriggers = async <T extends ResultRecord>(
     const promise = invokeTriggers(
       'following',
       { query, resultBefore, resultAfter, implicit },
-      { triggers, database },
+      { triggers, database, client },
     );
 
     // The result of the trigger should not be made available, otherwise
