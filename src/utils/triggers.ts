@@ -313,7 +313,7 @@ const invokeTriggers = async (
   /** The result of a query provided by the trigger. */
   result?: FormattedResults<unknown>[number] | symbol;
 }> => {
-  const { triggers } = options;
+  const { triggers, database } = options;
   const { query } = definition;
 
   const queryType = Object.keys(query)[0] as QueryType;
@@ -347,7 +347,7 @@ const invokeTriggers = async (
   //
   // If the triggers are *not* being executed for a custom database, the trigger file name
   // matches the model that is being addressed by the query.
-  const triggerFile = options.database ? 'sink' : queryModelDashed;
+  const triggerFile = database ? 'sink' : queryModelDashed;
   const triggersForModel = triggers[triggerFile];
   const triggerName = getMethodName(triggerType, queryType);
 
@@ -369,9 +369,7 @@ const invokeTriggers = async (
     const implicit = definition.implicit ?? false;
     const trigger = triggersForModel[triggerName as keyof typeof triggersForModel];
     const triggerOptions =
-      triggerFile === 'sink'
-        ? { model: queryModel, database: options.database, implicit }
-        : { implicit };
+      triggerFile === 'sink' ? { model: queryModel, database, implicit } : { implicit };
 
     // For triggers of type "following" (such as `followingAdd`), we want to pass
     // special function arguments that contain the value of the affected records
