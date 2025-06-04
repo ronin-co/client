@@ -1,5 +1,3 @@
-import type { AsyncLocalStorage } from 'node:async_hooks';
-
 import type { Triggers } from '@/src/utils/triggers';
 
 import type { Model, Result, ResultRecord } from '@ronin/compiler';
@@ -30,13 +28,6 @@ export interface QueryHandlerOptions {
    * an edge runtime, this option is required.
    */
   waitUntil?: (promise: Promise<unknown>) => void;
-
-  /**
-   * Allows for preventing recursions when running queries from triggers
-   * provided with the `triggers` option. If the `triggers` option is provided, this
-   * option is required.
-   */
-  asyncContext?: AsyncLocalStorage<any>;
 
   /**
    * If the query should be run for a specific database within your space, you may
