@@ -1,3 +1,4 @@
+import { createSyntaxFactory } from '@/src/index';
 import {
   type QueriesPerDatabase,
   type ResultsPerDatabase,
@@ -23,12 +24,15 @@ import {
 const EMPTY = Symbol('empty');
 
 interface TriggerOptions {
+  /** Whether the query was generated implicitly by an trigger. */
+  implicit: boolean;
+  /** An instance of the current client, which can be used for nested queries. */
+  client: ReturnType<typeof createSyntaxFactory>;
+
   /** The model for which the query is being executed. */
   model?: string;
   /** The database for which the query is being executed. */
   database?: string;
-  /** Whether the query was generated implicitly by an trigger. */
-  implicit?: boolean;
 }
 
 export type FilteredTriggerQuery<
@@ -264,8 +268,11 @@ const normalizeResults = (result: unknown) => {
   return structuredClone(value);
 };
 
-interface TriggerCallerOptions extends Omit<QueryHandlerOptions, 'triggers'> {
+interface TriggerCallerOptions {
+  /** The list of trigger functions from which a particular trigger can be picked. */
   triggers: NonNullable<QueryHandlerOptions['triggers']>;
+  /** The instance of the current client, which will be provided to the triggers. */
+  client: ReturnType<typeof createSyntaxFactory>;
   /**
    * If the triggers are being called for a custom database, the identifier of the database
    * would be provided here.
@@ -313,7 +320,7 @@ const invokeTriggers = async (
   /** The result of a query provided by the trigger. */
   result?: FormattedResults<unknown>[number] | symbol;
 }> => {
-  const { triggers } = options;
+  const { triggers, database, client } = options;
   const { query } = definition;
 
   const queryType = Object.keys(query)[0] as QueryType;
@@ -347,7 +354,7 @@ const invokeTriggers = async (
   //
   // If the triggers are *not* being executed for a custom database, the trigger file name
   // matches the model that is being addressed by the query.
-  const triggerFile = options.database ? 'sink' : queryModelDashed;
+  const triggerFile = database ? 'sink' : queryModelDashed;
   const triggersForModel = triggers[triggerFile];
   const triggerName = getMethodName(triggerType, queryType);
 
@@ -368,10 +375,12 @@ const invokeTriggers = async (
   if (triggersForModel && triggerName in triggersForModel) {
     const implicit = definition.implicit ?? false;
     const trigger = triggersForModel[triggerName as keyof typeof triggersForModel];
-    const triggerOptions =
-      triggerFile === 'sink'
-        ? { model: queryModel, database: options.database, implicit }
-        : { implicit };
+
+    const triggerOptions = {
+      implicit,
+      client,
+      ...(triggerFile === 'sink' ? { model: queryModel, database } : {}),
+    };
 
     // For triggers of type "following" (such as `followingAdd`), we want to pass
     // special function arguments that contain the value of the affected records
@@ -458,6 +467,10 @@ export const runQueriesWithTriggers = async <T extends ResultRecord>(
   // If no triggers were provided, we can just run all the queries and return the results.
   if (!triggers) return runQueries<T>(queries, options);
 
+  // If triggers were provided, intialize a new client instance that can be used for
+  // nested queries within triggers.
+  const client = createSyntaxFactory(options);
+
   if (typeof process === 'undefined' && !waitUntil) {
     let message = 'In the case that the "ronin" package receives a value for';
     message += ' its `triggers` option, it must also receive a value for its';
@@ -488,7 +501,7 @@ export const runQueriesWithTriggers = async <T extends ResultRecord>(
       const triggerResults = await invokeTriggers(
         'before',
         { query, implicit },
-        { triggers, database },
+        { triggers, database, client },
       );
 
       const queriesToInsert = triggerResults.queries!.map((query) => ({
@@ -508,7 +521,7 @@ export const runQueriesWithTriggers = async <T extends ResultRecord>(
       const triggerResults = await invokeTriggers(
         'during',
         { query, implicit },
-        { triggers, database },
+        { triggers, database, client },
       );
 
       if (triggerResults.queries && triggerResults.queries.length > 0) {
@@ -523,7 +536,7 @@ export const runQueriesWithTriggers = async <T extends ResultRecord>(
       const triggerResults = await invokeTriggers(
         'after',
         { query, implicit },
-        { triggers, database },
+        { triggers, database, client },
       );
 
       const queriesToInsert = triggerResults.queries!.map((query) => ({
@@ -589,7 +602,7 @@ export const runQueriesWithTriggers = async <T extends ResultRecord>(
       const triggerResults = await invokeTriggers(
         'resolving',
         { query, implicit },
-        { triggers, database },
+        { triggers, database, client },
       );
       queryList[index].result = triggerResults.result as FormattedResults<T>[number];
     }),
@@ -640,7 +653,7 @@ export const runQueriesWithTriggers = async <T extends ResultRecord>(
     const promise = invokeTriggers(
       'following',
       { query, resultBefore, resultAfter, implicit },
-      { triggers, database },
+      { triggers, database, client },
     );
 
     // The result of the trigger should not be made available, otherwise
