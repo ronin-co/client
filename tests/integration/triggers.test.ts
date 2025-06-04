@@ -739,7 +739,7 @@ describe('triggers', () => {
       });
     };
 
-    let accountTriggersOptions: Parameters<FollowingAddTrigger>[4] = {};
+    let accountTriggersOptions = {} as Parameters<FollowingAddTrigger>[4];
     const accountTriggers: { followingAdd: FollowingAddTrigger } = {
       followingAdd: (_query, _multiple, _before_, _after, options) => {
         accountTriggersOptions = options;
@@ -747,7 +747,7 @@ describe('triggers', () => {
     };
     const accountTriggersSpy = spyOn(accountTriggers, 'followingAdd');
 
-    let spaceTriggersOptions: Parameters<FollowingAddTrigger>[4] = {};
+    let spaceTriggersOptions = {} as Parameters<FollowingAddTrigger>[4];
     const spaceTriggers: { followingAdd: FollowingAddTrigger } = {
       followingAdd: (_query, _multiple, _before_, _after, options) => {
         spaceTriggersOptions = options;
@@ -812,8 +812,11 @@ describe('triggers', () => {
       },
     ]);
 
-    expect(accountTriggersOptions).toEqual({ implicit: true });
-    expect(spaceTriggersOptions).toEqual({ implicit: true });
+    expect(accountTriggersOptions).toEqual({
+      implicit: true,
+      client: expect.any(Object),
+    });
+    expect(spaceTriggersOptions).toEqual({ implicit: true, client: expect.any(Object) });
 
     expect(accountTriggersSpy).toHaveBeenCalled();
     expect(spaceTriggersSpy).toHaveBeenCalled();
