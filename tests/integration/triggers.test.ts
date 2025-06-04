@@ -1,5 +1,3 @@
-import { AsyncLocalStorage } from 'node:async_hooks';
-
 import { beforeEach, describe, expect, mock, spyOn, test } from 'bun:test';
 
 import { createSyntaxFactory } from '@/src/index';
@@ -58,7 +56,6 @@ describe('triggers', () => {
           resolvingGet: mockTrigger as any,
         },
       },
-      asyncContext: new AsyncLocalStorage(),
     });
 
     expect(mockTrigger).toHaveBeenCalled();
@@ -86,7 +83,6 @@ describe('triggers', () => {
           },
         },
       },
-      asyncContext: new AsyncLocalStorage(),
     });
 
     await get.account.with.handle('juri');
@@ -118,7 +114,6 @@ describe('triggers', () => {
           },
         },
       },
-      asyncContext: new AsyncLocalStorage(),
     });
 
     await get.account.with.handle('elaine');
@@ -149,7 +144,6 @@ describe('triggers', () => {
           },
         },
       },
-      asyncContext: new AsyncLocalStorage(),
     }));
 
     await get.account.with.handle('juri');
@@ -188,7 +182,6 @@ describe('triggers', () => {
           },
         },
       },
-      asyncContext: new AsyncLocalStorage(),
     });
 
     const schema = await get.schema.with.id('1');
@@ -237,7 +230,6 @@ describe('triggers', () => {
           },
         },
       },
-      asyncContext: new AsyncLocalStorage(),
     });
 
     const model = await create.model({
@@ -313,7 +305,6 @@ describe('triggers', () => {
           },
         },
       },
-      asyncContext: new AsyncLocalStorage(),
     });
 
     await (alter as unknown as (details: object) => unknown)({
@@ -383,7 +374,6 @@ describe('triggers', () => {
           },
         },
       },
-      asyncContext: new AsyncLocalStorage(),
     });
 
     const model = await drop.model('account' as Parameters<typeof drop.model>[0]);
@@ -433,7 +423,6 @@ describe('triggers', () => {
           },
         },
       },
-      asyncContext: new AsyncLocalStorage(),
     });
 
     const account = await remove.account({
@@ -497,7 +486,6 @@ describe('triggers', () => {
           },
         },
       },
-      asyncContext: new AsyncLocalStorage(),
     });
 
     const accounts = (await set.accounts({
@@ -562,7 +550,6 @@ describe('triggers', () => {
           },
         },
       },
-      asyncContext: new AsyncLocalStorage(),
     });
 
     const result = await batch(() => [
@@ -665,7 +652,6 @@ describe('triggers', () => {
             },
           },
         },
-        asyncContext: new AsyncLocalStorage(),
       },
     );
 
@@ -783,7 +769,6 @@ describe('triggers', () => {
         space: spaceTriggers,
       },
       fetch: mockFetchNew,
-      asyncContext: new AsyncLocalStorage(),
     });
 
     // We're using a batch to be able to check whether the results of the queries
@@ -937,7 +922,6 @@ describe('triggers', () => {
         app: appTriggers,
       },
       fetch: mockFetchNew,
-      asyncContext: new AsyncLocalStorage(),
     });
 
     // We're using a batch to be able to check whether the results of the queries

@@ -1,5 +1,3 @@
-import { AsyncLocalStorage } from 'node:async_hooks';
-
 import { describe, expect, spyOn, test } from 'bun:test';
 
 import createSyntaxFactory from '@/src/index';
@@ -43,7 +41,6 @@ describe('edge runtime', () => {
           // @ts-expect-error - We are deliberately causing an error.
           add: () => undefined,
         },
-        asyncContext: new AsyncLocalStorage(),
       });
 
       await factory.add.account({ with: { handle: 'leo' } });
@@ -105,7 +102,6 @@ describe('edge runtime', () => {
         waitUntil: (promise) => {
           promisesToAwait.push(promise);
         },
-        asyncContext: new AsyncLocalStorage(),
       },
     );
 
@@ -161,7 +157,6 @@ describe('edge runtime', () => {
         waitUntil: (promise) => {
           promisesToAwait.push(promise);
         },
-        asyncContext: new AsyncLocalStorage(),
       },
     );
 
@@ -213,7 +208,6 @@ describe('edge runtime', () => {
         waitUntil: (promise) => {
           promisesToAwait.push(promise);
         },
-        asyncContext: new AsyncLocalStorage(),
       },
     );
 
