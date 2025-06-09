@@ -10,7 +10,7 @@ import type {
   RecursivePartial,
 } from '@/src/types/utils';
 import { WRITE_QUERY_TYPES } from '@/src/utils/constants';
-import { toDashCase } from '@/src/utils/helpers';
+import { toDashCase, validateToken } from '@/src/utils/helpers';
 import {
   type CombinedInstructions,
   DDL_QUERY_TYPES,
