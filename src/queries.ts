@@ -49,7 +49,7 @@ export const runQueries = async <T extends ResultRecord>(
   // Ensure that a token is present. We must only perform this check if there is a
   // guarantee that actual queries must be executed. For example, if the client is
   // initialized with triggers that run all the queries using a different data source,
-  // we don't want to ensure that a token is present.
+  // we don't want to require a token.
   validateToken(options);
 
   let hasWriteQuery: boolean | null = null;
