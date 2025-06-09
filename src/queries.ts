@@ -164,6 +164,32 @@ export async function runQueriesWithStorageAndTriggers<T extends ResultRecord>(
   queries: Array<Query> | Record<string, Array<Query>>,
   options: QueryHandlerOptions = {},
 ): Promise<FormattedResults<T> | Record<string, FormattedResults<T>>> {
+  if (!options.token && typeof process !== 'undefined') {
+    const token =
+      typeof process?.env !== 'undefined'
+        ? process.env.RONIN_TOKEN
+        : typeof import.meta?.env !== 'undefined'
+          ? import.meta.env.RONIN_TOKEN
+          : undefined;
+
+    if (!token || token === 'undefined') {
+      const message =
+        'Please specify the `RONIN_TOKEN` environment variable' +
+        ' or set the `token` option when invoking RONIN.';
+
+      throw new Error(message);
+    }
+
+    options.token = token;
+  }
+
+  if (!options.token) {
+    let message = 'When invoking RONIN from an edge runtime, the';
+    message += ' `token` option must be set.';
+
+    throw new Error(message);
+  }
+
   const singleDatabase = Array.isArray(queries);
   const normalizedQueries = singleDatabase ? { default: queries } : queries;
 

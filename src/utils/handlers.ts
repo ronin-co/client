@@ -26,34 +26,6 @@ export const queriesHandler = async (
   queries: Array<Query> | { statements: Array<Statement> },
   options: QueryHandlerOptions = {},
 ) => {
-  if (!options.token && typeof process !== 'undefined') {
-    const token =
-      typeof process?.env !== 'undefined'
-        ? process.env.RONIN_TOKEN
-        : typeof import.meta?.env !== 'undefined'
-          ? import.meta.env.RONIN_TOKEN
-          : undefined;
-
-    if (!token || token === 'undefined') {
-      const message =
-        'Please specify the `RONIN_TOKEN` environment variable' +
-        ' or set the `token` option when invoking RONIN.';
-
-      throw new Error(message);
-    }
-
-    options.token = token;
-  }
-
-  const token = options.token;
-
-  if (!token) {
-    let message = 'When invoking RONIN from an edge runtime, the';
-    message += ' `token` option must be set.';
-
-    throw new Error(message);
-  }
-
   if ('statements' in queries) {
     const results = await runQueries(
       queries.statements.map((statement) => ({ statement })),
