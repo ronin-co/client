@@ -102,6 +102,7 @@ describe('edge runtime', () => {
         waitUntil: (promise) => {
           promisesToAwait.push(promise);
         },
+        token: 'supertoken',
       },
     );
 
@@ -157,6 +158,7 @@ describe('edge runtime', () => {
         waitUntil: (promise) => {
           promisesToAwait.push(promise);
         },
+        token: 'supertoken',
       },
     );
 
@@ -208,6 +210,7 @@ describe('edge runtime', () => {
         waitUntil: (promise) => {
           promisesToAwait.push(promise);
         },
+        token: 'supertoken',
       },
     );
 
