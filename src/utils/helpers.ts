@@ -114,6 +114,7 @@ export const omit = <T, TKeys extends keyof T>(
 ): Omit<T, TKeys> => {
   if (!obj) return {} as Omit<T, TKeys>;
   if (!keys || keys.length === 0) return obj as Omit<T, TKeys>;
+
   return keys.reduce(
     (acc, key) => {
       delete acc[key];
