@@ -10,6 +10,7 @@ import type {
   RecursivePartial,
 } from '@/src/types/utils';
 import { WRITE_QUERY_TYPES } from '@/src/utils/constants';
+import { ClientError } from '@/src/utils/errors';
 import { omit, toDashCase } from '@/src/utils/helpers';
 import {
   type CombinedInstructions,
@@ -21,7 +22,6 @@ import {
   type QuerySchemaType,
   type QueryType,
   type ResultRecord,
-  RoninError,
 } from '@ronin/compiler';
 
 const EMPTY = Symbol('empty');
@@ -468,9 +468,9 @@ export const runQueriesWithTriggers = async <T extends ResultRecord>(
   const { triggers, waitUntil, requireTriggers } = options;
 
   const triggerErrorType = requireTriggers !== 'all' ? ` ${requireTriggers}` : '';
-  const triggerError = new RoninError({
+  const triggerError = new ClientError({
     message: `Please define "during" triggers for the provided${triggerErrorType} queries.`,
-    code: 'TRIGGER_NOT_FOUND',
+    code: 'TRIGGER_REQUIRED',
   });
 
   // If no triggers were provided, we can just run all the queries and return the results.

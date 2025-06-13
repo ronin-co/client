@@ -1,3 +1,3 @@
 export { runQueriesWithStorageAndTriggers as runQueries } from '@/src/queries';
 export { processStorableObjects, isStorableObject } from '@/src/storage';
-export { InvalidResponseError } from '@/src/utils/errors';
+export { ClientError } from '@/src/utils/errors';

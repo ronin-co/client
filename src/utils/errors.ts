@@ -1,16 +1,16 @@
-interface InvalidResponseErrorDetails {
+interface ClientErrorDetails {
   message: string;
-  code: string;
+  code: 'JSON_PARSE_ERROR' | 'TRIGGER_REQUIRED';
 }
 
-export class InvalidResponseError extends Error {
-  message: InvalidResponseErrorDetails['message'];
-  code: InvalidResponseErrorDetails['code'];
+export class ClientError extends Error {
+  message: ClientErrorDetails['message'];
+  code: ClientErrorDetails['code'];
 
-  constructor(details: InvalidResponseErrorDetails) {
+  constructor(details: ClientErrorDetails) {
     super(details.message);
 
-    this.name = 'InvalidResponseError';
+    this.name = 'ClientError';
     this.message = details.message;
     this.code = details.code;
   }
@@ -34,13 +34,13 @@ export const getResponseBody = async <T>(
   const text = await response.text();
 
   let json: T & {
-    error?: InvalidResponseErrorDetails;
+    error?: ClientErrorDetails;
   };
 
   try {
     json = JSON.parse(text);
   } catch (_err) {
-    throw new InvalidResponseError({
+    throw new ClientError({
       message: `${options?.errorPrefix ? `${options.errorPrefix} ` : ''}${text}`,
       code: 'JSON_PARSE_ERROR',
     });
@@ -48,7 +48,7 @@ export const getResponseBody = async <T>(
 
   if (json.error) {
     json.error.message = `${options?.errorPrefix ? `${options.errorPrefix} ` : ''}${json.error.message}`;
-    throw new InvalidResponseError(json.error);
+    throw new ClientError(json.error);
   }
 
   return json;
