@@ -1,6 +1,9 @@
+import type { CompilerError } from '@ronin/compiler';
+
 interface ClientErrorDetails {
   message: string;
-  code: 'JSON_PARSE_ERROR' | 'TRIGGER_REQUIRED';
+  // Since compiler errors might get returned by the platform, we have to add them here.
+  code: 'JSON_PARSE_ERROR' | 'TRIGGER_REQUIRED' | CompilerError['code'];
 }
 
 export class ClientError extends Error {
