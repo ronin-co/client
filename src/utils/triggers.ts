@@ -541,7 +541,7 @@ export const runQueriesWithTriggers = async <T extends ResultRecord>(
 
       if (requireTriggers) {
         const queryType = Object.keys(query)[0] as QueryType;
-        const requiredTypes =
+        const requiredTypes: ReadonlyArray<QueryType> =
           requireTriggers === 'read'
             ? QUERY_TYPES_READ
             : requireTriggers === 'write'
