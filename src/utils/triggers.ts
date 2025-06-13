@@ -10,7 +10,7 @@ import type {
   RecursivePartial,
 } from '@/src/types/utils';
 import { WRITE_QUERY_TYPES } from '@/src/utils/constants';
-import { toDashCase } from '@/src/utils/helpers';
+import { omit, toDashCase } from '@/src/utils/helpers';
 import {
   type CombinedInstructions,
   DDL_QUERY_TYPES,
@@ -479,7 +479,10 @@ export const runQueriesWithTriggers = async <T extends ResultRecord>(
 
   // If triggers were provided, intialize a new client instance that can be used for
   // nested queries within triggers.
-  const client = createSyntaxFactory(options);
+  //
+  // We are stripping the `requireTriggers` option, because no triggers should be
+  // required for queries that are nested into triggers.
+  const client = createSyntaxFactory(omit(options, ['requireTriggers']));
 
   if (typeof process === 'undefined' && !waitUntil) {
     let message = 'In the case that the "ronin" package receives a value for';
