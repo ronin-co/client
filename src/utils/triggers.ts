@@ -539,6 +539,8 @@ export const runQueriesWithTriggers = async <T extends ResultRecord>(
         return;
       }
 
+      // If "during" triggers are required for the query type of the current query,
+      // we want to throw an error to prevent the query from being executed.
       if (requireTriggers) {
         const queryType = Object.keys(query)[0] as QueryType;
         const requiredTypes: ReadonlyArray<QueryType> =
