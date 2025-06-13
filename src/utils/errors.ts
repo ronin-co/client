@@ -3,7 +3,12 @@ import type { CompilerError } from '@ronin/compiler';
 interface ClientErrorDetails {
   message: string;
   // Since compiler errors might get returned by the platform, we have to add them here.
-  code: 'JSON_PARSE_ERROR' | 'TRIGGER_REQUIRED' | CompilerError['code'];
+  // The `AUTH_INVALID_ACCESS` error might be returned by the platform.
+  code:
+    | 'JSON_PARSE_ERROR'
+    | 'TRIGGER_REQUIRED'
+    | 'AUTH_INVALID_ACCESS'
+    | CompilerError['code'];
 }
 
 export class ClientError extends Error {
