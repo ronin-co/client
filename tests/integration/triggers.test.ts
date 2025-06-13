@@ -958,4 +958,60 @@ describe('triggers', () => {
       }),
     );
   });
+
+  test('run queries with triggers required for all queries', async () => {
+    const { get, remove } = createSyntaxFactory({
+      // biome-ignore lint/suspicious/useAwait: We need this to satisfy the types.
+      fetch: async () => {
+        return Response.json({ results: [] });
+      },
+      requireTriggers: 'all',
+    });
+
+    expect(get.accounts()).rejects.toThrow(
+      'Please define "during" triggers for the provided queries.',
+    );
+
+    expect(remove.account.with.handle('elaine')).rejects.toThrow(
+      'Please define "during" triggers for the provided queries.',
+    );
+  });
+
+  test('run queries with triggers required for read queries', async () => {
+    const { get } = createSyntaxFactory({
+      // biome-ignore lint/suspicious/useAwait: We need this to satisfy the types.
+      fetch: async () => {
+        return Response.json({ results: [] });
+      },
+      requireTriggers: 'read',
+      triggers: {
+        team: {
+          get: (query) => query,
+        },
+      },
+    });
+
+    expect(get.accounts()).rejects.toThrow(
+      'Please define "during" triggers for the provided read queries.',
+    );
+  });
+
+  test('run queries with triggers required for write queries', async () => {
+    const { remove } = createSyntaxFactory({
+      // biome-ignore lint/suspicious/useAwait: We need this to satisfy the types.
+      fetch: async () => {
+        return Response.json({ results: [] });
+      },
+      requireTriggers: 'write',
+      triggers: {
+        team: {
+          get: (query) => query,
+        },
+      },
+    });
+
+    expect(remove.account.with.handle('elaine')).rejects.toThrow(
+      'Please define "during" triggers for the provided write queries.',
+    );
+  });
 });
