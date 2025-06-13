@@ -21,6 +21,7 @@ import {
   type QuerySchemaType,
   type QueryType,
   type ResultRecord,
+  RoninError,
 } from '@ronin/compiler';
 
 const EMPTY = Symbol('empty');
@@ -467,9 +468,10 @@ export const runQueriesWithTriggers = async <T extends ResultRecord>(
   const { triggers, waitUntil, requireTriggers } = options;
 
   const triggerErrorType = requireTriggers !== 'all' ? ` ${requireTriggers}` : '';
-  const triggerError = new Error(
-    `Please define "during" triggers for the provided${triggerErrorType} queries.`,
-  );
+  const triggerError = new RoninError({
+    message: `Please define "during" triggers for the provided${triggerErrorType} queries.`,
+    code: 'TRIGGER_NOT_FOUND',
+  });
 
   // If no triggers were provided, we can just run all the queries and return the results.
   if (!triggers) {
