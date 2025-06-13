@@ -15,6 +15,8 @@ import {
   type CombinedInstructions,
   DDL_QUERY_TYPES,
   QUERY_TYPES,
+  QUERY_TYPES_READ,
+  QUERY_TYPES_WRITE,
   type Query,
   type QuerySchemaType,
   type QueryType,
@@ -462,10 +464,18 @@ export const runQueriesWithTriggers = async <T extends ResultRecord>(
   queries: QueriesPerDatabase,
   options: QueryHandlerOptions = {},
 ): Promise<ResultsPerDatabase<T>> => {
-  const { triggers, waitUntil } = options;
+  const { triggers, waitUntil, requireTriggers } = options;
+
+  const triggerErrorType = requireTriggers !== 'all' ? ` ${requireTriggers}` : '';
+  const triggerError = new Error(
+    `Please define "during" triggers for the provided${triggerErrorType} queries.`,
+  );
 
   // If no triggers were provided, we can just run all the queries and return the results.
-  if (!triggers) return runQueries<T>(queries, options);
+  if (!triggers) {
+    if (requireTriggers) throw triggerError;
+    return runQueries<T>(queries, options);
+  }
 
   // If triggers were provided, intialize a new client instance that can be used for
   // nested queries within triggers.
@@ -526,6 +536,19 @@ export const runQueriesWithTriggers = async <T extends ResultRecord>(
 
       if (triggerResults.queries && triggerResults.queries.length > 0) {
         queryList[index].query = triggerResults.queries[0];
+        return;
+      }
+
+      if (requireTriggers) {
+        const queryType = Object.keys(query)[0] as QueryType;
+        const requiredTypes =
+          requireTriggers === 'read'
+            ? QUERY_TYPES_READ
+            : requireTriggers === 'write'
+              ? QUERY_TYPES_WRITE
+              : QUERY_TYPES;
+
+        if (requiredTypes.includes(queryType)) throw triggerError;
       }
     }),
   );

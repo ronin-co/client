@@ -5,7 +5,7 @@
       "name": "ronin",
       "dependencies": {
         "@ronin/cli": "0.3.19",
-        "@ronin/compiler": "0.18.8",
+        "@ronin/compiler": "0.18.9",
         "@ronin/engine": "0.1.23",
         "@ronin/syntax": "0.2.43",
       },
@@ -178,7 +178,7 @@
 
     "@ronin/codegen": ["@ronin/codegen@1.7.4", "", { "dependencies": { "typescript": "5.7.3" } }, "sha512-snvGHHjiy66mcVm6KG3lHXIq3U/yze1SgNoSZzrKq9vHTG4thkulbnXOXRWjagnFH2HPv0xcQQNW7a8VT0XjZg=="],
 
-    "@ronin/compiler": ["@ronin/compiler@0.18.8", "", { "peerDependencies": { "@ronin/engine": ">=0.1.23" } }, "sha512-9IvxXVmaoT+5ECsUBTkIY6N2GdC8o3HpmfpHYjyMTDXYhg0mrxg8Jgf1cisg/PxFyoOTOr5fkMzZ7nyueH+KvA=="],
+    "@ronin/compiler": ["@ronin/compiler@0.18.9", "", { "peerDependencies": { "@ronin/engine": ">=0.1.23" } }, "sha512-6h1YGdpcD/hUlrS4Mm9NvG+MlWcaPZ/+eaALSvxBXxxWb4dWcwtrtAU9/X3eZusSOa3MT6fbP3i1vDLdLWo/JA=="],
 
     "@ronin/engine": ["@ronin/engine@0.1.23", "", { "dependencies": { "zod": "3.24.1" } }, "sha512-QDeikl4YEBFHEdful9+x5e8lLrxXvjhubJEYxnFfM7SJoFC9OxoE+Dq4g6mVzRuCI+gN+Odkdy3gd2ARr7eXFg=="],
 
