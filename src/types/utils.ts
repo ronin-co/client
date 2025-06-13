@@ -9,7 +9,7 @@ export interface QueryHandlerOptions {
   triggers?: Triggers;
 
   /**
-   * Specific query types to require "during" triggers for.
+   * Specific query types for which "during" triggers should be required.
    */
   requireTriggers?: 'all' | 'write' | 'read';
 
