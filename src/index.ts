@@ -34,9 +34,9 @@ import type { Model } from '@ronin/syntax/schema';
  *
  * @param options - An optional object of options for the query execution.
  *
- * Alternatively, a function that returns the object may be provided instead,
- * which is useful for cases in which the config must be generated dynamically
- * whenever a query is executed.
+ * Alternatively, a function that returns the object may be provided instead, which is
+ * useful for cases in which the config must be generated dynamically whenever a query
+ * is executed.
  *
  * @returns An object with methods for generating and executing different types
  * of queries.

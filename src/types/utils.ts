@@ -39,6 +39,15 @@ export interface QueryHandlerOptions {
    * provide the desired database name here.
    */
   database?: string;
+
+  /**
+   * Sets the `implicit` option received by triggers, allowing for indicating whether the
+   * client is being invoked from within triggers.
+   *
+   * In order to automatically resume the configuration of the client, it is highly
+   * recommended to use the client provided in the `options.client` argument for triggers.
+   */
+  implicit?: boolean;
 }
 
 /**

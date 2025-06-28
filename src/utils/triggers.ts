@@ -465,7 +465,7 @@ export const runQueriesWithTriggers = async <T extends ResultRecord>(
   queries: QueriesPerDatabase,
   options: QueryHandlerOptions = {},
 ): Promise<ResultsPerDatabase<T>> => {
-  const { triggers, waitUntil, requireTriggers } = options;
+  const { triggers, waitUntil, requireTriggers, implicit: implicitRoot } = options;
 
   const triggerErrorType = requireTriggers !== 'all' ? ` ${requireTriggers}` : '';
   const triggerError = new ClientError({
@@ -484,7 +484,10 @@ export const runQueriesWithTriggers = async <T extends ResultRecord>(
   //
   // We are stripping the `requireTriggers` option, because no triggers should be
   // required for queries that are nested into triggers.
-  const client = createSyntaxFactory(omit(options, ['requireTriggers']));
+  const client = createSyntaxFactory({
+    ...omit(options, ['requireTriggers']),
+    implicit: true,
+  });
 
   if (typeof process === 'undefined' && !waitUntil) {
     let message = 'In the case that the "ronin" package receives a value for';
@@ -508,7 +511,12 @@ export const runQueriesWithTriggers = async <T extends ResultRecord>(
        */
       implicit?: boolean;
     }
-  > = queries.map(({ query, database }) => ({ query, result: EMPTY, database }));
+  > = queries.map(({ query, database }) => ({
+    query,
+    result: EMPTY,
+    database,
+    implicit: implicitRoot,
+  }));
 
   // Invoke `beforeAdd`, `beforeGet`, `beforeSet`, `beforeRemove`, and `beforeCount`.
   await Promise.all(
