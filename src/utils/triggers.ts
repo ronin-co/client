@@ -515,7 +515,6 @@ export const runQueriesWithTriggers = async <T extends ResultRecord>(
     query,
     result: EMPTY,
     database,
-    implicit: implicitRoot,
   }));
 
   // Invoke `beforeAdd`, `beforeGet`, `beforeSet`, `beforeRemove`, and `beforeCount`.
@@ -523,7 +522,7 @@ export const runQueriesWithTriggers = async <T extends ResultRecord>(
     queryList.map(async ({ query, database, implicit }, index) => {
       const triggerResults = await invokeTriggers(
         'before',
-        { query, implicit },
+        { query, implicit: implicitRoot || implicit },
         { triggers, database, client },
       );
 
@@ -543,7 +542,7 @@ export const runQueriesWithTriggers = async <T extends ResultRecord>(
     queryList.map(async ({ query, database, implicit }, index) => {
       const triggerResults = await invokeTriggers(
         'during',
-        { query, implicit },
+        { query, implicit: implicitRoot || implicit },
         { triggers, database, client },
       );
 
@@ -573,7 +572,7 @@ export const runQueriesWithTriggers = async <T extends ResultRecord>(
     queryList.map(async ({ query, database, implicit }, index) => {
       const triggerResults = await invokeTriggers(
         'after',
-        { query, implicit },
+        { query, implicit: implicitRoot || implicit },
         { triggers, database, client },
       );
 
@@ -639,7 +638,7 @@ export const runQueriesWithTriggers = async <T extends ResultRecord>(
     queryList.map(async ({ query, database, implicit }, index) => {
       const triggerResults = await invokeTriggers(
         'resolving',
-        { query, implicit },
+        { query, implicit: implicitRoot || implicit },
         { triggers, database, client },
       );
       queryList[index].result = triggerResults.result as FormattedResults<T>[number];
@@ -690,7 +689,7 @@ export const runQueriesWithTriggers = async <T extends ResultRecord>(
     // Run the actual trigger functions.
     const promise = invokeTriggers(
       'following',
-      { query, resultBefore, resultAfter, implicit },
+      { query, resultBefore, resultAfter, implicit: implicitRoot || implicit },
       { triggers, database, client },
     );
 
