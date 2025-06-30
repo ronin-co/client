@@ -1,1 +1,1 @@
-import.meta.env.RONIN_TOKEN = 'secret_token';
+process.env.RONIN_TOKEN = 'secret_token';
