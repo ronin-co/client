@@ -11,6 +11,9 @@ describe('edge runtime', () => {
     const oldProcess = global.process;
     global.process = undefined as unknown as NodeJS.Process;
 
+    const oldImportMeta = import.meta.env.RONIN_TOKEN;
+    import.meta.env.RONIN_TOKEN = undefined;
+
     try {
       const factory = createSyntaxFactory({});
 
@@ -21,6 +24,7 @@ describe('edge runtime', () => {
 
     // Restore the old runtime.
     global.process = oldProcess;
+    import.meta.env.RONIN_TOKEN = oldImportMeta;
 
     expect(error?.message).toMatch(
       'When invoking RONIN from an edge runtime, the `token` option must be set.',

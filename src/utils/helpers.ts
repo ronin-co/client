@@ -72,9 +72,9 @@ export const mergeOptions = (
  * @returns Nothing if the token is valid, otherwise throws an error.
  */
 export const validateToken = (options: QueryHandlerOptions = {}) => {
-  if (!options.token && typeof process !== 'undefined') {
+  if (!options.token) {
     const token =
-      typeof process?.env !== 'undefined'
+      typeof process !== 'undefined' && typeof process?.env !== 'undefined'
         ? process.env.RONIN_TOKEN
         : typeof import.meta?.env !== 'undefined'
           ? import.meta.env.RONIN_TOKEN
@@ -82,20 +82,15 @@ export const validateToken = (options: QueryHandlerOptions = {}) => {
 
     if (!token || token === 'undefined') {
       const message =
-        'Please specify the `RONIN_TOKEN` environment variable' +
-        ' or set the `token` option when invoking RONIN.';
+        typeof process === 'undefined'
+          ? 'When invoking RONIN from an edge runtime, the `token` option must be set.'
+          : 'Please specify the `RONIN_TOKEN` environment variable' +
+            ' or set the `token` option when invoking RONIN.';
 
       throw new Error(message);
     }
 
     options.token = token;
-  }
-
-  if (!options.token) {
-    let message = 'When invoking RONIN from an edge runtime, the';
-    message += ' `token` option must be set.';
-
-    throw new Error(message);
   }
 };
 
