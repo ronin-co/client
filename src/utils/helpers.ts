@@ -81,16 +81,11 @@ export const validateToken = (options: QueryHandlerOptions = {}) => {
           : undefined;
 
     if (!token || token === 'undefined') {
-      if (typeof process !== 'undefined') {
-        const message =
-          'Please specify the `RONIN_TOKEN` environment variable' +
-          ' or set the `token` option when invoking RONIN.';
-
-        throw new Error(message);
-      }
-
-      let message = 'When invoking RONIN from an edge runtime, the';
-      message += ' `token` option must be set.';
+      const message =
+        typeof process === 'undefined'
+          ? 'When invoking RONIN from an edge runtime, the `token` option must be set.'
+          : 'Please specify the `RONIN_TOKEN` environment variable' +
+            ' or set the `token` option when invoking RONIN.';
 
       throw new Error(message);
     }
