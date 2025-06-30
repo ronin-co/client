@@ -74,11 +74,9 @@ export const mergeOptions = (
 export const validateToken = (options: QueryHandlerOptions = {}) => {
   if (!options.token) {
     const token =
-      typeof process !== 'undefined' && typeof process?.env !== 'undefined'
-        ? process.env.RONIN_TOKEN
-        : typeof import.meta?.env !== 'undefined'
-          ? import.meta.env.RONIN_TOKEN
-          : undefined;
+      typeof import.meta?.env !== 'undefined'
+        ? import.meta.env.RONIN_TOKEN
+        : process?.env?.RONIN_TOKEN;
 
     if (!token || token === 'undefined') {
       const message =
